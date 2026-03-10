@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Input } from "@/components/ui";
+import { supabase } from "@/lib/supabase";
 
 const MAGIC_EMAIL = "ibeckzoom@gmail.com";
 
@@ -15,14 +16,94 @@ export default function LoginPage() {
   const [acEmail, setAcEmail] = useState("");
   const [companyEmail, setCompanyEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [companyPassword, setCompanyPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleCompanySubmit = (e: React.FormEvent) => {
+  const signInOrSignUp = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+    if (!trimmedEmail || !trimmedPassword) {
+      return { success: false, error: "メールアドレスとパスワードを入力してください。" };
+    }
+    if (trimmedPassword.length < 6) {
+      return { success: false, error: "パスワードは6文字以上で入力してください。" };
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: trimmedEmail,
+      password: trimmedPassword,
+    });
+    if (!signInError) return { success: true };
+
+    const isInvalidCredentials =
+      signInError.message?.toLowerCase().includes("invalid login") ||
+      signInError.message?.toLowerCase().includes("invalid_credentials") ||
+      signInError.message?.toLowerCase().includes("user not found");
+    if (!isInvalidCredentials) {
+      return { success: false, error: signInError.message ?? "ログインに失敗しました。" };
+    }
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: trimmedEmail,
+      password: trimmedPassword,
+    });
+    if (signUpError) {
+      return {
+        success: false,
+        error: signUpError.message ?? "新規登録に失敗しました。パスワードは6文字以上にしてください。",
+      };
+    }
+    return { success: true };
+  };
+
+  const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+    const email = acEmail.trim().toLowerCase();
+    if (email === MAGIC_EMAIL) {
+      router.push("/mypage");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const result = await signInOrSignUp(acEmail, password);
+      if (result.success) {
+        router.push("/mypage");
+        return;
+      }
+      const msg = result.error ?? "認証に失敗しました。";
+      setErrorMessage(msg);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "予期しないエラーが発生しました。";
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCompanySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
     if (companyEmail.trim().toLowerCase() === MAGIC_EMAIL) {
       router.push("/clubdashboard");
       return;
     }
-    // その他のメールはデモでは何もしない（必要なら別処理）
+    setIsLoading(true);
+    try {
+      const result = await signInOrSignUp(companyEmail, companyPassword);
+      if (result.success) {
+        router.push("/clubdashboard");
+        return;
+      }
+      const msg = result.error ?? "認証に失敗しました。";
+      setErrorMessage(msg);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "予期しないエラーが発生しました。";
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -64,7 +145,7 @@ export default function LoginPage() {
           </div>
 
           {tab === "student" && (
-            <div className="space-y-6">
+            <form className="space-y-6" onSubmit={handleStudentSubmit}>
               <button
                 type="button"
                 className="w-full py-4 px-4 flex items-center justify-center gap-2 bg-[#2d5a3d] text-white font-bold text-sm hover:bg-[#244a32] transition-colors"
@@ -80,24 +161,45 @@ export default function LoginPage() {
                   <span className="bg-white px-2 text-grey-custom">または</span>
                 </div>
               </div>
-              <div>
-                <label className="block text-primary font-bold text-sm mb-2">
-                  大学のメールアドレス（.ac.jp）でログイン
-                </label>
-                <div className="flex gap-2">
+              <div className="space-y-5">
+                <div>
+                  <label htmlFor="student-email" className="block text-primary font-bold text-sm mb-2">
+                    大学のメールアドレス（.ac.jp）でログイン
+                  </label>
                   <Input
+                    id="student-email"
                     type="email"
                     value={acEmail}
                     onChange={(e) => setAcEmail(e.target.value)}
                     placeholder="xxx@xxx.ac.jp"
-                    className="flex-1"
+                    className="w-full"
+                    disabled={isLoading}
                   />
-                  <Button type="button" variant="primary" className="shrink-0">
-                    送信
-                  </Button>
+                </div>
+                <div>
+                  <label htmlFor="student-password" className="block text-primary font-bold text-sm mb-2">
+                    パスワード
+                  </label>
+                  <input
+                    id="student-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="パスワードを入力"
+                    disabled={isLoading}
+                    className="w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 bg-white placeholder-gray-400 rounded-none px-3 py-2"
+                  />
                 </div>
               </div>
-            </div>
+              {errorMessage && tab === "student" && (
+                <p className="text-sm text-red-600" role="alert">
+                  {errorMessage}
+                </p>
+              )}
+              <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
+                {isLoading ? "処理中..." : "ログイン"}
+              </Button>
+            </form>
           )}
 
           {tab === "company" && (
@@ -109,15 +211,17 @@ export default function LoginPage() {
                   value={companyEmail}
                   onChange={(e) => setCompanyEmail(e.target.value)}
                   placeholder="メールアドレスを入力"
+                  disabled={isLoading}
                 />
               </div>
               <div>
                 <label className="block text-primary font-bold text-sm mb-2">パスワード</label>
                 <Input
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={companyPassword}
+                  onChange={(e) => setCompanyPassword(e.target.value)}
                   placeholder="パスワードを入力"
+                  disabled={isLoading}
                 />
               </div>
               <div className="text-right">
@@ -128,8 +232,13 @@ export default function LoginPage() {
                   パスワードを忘れた場合
                 </Link>
               </div>
-              <Button type="submit" variant="primary" className="w-full">
-                ログイン
+              {errorMessage && tab === "company" && (
+                <p className="text-sm text-red-600" role="alert">
+                  {errorMessage}
+                </p>
+              )}
+              <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
+                {isLoading ? "処理中..." : "ログイン"}
               </Button>
             </form>
           )}
