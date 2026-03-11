@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "supabase:set-email-rate-limit": "node scripts/set-auth-rate-limit.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

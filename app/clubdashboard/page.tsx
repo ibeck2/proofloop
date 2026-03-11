@@ -1,4 +1,5 @@
 import Link from "next/link";
+import OrganizationProfileForm from "./OrganizationProfileForm";
 
 export default function ClubDashboardPage() {
   return (
@@ -49,6 +50,9 @@ export default function ClubDashboardPage() {
           </div>
           <div className="flex-1 overflow-y-auto">
             <div className="max-w-7xl mx-auto w-full px-6 py-8 lg:px-12 lg:py-10">
+              <div className="mb-10">
+                <OrganizationProfileForm />
+              </div>
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
                 <div className="flex flex-col gap-2">
                   <p className="text-primary dark:text-white text-lg font-bold">AFPLA 管理ページへようこそ</p>

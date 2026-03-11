@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button, Input } from "@/components/ui";
+import { supabase } from "@/lib/supabase";
 
+const MAGIC_EMAIL = "ibeckzoom@gmail.com";
 type TabType = "student" | "company";
 
 const companySignupSchema = z.object({
@@ -18,14 +21,18 @@ const companySignupSchema = z.object({
   password: z
     .string()
     .min(1, "パスワードを入力してください")
-    .min(8, "パスワードは8文字以上で入力してください"),
+    .min(6, "パスワードは6文字以上で入力してください"),
 });
 
 type CompanySignupForm = z.infer<typeof companySignupSchema>;
 
 export default function SignupPage() {
+  const router = useRouter();
   const [tab, setTab] = useState<TabType>("student");
   const [acEmail, setAcEmail] = useState("");
+  const [studentPassword, setStudentPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -35,6 +42,59 @@ export default function SignupPage() {
     resolver: zodResolver(companySignupSchema),
     defaultValues: { companyEmail: "", password: "" },
   });
+
+  const handleStudentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError(null);
+    const email = acEmail.trim().toLowerCase();
+    if (!email) {
+      setSubmitError("メールアドレスを入力してください。");
+      return;
+    }
+    if (studentPassword.length < 6) {
+      setSubmitError("パスワードは6文字以上で入力してください。");
+      return;
+    }
+    if (email === MAGIC_EMAIL) {
+      router.push("/mypage");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: studentPassword.trim(),
+      });
+      if (error) throw error;
+      router.push("/mypage");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "登録に失敗しました。");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCompanySubmit = async (data: CompanySignupForm) => {
+    setSubmitError(null);
+    const email = data.companyEmail.trim().toLowerCase();
+    if (email === MAGIC_EMAIL) {
+      router.push("/companydashboard");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password: data.password,
+      });
+      if (error) throw error;
+      router.push("/companydashboard");
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "登録に失敗しました。");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
@@ -75,7 +135,7 @@ export default function SignupPage() {
           </div>
 
           {tab === "student" && (
-            <div className="space-y-6">
+            <form className="space-y-6" onSubmit={handleStudentSubmit}>
               <button
                 type="button"
                 className="w-full py-4 px-4 flex items-center justify-center gap-2 bg-[#2d5a3d] text-white font-bold text-sm hover:bg-[#244a32] transition-colors"
@@ -92,42 +152,56 @@ export default function SignupPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-primary font-bold text-sm mb-2">
+                <label htmlFor="student-email" className="block text-primary font-bold text-sm mb-2">
                   大学のメールアドレス（.ac.jp）で登録
                 </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="email"
-                    value={acEmail}
-                    onChange={(e) => setAcEmail(e.target.value)}
-                    placeholder="xxx@xxx.ac.jp"
-                    className="flex-1"
-                  />
-                  <Button type="button" variant="primary" className="shrink-0">
-                    送信
-                  </Button>
-                </div>
+                <Input
+                  id="student-email"
+                  type="email"
+                  value={acEmail}
+                  onChange={(e) => setAcEmail(e.target.value)}
+                  placeholder="xxx@xxx.ac.jp"
+                  disabled={isLoading}
+                  className="w-full"
+                />
               </div>
-            </div>
+              <div>
+                <label htmlFor="student-password" className="block text-primary font-bold text-sm mb-2">
+                  パスワード
+                </label>
+                <input
+                  id="student-password"
+                  type="password"
+                  value={studentPassword}
+                  onChange={(e) => setStudentPassword(e.target.value)}
+                  placeholder="パスワードを入力（6文字以上）"
+                  disabled={isLoading}
+                  className="w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 bg-white placeholder-gray-400 rounded-none px-3 py-2"
+                />
+              </div>
+              {submitError && tab === "student" && (
+                <p className="text-sm text-red-600" role="alert">
+                  {submitError}
+                </p>
+              )}
+              <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
+                {isLoading ? "処理中..." : "登録"}
+              </Button>
+            </form>
           )}
 
           {tab === "company" && (
             <form
               className="space-y-5"
-              onSubmit={handleSubmit(
-                (data) => {
-                  console.log("[企業向け新規登録] 送信データ:", JSON.stringify(data, null, 2));
-                },
-                () => {
-                  toast("入力内容を確認してください", {
-                    icon: (
-                      <span className="material-symbols-outlined" style={{ color: "#8B0000", fontSize: 20 }}>
-                        error
-                      </span>
-                    ),
-                  });
-                }
-              )}
+              onSubmit={handleSubmit(handleCompanySubmit, () => {
+                toast("入力内容を確認してください", {
+                  icon: (
+                    <span className="material-symbols-outlined" style={{ color: "#8B0000", fontSize: 20 }}>
+                      error
+                    </span>
+                  ),
+                });
+              })}
             >
               <div>
                 <label className="block text-primary font-bold text-sm mb-2">法人メールアドレス</label>
@@ -135,22 +209,24 @@ export default function SignupPage() {
                   type="email"
                   placeholder="メールアドレスを入力"
                   {...register("companyEmail")}
+                  disabled={isLoading}
                   className={errors.companyEmail ? "border-accent" : ""}
                 />
                 {errors.companyEmail && (
-                  <p className="mt-1 text-accent text-xs">{errors.companyEmail.message}</p>
+                  <p className="mt-1 text-red-600 text-xs">{errors.companyEmail.message}</p>
                 )}
               </div>
               <div>
                 <label className="block text-primary font-bold text-sm mb-2">パスワード</label>
                 <Input
                   type="password"
-                  placeholder="パスワードを入力"
+                  placeholder="パスワードを入力（6文字以上）"
                   {...register("password")}
+                  disabled={isLoading}
                   className={errors.password ? "border-accent" : ""}
                 />
                 {errors.password && (
-                  <p className="mt-1 text-accent text-xs">{errors.password.message}</p>
+                  <p className="mt-1 text-red-600 text-xs">{errors.password.message}</p>
                 )}
               </div>
               <div className="text-right">
@@ -161,8 +237,13 @@ export default function SignupPage() {
                   パスワードを忘れた場合
                 </Link>
               </div>
-              <Button type="submit" variant="primary" className="w-full">
-                登録
+              {submitError && tab === "company" && (
+                <p className="text-sm text-red-600" role="alert">
+                  {submitError}
+                </p>
+              )}
+              <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
+                {isLoading ? "処理中..." : "登録"}
               </Button>
             </form>
           )}

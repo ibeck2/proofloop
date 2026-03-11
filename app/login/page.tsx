@@ -20,7 +20,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const signInOrSignUp = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedPassword = password.trim();
     if (!trimmedEmail || !trimmedPassword) {
@@ -30,29 +30,12 @@ export default function LoginPage() {
       return { success: false, error: "パスワードは6文字以上で入力してください。" };
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: trimmedEmail,
       password: trimmedPassword,
     });
-    if (!signInError) return { success: true };
-
-    const isInvalidCredentials =
-      signInError.message?.toLowerCase().includes("invalid login") ||
-      signInError.message?.toLowerCase().includes("invalid_credentials") ||
-      signInError.message?.toLowerCase().includes("user not found");
-    if (!isInvalidCredentials) {
-      return { success: false, error: signInError.message ?? "ログインに失敗しました。" };
-    }
-
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: trimmedEmail,
-      password: trimmedPassword,
-    });
-    if (signUpError) {
-      return {
-        success: false,
-        error: signUpError.message ?? "新規登録に失敗しました。パスワードは6文字以上にしてください。",
-      };
+    if (error) {
+      return { success: false, error: error.message ?? "ログインに失敗しました。" };
     }
     return { success: true };
   };
@@ -67,16 +50,14 @@ export default function LoginPage() {
     }
     setIsLoading(true);
     try {
-      const result = await signInOrSignUp(acEmail, password);
+      const result = await signIn(acEmail, password);
       if (result.success) {
         router.push("/mypage");
         return;
       }
-      const msg = result.error ?? "認証に失敗しました。";
-      setErrorMessage(msg);
+      setErrorMessage(result.error ?? "ログインに失敗しました。");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "予期しないエラーが発生しました。";
-      setErrorMessage(msg);
+      setErrorMessage(err instanceof Error ? err.message : "予期しないエラーが発生しました。");
     } finally {
       setIsLoading(false);
     }
@@ -86,21 +67,19 @@ export default function LoginPage() {
     e.preventDefault();
     setErrorMessage(null);
     if (companyEmail.trim().toLowerCase() === MAGIC_EMAIL) {
-      router.push("/clubdashboard");
+      router.push("/companydashboard");
       return;
     }
     setIsLoading(true);
     try {
-      const result = await signInOrSignUp(companyEmail, companyPassword);
+      const result = await signIn(companyEmail, companyPassword);
       if (result.success) {
-        router.push("/clubdashboard");
+        router.push("/companydashboard");
         return;
       }
-      const msg = result.error ?? "認証に失敗しました。";
-      setErrorMessage(msg);
+      setErrorMessage(result.error ?? "ログインに失敗しました。");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "予期しないエラーが発生しました。";
-      setErrorMessage(msg);
+      setErrorMessage(err instanceof Error ? err.message : "予期しないエラーが発生しました。");
     } finally {
       setIsLoading(false);
     }
