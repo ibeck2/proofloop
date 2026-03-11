@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Button, Input } from "@/components/ui";
 
 const KANBAN_COLUMNS = [
@@ -47,95 +46,52 @@ export default function SelectionPage() {
   const [esQuestion3, setEsQuestion3] = useState("その他（自由記述）");
 
   return (
-    <div className="bg-[#f5f5f7] text-slate-900 font-display min-h-screen">
-      <div className="flex min-h-screen w-full">
-        {/* サイドバー（clubdashboard と同様） */}
-        <aside className="hidden w-64 flex-col bg-white border-r border-slate-200 lg:flex shrink-0">
-          <div className="flex h-full flex-col justify-between p-6">
-            <div className="flex flex-col gap-8">
-              <p className="text-text-sub text-xs">管理者用</p>
-              <nav className="flex flex-col gap-2">
-                <Link className="flex items-center gap-3 px-4 py-3 text-text-sub hover:bg-slate-50 transition-colors" href="/clubdashboard">
-                  <span className="material-symbols-outlined" style={{ fontSize: 24 }}>dashboard</span>
-                  <span className="text-sm font-medium">ダッシュボードホーム</span>
-                </Link>
-                <Link className="flex items-center gap-3 px-4 py-3 text-text-sub hover:bg-slate-50 transition-colors" href="/clubprofile">
-                  <span className="material-symbols-outlined" style={{ fontSize: 24 }}>edit_note</span>
-                  <span className="text-sm font-medium">プロフィール編集</span>
-                </Link>
-                <Link className="flex items-center gap-3 px-4 py-3 bg-primary/10 text-primary" href="/clubdashboard/selection">
-                  <span className="material-symbols-outlined" style={{ fontSize: 24 }}>how_to_vote</span>
-                  <span className="text-sm font-medium">新歓DX・選考管理</span>
-                </Link>
-                <Link className="flex items-center gap-3 px-4 py-3 text-text-sub hover:bg-slate-50 transition-colors" href="/clubopenmission">
-                  <span className="material-symbols-outlined" style={{ fontSize: 24 }}>task_alt</span>
-                  <span className="text-sm font-medium">ミッションボード</span>
-                </Link>
-                <Link className="flex items-center gap-3 px-4 py-3 text-text-sub hover:bg-slate-50 transition-colors" href="/clubdashboard/reviews">
-                  <span className="material-symbols-outlined" style={{ fontSize: 24 }}>rate_review</span>
-                  <span className="text-sm font-medium">口コミ・レビュー管理</span>
-                </Link>
-              </nav>
-            </div>
-            <div className="pt-6 border-t border-slate-100">
-              <Link className="flex items-center gap-3 px-4 py-2 text-text-sub hover:text-primary transition-colors" href="/">
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>logout</span>
-                <span className="text-sm font-medium">ログアウト</span>
-              </Link>
-            </div>
+    <div className="bg-[#f5f5f7] text-slate-900 font-display min-h-full">
+      <div className="flex-1 p-6 lg:p-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+          <div>
+            <h1 className="text-primary text-2xl font-bold tracking-tight">新歓 選考管理</h1>
+            <p className="text-text-sub text-sm mt-1">応募者の選考フローを管理します</p>
           </div>
-        </aside>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => setIsModalOpen(true)}
+            className="shrink-0"
+          >
+            <span className="material-symbols-outlined text-lg">settings</span>
+            選考フロー設定
+          </Button>
+        </div>
 
-        <main className="flex-1 flex flex-col min-w-0 overflow-x-auto">
-          <div className="flex-1 p-6 lg:p-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-              <div>
-                <h1 className="text-primary text-2xl font-bold tracking-tight">新歓 選考管理</h1>
-                <p className="text-text-sub text-sm mt-1">応募者の選考フローを管理します</p>
+        <div className="flex gap-4 overflow-x-auto pb-4 min-h-[480px]">
+          {KANBAN_COLUMNS.map((col) => (
+            <div
+              key={col.id}
+              className="w-[280px] shrink-0 flex flex-col bg-slate-100 border border-slate-200"
+            >
+              <div className="px-4 py-3 border-b border-slate-200 bg-white">
+                <h2 className="text-primary font-bold text-sm">{col.title}</h2>
               </div>
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => setIsModalOpen(true)}
-                className="shrink-0"
-              >
-                <span className="material-symbols-outlined text-lg">settings</span>
-                選考フロー設定
-              </Button>
-            </div>
-
-            {/* カンバンボード */}
-            <div className="flex gap-4 overflow-x-auto pb-4 min-h-[480px]">
-              {KANBAN_COLUMNS.map((col) => (
-                <div
-                  key={col.id}
-                  className="w-[280px] shrink-0 flex flex-col bg-slate-100 border border-slate-200"
-                >
-                  <div className="px-4 py-3 border-b border-slate-200 bg-white">
-                    <h2 className="text-primary font-bold text-sm">{col.title}</h2>
+              <div className="flex-1 p-3 space-y-3 overflow-y-auto min-h-[320px]">
+                {MOCK_APPLICANTS.filter((a) => a.columnId === col.id).map((applicant) => (
+                  <div
+                    key={applicant.id}
+                    className="bg-white border border-slate-200 p-4 hover:border-primary/30 transition-colors"
+                  >
+                    <p className="text-primary font-bold text-sm mb-1">{applicant.name}</p>
+                    <p className="text-text-sub text-xs mb-2">
+                      {applicant.university}・{applicant.department}
+                    </p>
+                    <p className="text-accent text-xs font-medium">{applicant.status}</p>
                   </div>
-                  <div className="flex-1 p-3 space-y-3 overflow-y-auto min-h-[320px]">
-                    {MOCK_APPLICANTS.filter((a) => a.columnId === col.id).map((applicant) => (
-                      <div
-                        key={applicant.id}
-                        className="bg-white border border-slate-200 p-4 hover:border-primary/30 transition-colors"
-                      >
-                        <p className="text-primary font-bold text-sm mb-1">{applicant.name}</p>
-                        <p className="text-text-sub text-xs mb-2">
-                          {applicant.university}・{applicant.department}
-                        </p>
-                        <p className="text-accent text-xs font-medium">{applicant.status}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        </main>
+          ))}
+        </div>
       </div>
 
-      {/* 選考フロー設定 モーダル */}
       {isModalOpen && (
         <>
           <div
@@ -162,7 +118,6 @@ export default function SelectionPage() {
               }}
               className="space-y-8"
             >
-              {/* ES（エントリーシート）設定セクション */}
               <div>
                 <h4 className="text-primary font-bold text-sm mb-3">ES（エントリーシート）設定</h4>
                 <div className="space-y-3 mb-4">
@@ -192,47 +147,26 @@ export default function SelectionPage() {
                     <p className="text-text-sub text-xs">質問項目をカスタマイズできます</p>
                     <div>
                       <label className="block text-primary font-bold text-xs mb-1">質問1</label>
-                      <Input
-                        value={esQuestion1}
-                        onChange={(e) => setEsQuestion1(e.target.value)}
-                        placeholder="例: 志望動機"
-                        className="text-sm"
-                      />
+                      <Input value={esQuestion1} onChange={(e) => setEsQuestion1(e.target.value)} placeholder="例: 志望動機" className="text-sm" />
                     </div>
                     <div>
                       <label className="block text-primary font-bold text-xs mb-1">質問2</label>
-                      <Input
-                        value={esQuestion2}
-                        onChange={(e) => setEsQuestion2(e.target.value)}
-                        placeholder="例: 自己PR"
-                        className="text-sm"
-                      />
+                      <Input value={esQuestion2} onChange={(e) => setEsQuestion2(e.target.value)} placeholder="例: 自己PR" className="text-sm" />
                     </div>
                     <div>
                       <label className="block text-primary font-bold text-xs mb-1">質問3</label>
-                      <Input
-                        value={esQuestion3}
-                        onChange={(e) => setEsQuestion3(e.target.value)}
-                        placeholder="例: その他（自由記述）"
-                        className="text-sm"
-                      />
+                      <Input value={esQuestion3} onChange={(e) => setEsQuestion3(e.target.value)} placeholder="例: その他（自由記述）" className="text-sm" />
                     </div>
                   </div>
                 )}
                 {esMode === "external" && (
                   <div className="pl-6 border-l-2 border-slate-200">
                     <label className="block text-primary font-bold text-xs mb-2">外部フォームのURL</label>
-                    <Input
-                      type="url"
-                      value={esUrl}
-                      onChange={(e) => setEsUrl(e.target.value)}
-                      placeholder="https://forms.google.com/..."
-                    />
+                    <Input type="url" value={esUrl} onChange={(e) => setEsUrl(e.target.value)} placeholder="https://forms.google.com/..." />
                   </div>
                 )}
               </div>
 
-              {/* 面接予約設定セクション */}
               <div>
                 <h4 className="text-primary font-bold text-sm mb-3">面接予約設定</h4>
                 <div className="space-y-3 mb-4">
@@ -265,12 +199,7 @@ export default function SelectionPage() {
                 {interviewMode === "external" && (
                   <div className="pl-6 border-l-2 border-slate-200">
                     <label className="block text-primary font-bold text-xs mb-2">日程調整ツールのURL</label>
-                    <Input
-                      type="url"
-                      value={interviewUrl}
-                      onChange={(e) => setInterviewUrl(e.target.value)}
-                      placeholder="https://calendly.com/..."
-                    />
+                    <Input type="url" value={interviewUrl} onChange={(e) => setInterviewUrl(e.target.value)} placeholder="https://calendly.com/..." />
                   </div>
                 )}
               </div>

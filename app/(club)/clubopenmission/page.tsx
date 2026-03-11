@@ -1,31 +1,26 @@
 export default function ClubOpenMissionPage() {
   return (
-    <div className="font-display text-slate-900 bg-background-light min-h-screen" style={{ backgroundColor: "#f9f9f9" }}>
-      {/* Global Navigation Header */}
-      <header className="flex items-center justify-end border-b border-slate-200 bg-white px-10 py-4 sticky top-0 z-50">
+    <div className="font-display text-slate-900 bg-background-light min-h-full" style={{ backgroundColor: "#f9f9f9" }}>
+      <header className="flex items-center justify-end border-b border-slate-200 bg-white px-6 lg:px-10 py-4 sticky top-0 z-10">
         <div className="flex items-center gap-6">
-          <button className="flex items-center justify-center bg-primary text-white px-6 py-2.5 text-sm font-bold tracking-wider hover:opacity-90 transition-opacity">
-            <span>新規タスクを追加</span>
+          <button className="flex items-center justify-center bg-primary text-white px-6 py-2.5 text-sm font-bold tracking-wider hover:opacity-90 transition-opacity" type="button">
+            新規タスクを追加
           </button>
           <div className="size-10 bg-primary/10 flex items-center justify-center border border-primary/20">
             <span className="material-symbols-outlined text-primary">account_circle</span>
           </div>
         </div>
       </header>
-      {/* Board Content Area */}
-      <main className="p-10 pb-20">
+      <main className="p-6 lg:p-10 pb-20">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-primary">オープン・ミッション・ボード</h2>
           <p className="text-mission-grey mt-2">組織全体のタスク進捗状況を確認できます</p>
         </div>
-        {/* Kanban Board */}
         <div className="flex gap-6 overflow-x-auto pb-8 custom-scrollbar items-start">
-          {/* Column: To Do */}
           <div className="kanban-column flex flex-col gap-4">
             <div className="bg-primary text-white p-4">
               <h3 className="font-bold text-base">未着手 タスクプール</h3>
             </div>
-            {/* Task Card 1 (AI Recommended) */}
             <div className="bg-white p-5 border-l-4 border-mission-red flex flex-col gap-3">
               <div className="flex items-center gap-2 bg-mission-red/5 px-2 py-1">
                 <span className="material-symbols-outlined text-mission-red text-sm">auto_awesome</span>
@@ -42,7 +37,6 @@ export default function ClubOpenMissionPage() {
                 </div>
               </div>
             </div>
-            {/* Task Card 2 */}
             <div className="bg-white p-5 border-l-4 border-transparent flex flex-col gap-3">
               <h4 className="text-base font-bold text-slate-900 leading-snug">協賛企業リストアップ</h4>
               <div className="flex items-center justify-between mt-2">
@@ -55,7 +49,6 @@ export default function ClubOpenMissionPage() {
                 </div>
               </div>
             </div>
-            {/* Task Card 3 (AI Recommended) */}
             <div className="bg-white p-5 border-l-4 border-mission-red flex flex-col gap-3">
               <div className="flex items-center gap-2 bg-mission-red/5 px-2 py-1">
                 <span className="material-symbols-outlined text-mission-red text-sm">auto_awesome</span>
@@ -73,7 +66,6 @@ export default function ClubOpenMissionPage() {
               </div>
             </div>
           </div>
-          {/* Column: In Progress */}
           <div className="kanban-column flex flex-col gap-4">
             <div className="bg-primary text-white p-4">
               <h3 className="font-bold text-base">進行中</h3>
@@ -103,7 +95,6 @@ export default function ClubOpenMissionPage() {
               </div>
             </div>
           </div>
-          {/* Column: Review */}
           <div className="kanban-column flex flex-col gap-4">
             <div className="bg-primary text-white p-4">
               <h3 className="font-bold text-base">確認待ち</h3>
@@ -125,7 +116,6 @@ export default function ClubOpenMissionPage() {
               </div>
             </div>
           </div>
-          {/* Column: Done */}
           <div className="kanban-column flex flex-col gap-4">
             <div className="bg-primary text-white p-4">
               <h3 className="font-bold text-base">完了</h3>
@@ -157,19 +147,20 @@ export default function ClubOpenMissionPage() {
           </div>
         </div>
       </main>
-      {/* Footer Status Bar */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-10 py-2 flex items-center justify-between z-40">
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2">
-            <div className="size-2 bg-primary" />
-            <span className="text-[10px] text-mission-grey font-bold">総ミッション数 12</span>
+      <footer className="border-t border-slate-200 bg-white px-6 lg:px-10 py-4 mt-auto">
+        <div className="flex items-center justify-between">
+          <div className="flex gap-4">
+            <div className="flex items-center gap-2">
+              <div className="size-2 bg-primary" />
+              <span className="text-[10px] text-mission-grey font-bold">総ミッション数 12</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="size-2 bg-mission-red" />
+              <span className="text-[10px] text-mission-grey font-bold">AI推奨 3</span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="size-2 bg-mission-red" />
-            <span className="text-[10px] text-mission-grey font-bold">AI推奨 3</span>
-          </div>
+          <div className="text-[10px] text-mission-grey">最終更新 2024/05/12 14:30</div>
         </div>
-        <div className="text-[10px] text-mission-grey">最終更新 2024/05/12 14:30</div>
       </footer>
     </div>
   );
