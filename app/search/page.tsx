@@ -1,57 +1,82 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import ClubCard from "@/components/ClubCard";
+import SearchOrgCard from "@/components/SearchOrgCard";
 import { Button, Input } from "@/components/ui";
 import { useFavorites } from "@/hooks/useFavorites";
-import { MOCK_CLUBS, type ScaleKey } from "@/lib/mockData";
+import { supabase } from "@/lib/supabase";
 
-const UNIVERSITIES = ["東京大学", "早稲田大学", "慶應義塾大学", "明治大学"] as const;
-const CATEGORIES = ["スポーツ", "文化学術", "音楽", "ボランティア"] as const;
-const SCALES: { value: ScaleKey; label: string }[] = [
-  { value: "50未満", label: "50名未満" },
-  { value: "50-100", label: "50名から100名" },
-  { value: "100以上", label: "100名以上" },
-];
+const CATEGORIES = [
+  "運動系（スポーツ・アウトドア）",
+  "文化系（音楽・演劇・アート）",
+  "学術・研究（ゼミ・研究会・勉強会）",
+  "ビジネス・キャリア（起業・就活）",
+  "国際交流・語学",
+  "ボランティア・NPO",
+  "イベント・企画（インカレ・学園祭等）",
+  "メディア・出版",
+  "趣味・その他",
+] as const;
+
+export type OrgSearchRow = {
+  id: string;
+  name: string | null;
+  university: string | null;
+  category: string | null;
+  description: string | null;
+  logo_url: string | null;
+  member_count: string | null;
+  activity_frequency: string | null;
+};
 
 export default function SearchPage() {
-  const [keyword, setKeyword] = useState("");
-  const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
+  const searchParams = useSearchParams();
+  const initialQ = searchParams.get("q") ?? "";
+  const [keyword, setKeyword] = useState(initialQ);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedScales, setSelectedScales] = useState<ScaleKey[]>([]);
+  const [orgs, setOrgs] = useState<OrgSearchRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [favoriteIds, toggleFavorite] = useFavorites();
 
-  const toggleFilter = <T,>(
-    current: T[],
-    value: T,
-    setter: (next: T[]) => void
-  ) => {
-    if (current.includes(value)) {
-      setter(current.filter((v) => v !== value));
-    } else {
-      setter([...current, value]);
-    }
-  };
+  const fetchOrgs = useCallback(async () => {
+    setLoading(true);
+    const trimmedKeyword = keyword.trim();
 
-  const filteredClubs = useMemo(() => {
-    const trimmedKeyword = keyword.trim().toLowerCase();
-    return MOCK_CLUBS.filter((club) => {
-      const matchKeyword =
-        trimmedKeyword === "" ||
-        club.name.toLowerCase().includes(trimmedKeyword) ||
-        club.university.toLowerCase().includes(trimmedKeyword) ||
-        club.category.toLowerCase().includes(trimmedKeyword) ||
-        club.tags.some((t) => t.toLowerCase().includes(trimmedKeyword));
-      const matchUniversity =
-        selectedUniversities.length === 0 || selectedUniversities.includes(club.university);
-      const matchCategory =
-        selectedCategories.length === 0 || selectedCategories.includes(club.category);
-      const matchScale =
-        selectedScales.length === 0 || selectedScales.includes(club.scale);
-      return matchKeyword && matchUniversity && matchCategory && matchScale;
-    });
-  }, [keyword, selectedUniversities, selectedCategories, selectedScales]);
+    let query = supabase
+      .from("organizations")
+      .select("id, name, university, category, description, logo_url, member_count, activity_frequency");
+
+    if (trimmedKeyword) {
+      const escaped = trimmedKeyword.replace(/'/g, "''");
+      const pattern = `%${escaped}%`;
+      query = query.or(`name.ilike.${pattern},description.ilike.${pattern}`);
+    }
+    if (selectedCategories.length > 0) {
+      query = query.in("category", selectedCategories);
+    }
+
+    const { data, error } = await query.order("name", { ascending: true });
+
+    if (error) {
+      console.error("organizations fetch error:", error);
+      setOrgs([]);
+    } else {
+      setOrgs((data as OrgSearchRow[]) ?? []);
+    }
+    setLoading(false);
+  }, [keyword, selectedCategories]);
+
+  useEffect(() => {
+    fetchOrgs();
+  }, [fetchOrgs]);
+
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+  };
 
   return (
     <div className="bg-white text-slate-900 font-display pb-20 md:pb-0">
@@ -66,111 +91,108 @@ export default function SearchPage() {
                   絞り込み検索
                 </h2>
               </div>
-              {/* University Filter */}
+              {/* Keyword search - reflected in state, fetchOrgs runs via useEffect */}
               <div className="border-b border-grey-custom/20 pb-6">
-                <p className="text-navy font-bold mb-4">大学</p>
-                <div className="space-y-3">
-                  {UNIVERSITIES.map((uni) => (
-                    <label key={uni} className="flex items-center gap-3 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        className="w-5 h-5 border-grey-custom text-accent focus:ring-0"
-                        checked={selectedUniversities.includes(uni)}
-                        onChange={() => toggleFilter(selectedUniversities, uni, setSelectedUniversities)}
-                      />
-                      <span className="text-navy text-sm group-hover:text-accent transition-colors">{uni}</span>
-                    </label>
-                  ))}
-                </div>
+                <p className="text-navy font-bold mb-3">キーワード</p>
+                <Input
+                  type="text"
+                  placeholder="団体名・説明で検索"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  className="w-full"
+                />
+                <p className="text-grey-custom text-xs mt-2">
+                  団体名または活動内容で部分一致検索します
+                </p>
               </div>
               {/* Category Filter */}
-              <div className="border-b border-grey-custom/20 pb-6">
+              <div className="pb-6">
                 <p className="text-navy font-bold mb-4">カテゴリ</p>
                 <div className="space-y-3">
                   {CATEGORIES.map((cat) => (
                     <label key={cat} className="flex items-center gap-3 cursor-pointer group">
                       <input
                         type="checkbox"
-                        className="w-5 h-5 border-grey-custom text-accent focus:ring-0"
+                        className="w-5 h-5 border-grey-custom text-accent focus:ring-0 rounded"
                         checked={selectedCategories.includes(cat)}
-                        onChange={() => toggleFilter(selectedCategories, cat, setSelectedCategories)}
+                        onChange={() => toggleCategory(cat)}
                       />
-                      <span className="text-navy text-sm group-hover:text-accent transition-colors">{cat}</span>
+                      <span className="text-navy text-sm group-hover:text-accent transition-colors line-clamp-2">
+                        {cat}
+                      </span>
                     </label>
                   ))}
                 </div>
               </div>
-              {/* Scale Filter */}
-              <div className="pb-6">
-                <p className="text-navy font-bold mb-4">規模</p>
-                <div className="space-y-3">
-                  {SCALES.map(({ value, label }) => (
-                    <label key={value} className="flex items-center gap-3 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        className="w-5 h-5 border-grey-custom text-accent focus:ring-0"
-                        checked={selectedScales.includes(value)}
-                        onChange={() => toggleFilter(selectedScales, value, setSelectedScales)}
-                      />
-                      <span className="text-navy text-sm group-hover:text-accent transition-colors">{label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => fetchOrgs()}
+                className="w-full"
+              >
+                検索する
+              </Button>
             </div>
           </aside>
           {/* Main Content Area */}
-          <section className="flex-1">
+          <section className="flex-1 min-w-0">
             <div className="mb-6">
               <h2 className="text-navy text-3xl font-bold mb-2">サークル検索</h2>
               <p className="text-grey-custom text-sm mb-4">大学生活を彩る団体を見つけよう</p>
-              <Input
-                type="text"
-                placeholder="団体名・大学・カテゴリ・タグで検索"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                className="max-w-md"
-              />
             </div>
             <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
               <div className="text-grey-custom text-sm">
-                全 {filteredClubs.length} 件の団体
+                {loading ? "検索中..." : `全 ${orgs.length} 件の団体`}
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredClubs.map((club) => {
-                const isFavorite = favoriteIds.includes(club.id);
-                return (
-                  <ClubCard
-                    key={club.id}
-                    id={club.id}
-                    name={club.name}
-                    university={club.university}
-                    category={club.category}
-                    memberCount={club.memberCount}
-                    image={club.image}
-                    imageAlt={club.imageAlt}
-                    detailHref="/clubprofile"
-                    isFavorite={isFavorite}
-                    onFavoriteClick={() => {
-                      toggleFavorite(club.id);
-                      toast.success(isFavorite ? "お気に入りから削除しました" : "お気に入りに追加しました");
-                    }}
-                  />
-                );
-              })}
-            </div>
-            {filteredClubs.length === 0 && (
-              <p className="text-grey-custom text-center py-12">条件に一致する団体がありません。絞り込みを変更してください。</p>
+
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <article key={i} className="bg-white border border-grey-custom/10 rounded-lg overflow-hidden animate-pulse">
+                    <div className="aspect-[2/1] bg-slate-200" />
+                    <div className="p-5 space-y-3">
+                      <div className="flex gap-2">
+                        <span className="h-5 w-20 bg-slate-200 rounded" />
+                        <span className="h-5 w-24 bg-slate-100 rounded" />
+                      </div>
+                      <div className="h-5 bg-slate-200 w-3/4 rounded" />
+                      <div className="h-4 bg-slate-100 w-full rounded" />
+                      <div className="h-4 bg-slate-100 w-1/2 rounded" />
+                      <div className="h-4 bg-slate-100 w-20 mt-4 rounded" />
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : orgs.length === 0 ? (
+              <p className="text-grey-custom text-center py-12 border border-grey-custom/20 rounded-lg bg-slate-50">
+                条件に一致する団体が見つかりませんでした。キーワードやカテゴリを変えて検索してみてください。
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {orgs.map((org) => {
+                  const isFavorite = favoriteIds.includes(org.id);
+                  return (
+                    <SearchOrgCard
+                      key={org.id}
+                      id={org.id}
+                      name={org.name ?? "（団体名なし）"}
+                      university={org.university}
+                      category={org.category}
+                      description={org.description}
+                      logoUrl={org.logo_url}
+                      memberCount={org.member_count}
+                      activityFrequency={org.activity_frequency}
+                      isFavorite={isFavorite}
+                      onFavoriteClick={() => {
+                        toggleFavorite(org.id);
+                        toast.success(isFavorite ? "お気に入りから削除しました" : "お気に入りに追加しました");
+                      }}
+                    />
+                  );
+                })}
+              </div>
             )}
-            <div className="mt-16 flex justify-center gap-2">
-              <Button variant="primary" size="sm" className="w-10 h-10 min-w-10 p-0">1</Button>
-              <Button variant="outlineMuted" size="sm" className="w-10 h-10 min-w-10 p-0">2</Button>
-              <Button variant="outlineMuted" size="sm" className="w-10 h-10 min-w-10 p-0">3</Button>
-              <Button variant="outlineMuted" size="sm" className="w-10 h-10 min-w-10 p-0">
-                <span className="material-symbols-outlined text-lg">chevron_right</span>
-              </Button>
-            </div>
           </section>
         </div>
       </main>
