@@ -18,8 +18,37 @@ type OrganizationRow = {
   member_count: string | null;
   activity_frequency: string | null;
   logo_url: string | null;
+  is_intercollege: boolean | null;
+  target_grades: string | null;
+  selection_process: string | null;
+  gender_ratio: string | null;
+  grade_composition: string | null;
+  location_detail: string | null;
+  fee_entry: string | null;
+  fee_annual: string | null;
   created_at: string;
 };
+
+const TARGET_GRADES_OPTIONS = [
+  "",
+  "学部1年生",
+  "学部2年生",
+  "学部3年生",
+  "学部4年生",
+  "院生可",
+  "学部生のみ",
+  "学年不問",
+  "その他",
+];
+
+const SELECTION_PROCESS_OPTIONS = [
+  "",
+  "選考あり",
+  "選考なし",
+  "面接あり",
+  "書類選考あり",
+  "その他",
+];
 
 const CATEGORY_OPTIONS = [
   "運動系（スポーツ・アウトドア）",
@@ -46,6 +75,14 @@ export default function OrganizationProfileForm() {
   const [instagramId, setInstagramId] = useState("");
   const [lineUrl, setLineUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [isIntercollege, setIsIntercollege] = useState(false);
+  const [targetGrades, setTargetGrades] = useState("");
+  const [selectionProcess, setSelectionProcess] = useState("");
+  const [genderRatio, setGenderRatio] = useState("");
+  const [gradeComposition, setGradeComposition] = useState("");
+  const [locationDetail, setLocationDetail] = useState("");
+  const [feeEntry, setFeeEntry] = useState("");
+  const [feeAnnual, setFeeAnnual] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -64,7 +101,7 @@ export default function OrganizationProfileForm() {
       setErrorMessage(null);
       const { data: rows, error: fetchError } = await supabase
         .from("organizations")
-        .select("id, user_id, name, university, category, description, x_id, instagram_id, line_url, website_url, member_count, activity_frequency, logo_url, created_at")
+        .select("id, user_id, name, university, category, description, x_id, instagram_id, line_url, website_url, member_count, activity_frequency, logo_url, is_intercollege, target_grades, selection_process, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, created_at")
         .eq("user_id", uid)
         .limit(1);
       if (cancelled) return;
@@ -84,6 +121,14 @@ export default function OrganizationProfileForm() {
         setInstagramId(org.instagram_id ?? "");
         setLineUrl(org.line_url ?? "");
         setWebsiteUrl(org.website_url ?? "");
+        setIsIntercollege(org.is_intercollege ?? false);
+        setTargetGrades(org.target_grades ?? "");
+        setSelectionProcess(org.selection_process ?? "");
+        setGenderRatio(org.gender_ratio ?? "");
+        setGradeComposition(org.grade_composition ?? "");
+        setLocationDetail(org.location_detail ?? "");
+        setFeeEntry(org.fee_entry ?? "");
+        setFeeAnnual(org.fee_annual ?? "");
         setLogoUrl(org.logo_url ?? null);
       }
       setIsLoading(false);
@@ -172,6 +217,14 @@ export default function OrganizationProfileForm() {
         member_count: memberCount.trim() || null,
         activity_frequency: activityFrequency.trim() || null,
         logo_url: finalLogoUrl,
+        is_intercollege: isIntercollege,
+        target_grades: targetGrades.trim() || null,
+        selection_process: selectionProcess.trim() || null,
+        gender_ratio: genderRatio.trim() || null,
+        grade_composition: gradeComposition.trim() || null,
+        location_detail: locationDetail.trim() || null,
+        fee_entry: feeEntry.trim() || null,
+        fee_annual: feeAnnual.trim() || null,
       };
 
       if (orgId) {
@@ -351,6 +404,147 @@ export default function OrganizationProfileForm() {
                 value={activityFrequency}
                 onChange={(e) => setActivityFrequency(e.target.value)}
                 placeholder="例: 週2回"
+                disabled={inputDisabled}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* 属性・選考セクション */}
+        <section className="space-y-6">
+          <h4 className="text-primary dark:text-white font-bold text-base border-b border-slate-200 dark:border-slate-600 pb-2">
+            属性・選考
+          </h4>
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isIntercollege}
+                onChange={(e) => setIsIntercollege(e.target.checked)}
+                disabled={inputDisabled}
+                className="w-5 h-5 border-slate-300 text-accent focus:ring-accent rounded"
+              />
+              <span className="text-primary dark:text-slate-200 font-bold text-sm">
+                インカレ（他大学の参加可）
+              </span>
+            </label>
+            <p className="text-text-sub dark:text-slate-400 text-xs mt-1 ml-8">
+              チェックを付けると「インカレ」として表示されます
+            </p>
+          </div>
+          <div>
+            <label htmlFor="org-target-grades" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              対象学年
+            </label>
+            <select
+              id="org-target-grades"
+              value={targetGrades}
+              onChange={(e) => setTargetGrades(e.target.value)}
+              disabled={inputDisabled}
+              className={inputClass}
+            >
+              {TARGET_GRADES_OPTIONS.map((opt) => (
+                <option key={opt || "blank"} value={opt}>
+                  {opt || "選択してください"}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="org-selection-process" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              選考の有無
+            </label>
+            <select
+              id="org-selection-process"
+              value={selectionProcess}
+              onChange={(e) => setSelectionProcess(e.target.value)}
+              disabled={inputDisabled}
+              className={inputClass}
+            >
+              {SELECTION_PROCESS_OPTIONS.map((opt) => (
+                <option key={opt || "blank"} value={opt}>
+                  {opt || "選択してください"}
+                </option>
+              ))}
+            </select>
+          </div>
+        </section>
+
+        {/* 構成・費用セクション */}
+        <section className="space-y-6">
+          <h4 className="text-primary dark:text-white font-bold text-base border-b border-slate-200 dark:border-slate-600 pb-2">
+            構成・費用
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="org-gender-ratio" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+                男女比
+              </label>
+              <Input
+                id="org-gender-ratio"
+                type="text"
+                value={genderRatio}
+                onChange={(e) => setGenderRatio(e.target.value)}
+                placeholder="例: 6:4（男子:女子）"
+                disabled={inputDisabled}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label htmlFor="org-grade-composition" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+                学年構成
+              </label>
+              <Input
+                id="org-grade-composition"
+                type="text"
+                value={gradeComposition}
+                onChange={(e) => setGradeComposition(e.target.value)}
+                placeholder="例: 1年40%、2年30%、3年20%、4年10%"
+                disabled={inputDisabled}
+                className="w-full"
+              />
+            </div>
+          </div>
+          <div>
+            <label htmlFor="org-location-detail" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              主な活動場所
+            </label>
+            <Input
+              id="org-location-detail"
+              type="text"
+              value={locationDetail}
+              onChange={(e) => setLocationDetail(e.target.value)}
+              placeholder="例: 駒場キャンパス 1号館"
+              disabled={inputDisabled}
+              className="w-full"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="org-fee-entry" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+                初期費用
+              </label>
+              <Input
+                id="org-fee-entry"
+                type="text"
+                value={feeEntry}
+                onChange={(e) => setFeeEntry(e.target.value)}
+                placeholder="例: 入会金3,000円"
+                disabled={inputDisabled}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label htmlFor="org-fee-annual" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+                年会費
+              </label>
+              <Input
+                id="org-fee-annual"
+                type="text"
+                value={feeAnnual}
+                onChange={(e) => setFeeAnnual(e.target.value)}
+                placeholder="例: 年12,000円"
                 disabled={inputDisabled}
                 className="w-full"
               />

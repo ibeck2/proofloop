@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useState, useCallback, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 const STUDENT_PATHS = ["/", "/search", "/classinfo", "/schedule", "/clubprofile", "/mypage"];
 
@@ -15,15 +16,36 @@ const MOBILE_NAV_LINKS = [
   { href: "/", label: "ホーム", icon: "home" },
   { href: "/search", label: "検索", icon: "search" },
   { href: "/schedule", label: "カレンダー", icon: "calendar_month" },
-  { href: "/clubprofile", label: "マイページ", icon: "person" },
+  { href: "/mypage", label: "マイページ", icon: "person" },
 ] as const;
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const showStudentNav = isStudentPath(pathname ?? "");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [session, setSession] = useState<{ user: { user_metadata?: { full_name?: string; name?: string } } } | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) =>
+      setSession(session ?? null)
+    );
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const displayName =
+    session?.user?.user_metadata?.full_name ||
+    session?.user?.user_metadata?.name ||
+    "ログイン中";
 
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
+
+  const handleLogout = useCallback(async () => {
+    await supabase.auth.signOut();
+    closeMenu();
+    router.push("/");
+  }, [router, closeMenu]);
 
   return (
     <>
@@ -51,19 +73,43 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               </nav>
               <div className="flex items-center gap-3">
-                <div className="hidden md:flex gap-3">
-                  <Link
-                    href="/login"
-                    className="inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors px-6 h-10 font-bold text-sm rounded-none"
-                  >
-                    ログイン
-                  </Link>
-                  <Link
-                    href="/signup"
-                    className="inline-flex items-center justify-center bg-accent text-white hover:bg-[#600000] transition-colors px-6 h-10 font-bold text-sm rounded-none"
-                  >
-                    新規登録
-                  </Link>
+                <div className="hidden md:flex items-center gap-3">
+                  {session ? (
+                    <>
+                      <Link
+                        href="/mypage"
+                        className="inline-flex items-center gap-2 text-text-grey hover:text-primary font-bold text-sm transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">person</span>
+                        マイページ
+                      </Link>
+                      <span className="text-text-grey text-sm font-medium flex items-center gap-2">
+                        ログイン中: {displayName}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        className="inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                      >
+                        ログアウト
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                      >
+                        ログイン
+                      </Link>
+                      <Link
+                        href="/signup"
+                        className="inline-flex items-center justify-center bg-accent text-white hover:bg-[#600000] transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                      >
+                        新規登録
+                      </Link>
+                    </>
+                  )}
                 </div>
                 {/* モバイル: ハンバーガーボタン */}
                 <button
@@ -123,20 +169,45 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 ))}
               </nav>
               <div className="px-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
-                <Link
-                  href="/login"
-                  onClick={closeMenu}
-                  className="w-full inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors py-3 font-bold text-sm rounded-none"
-                >
-                  ログイン
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={closeMenu}
-                  className="w-full inline-flex items-center justify-center bg-accent text-white hover:bg-[#600000] transition-colors py-3 font-bold text-sm rounded-none"
-                >
-                  新規登録
-                </Link>
+                {session ? (
+                  <>
+                    <Link
+                      href="/mypage"
+                      onClick={closeMenu}
+                      className="flex items-center gap-2 px-4 py-3 rounded-lg font-bold text-sm text-primary bg-primary/10"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">person</span>
+                      マイページ
+                    </Link>
+                    <div className="flex items-center gap-2 text-text-grey text-sm font-medium px-2 py-2">
+                      ログイン中: {displayName}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="w-full inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors py-3 font-bold text-sm rounded-none"
+                    >
+                      ログアウト
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={closeMenu}
+                      className="w-full inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors py-3 font-bold text-sm rounded-none"
+                    >
+                      ログイン
+                    </Link>
+                    <Link
+                      href="/signup"
+                      onClick={closeMenu}
+                      className="w-full inline-flex items-center justify-center bg-accent text-white hover:bg-[#600000] transition-colors py-3 font-bold text-sm rounded-none"
+                    >
+                      新規登録
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </aside>
@@ -158,7 +229,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="material-symbols-outlined">calendar_month</span>
             <span className="text-[10px] font-bold">カレンダー</span>
           </Link>
-          <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/clubprofile">
+          <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/mypage">
             <span className="material-symbols-outlined">person</span>
             <span className="text-[10px] font-bold">マイページ</span>
           </Link>

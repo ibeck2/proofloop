@@ -29,6 +29,9 @@ export type OrgSearchRow = {
   logo_url: string | null;
   member_count: string | null;
   activity_frequency: string | null;
+  is_intercollege: boolean | null;
+  target_grades: string | null;
+  selection_process: string | null;
 };
 
 export default function SearchPage() {
@@ -36,6 +39,8 @@ export default function SearchPage() {
   const initialQ = searchParams.get("q") ?? "";
   const [keyword, setKeyword] = useState(initialQ);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
+  const [universities, setUniversities] = useState<string[]>([]);
   const [orgs, setOrgs] = useState<OrgSearchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [favoriteIds, toggleFavorite] = useFavorites();
@@ -46,7 +51,7 @@ export default function SearchPage() {
 
     let query = supabase
       .from("organizations")
-      .select("id, name, university, category, description, logo_url, member_count, activity_frequency");
+      .select("id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process");
 
     if (trimmedKeyword) {
       const escaped = trimmedKeyword.replace(/'/g, "''");
@@ -55,6 +60,9 @@ export default function SearchPage() {
     }
     if (selectedCategories.length > 0) {
       query = query.in("category", selectedCategories);
+    }
+    if (selectedUniversities.length > 0) {
+      query = query.in("university", selectedUniversities);
     }
 
     const { data, error } = await query.order("name", { ascending: true });
@@ -66,11 +74,26 @@ export default function SearchPage() {
       setOrgs((data as OrgSearchRow[]) ?? []);
     }
     setLoading(false);
-  }, [keyword, selectedCategories]);
+  }, [keyword, selectedCategories, selectedUniversities]);
 
   useEffect(() => {
     fetchOrgs();
   }, [fetchOrgs]);
+
+  useEffect(() => {
+    const loadUniversities = async () => {
+      const { data } = await supabase
+        .from("organizations")
+        .select("university")
+        .not("university", "is", null);
+      const uniq = Array.from(new Set((data ?? []).map((r) => r.university).filter(Boolean))) as string[];
+      setUniversities((prev) => {
+        const merged = new Set([...prev, ...uniq]);
+        return Array.from(merged).sort();
+      });
+    };
+    loadUniversities();
+  }, []);
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
@@ -105,6 +128,31 @@ export default function SearchPage() {
                   団体名または活動内容で部分一致検索します
                 </p>
               </div>
+              {/* University Filter */}
+              {universities.length > 0 && (
+                <div className="border-b border-grey-custom/20 pb-6">
+                  <p className="text-navy font-bold mb-4">大学</p>
+                  <div className="space-y-3 max-h-48 overflow-y-auto">
+                    {universities.map((uni) => (
+                      <label key={uni} className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          className="w-5 h-5 border-grey-custom text-accent focus:ring-0 rounded"
+                          checked={selectedUniversities.includes(uni)}
+                          onChange={() =>
+                            setSelectedUniversities((prev) =>
+                              prev.includes(uni) ? prev.filter((u) => u !== uni) : [...prev, uni]
+                            )
+                          }
+                        />
+                        <span className="text-navy text-sm group-hover:text-accent transition-colors line-clamp-1">
+                          {uni}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* Category Filter */}
               <div className="pb-6">
                 <p className="text-navy font-bold mb-4">カテゴリ</p>
@@ -166,7 +214,7 @@ export default function SearchPage() {
               </div>
             ) : orgs.length === 0 ? (
               <p className="text-grey-custom text-center py-12 border border-grey-custom/20 rounded-lg bg-slate-50">
-                条件に一致する団体が見つかりませんでした。キーワードやカテゴリを変えて検索してみてください。
+                条件に一致する団体が見つかりませんでした。キーワード、大学、カテゴリを変えて検索してみてください。
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -183,6 +231,9 @@ export default function SearchPage() {
                       logoUrl={org.logo_url}
                       memberCount={org.member_count}
                       activityFrequency={org.activity_frequency}
+                      isIntercollege={org.is_intercollege}
+                      targetGrades={org.target_grades}
+                      selectionProcess={org.selection_process}
                       isFavorite={isFavorite}
                       onFavoriteClick={() => {
                         toggleFavorite(org.id);

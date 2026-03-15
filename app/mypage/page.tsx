@@ -2,8 +2,27 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Input, Button } from "@/components/ui";
+
+type ProfileRow = {
+  id: string;
+  email: string | null;
+  display_name: string | null;
+  university: string | null;
+  faculty: string | null;
+  enrollment_year: string | null;
+};
+
+const ENROLLMENT_YEAR_OPTIONS = [
+  { value: "", label: "選択してください" },
+  { value: "2026", label: "2026年度" },
+  { value: "2025", label: "2025年度" },
+  { value: "2024", label: "2024年度" },
+  { value: "2023", label: "2023年度" },
+  { value: "before", label: "それ以前" },
+];
 
 type UserRow = {
   id: string;
@@ -21,6 +40,13 @@ type OrgRow = {
 
 export default function MypagePage() {
   const [userName, setUserName] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [displayName, setDisplayName] = useState("");
+  const [university, setUniversity] = useState("");
+  const [faculty, setFaculty] = useState("");
+  const [enrollmentYear, setEnrollmentYear] = useState("");
+  const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchResults, setSearchResults] = useState<OrgRow[]>([]);
@@ -36,17 +62,34 @@ export default function MypagePage() {
         setIsLoading(false);
         return;
       }
-      const { data: rows, error: fetchError } = await supabase
+      setUserId(authUser.id);
+      setUserEmail(authUser.email ?? "");
+      const { data: userRows, error: userError } = await supabase
         .from("users")
         .select("id, name, email, role")
         .eq("id", authUser.id)
         .limit(1);
       if (cancelled) return;
-      if (!fetchError && rows?.length) {
-        const row = rows[0] as UserRow;
+      if (!userError && userRows?.length) {
+        const row = userRows[0] as UserRow;
         setUserName(row.name?.trim() || null);
       } else {
         setUserName(authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? null);
+      }
+      const { data: profileRows } = await supabase
+        .from("profiles")
+        .select("id, email, display_name, university, faculty, enrollment_year")
+        .eq("id", authUser.id)
+        .limit(1);
+      if (cancelled) return;
+      if (profileRows?.length) {
+        const p = profileRows[0] as ProfileRow;
+        setDisplayName(p.display_name ?? "");
+        setUniversity(p.university ?? "");
+        setFaculty(p.faculty ?? "");
+        setEnrollmentYear(p.enrollment_year ?? "");
+      } else {
+        setDisplayName(authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? "");
       }
       setIsLoading(false);
     })();
@@ -55,7 +98,32 @@ export default function MypagePage() {
     };
   }, []);
 
-  const displayName = userName && userName.length > 0 ? userName : "ゲスト";
+  const displayNameLabel = userName && userName.length > 0 ? userName : displayName || "ゲスト";
+
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+    setIsProfileSaving(true);
+    try {
+      const { error } = await supabase.from("profiles").upsert(
+        {
+          id: userId,
+          email: userEmail || null,
+          display_name: displayName.trim() || null,
+          university: university.trim() || null,
+          faculty: faculty.trim() || null,
+          enrollment_year: enrollmentYear.trim() || null,
+        },
+        { onConflict: "id" }
+      );
+      if (error) throw error;
+      toast.success("プロフィールを保存しました");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "保存に失敗しました");
+    } finally {
+      setIsProfileSaving(false);
+    }
+  };
 
   const runSearch = useCallback(async () => {
     const keyword = searchKeyword.trim();
@@ -104,9 +172,96 @@ export default function MypagePage() {
         ) : (
           <>
             <p className="text-slate-700 text-base mb-8">
-              <span className="font-bold text-primary">{displayName}</span>
+              <span className="font-bold text-primary">{displayNameLabel}</span>
               <span className="text-slate-600"> さん、こんにちは</span>
             </p>
+
+            {/* プロフィール情報 */}
+            <section className="mb-10">
+              <h2 className="text-primary text-lg font-bold mb-4">プロフィール情報</h2>
+              <form onSubmit={handleProfileSave} className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                <div className="space-y-5">
+                  <div>
+                    <label htmlFor="profile-email" className="block text-slate-700 font-bold text-sm mb-2">
+                      メールアドレス
+                    </label>
+                    <Input
+                      id="profile-email"
+                      type="email"
+                      value={userEmail}
+                      readOnly
+                      disabled
+                      className="w-full bg-slate-50 text-slate-600 cursor-not-allowed"
+                    />
+                    <p className="text-slate-500 text-xs mt-1">Supabase Authで登録したメールアドレスです</p>
+                  </div>
+                  <div>
+                    <label htmlFor="profile-display-name" className="block text-slate-700 font-bold text-sm mb-2">
+                      氏名 / ニックネーム
+                    </label>
+                    <Input
+                      id="profile-display-name"
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="例: 山田 太郎"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="profile-university" className="block text-slate-700 font-bold text-sm mb-2">
+                      大学名
+                    </label>
+                    <Input
+                      id="profile-university"
+                      type="text"
+                      value={university}
+                      onChange={(e) => setUniversity(e.target.value)}
+                      placeholder="例: 東京大学"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="profile-faculty" className="block text-slate-700 font-bold text-sm mb-2">
+                      学部・学科
+                    </label>
+                    <Input
+                      id="profile-faculty"
+                      type="text"
+                      value={faculty}
+                      onChange={(e) => setFaculty(e.target.value)}
+                      placeholder="例: 文学部 心理学科"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="profile-enrollment-year" className="block text-slate-700 font-bold text-sm mb-2">
+                      入学年度
+                    </label>
+                    <select
+                      id="profile-enrollment-year"
+                      value={enrollmentYear}
+                      onChange={(e) => setEnrollmentYear(e.target.value)}
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
+                    >
+                      {ENROLLMENT_YEAR_OPTIONS.map((opt) => (
+                        <option key={opt.value || "blank"} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  className="mt-6 w-full"
+                  disabled={isProfileSaving}
+                >
+                  {isProfileSaving ? "保存中..." : "保存する"}
+                </Button>
+              </form>
+            </section>
 
             {/* 自分の所属団体を探す */}
             <section className="mb-10">

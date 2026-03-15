@@ -31,6 +31,14 @@ export default function ClubSidebar() {
               <span className="material-symbols-outlined" style={{ fontSize: 24 }}>how_to_vote</span>
               <span className="text-sm font-medium">新歓DX・選考管理</span>
             </Link>
+            <Link className={linkClass("/clubevents", true)} href="/clubevents">
+              <span className="material-symbols-outlined" style={{ fontSize: 24 }}>event</span>
+              <span className="text-sm font-medium">イベント管理</span>
+            </Link>
+            <Link className={linkClass("/clubphotos", true)} href="/clubphotos">
+              <span className="material-symbols-outlined" style={{ fontSize: 24 }}>photo_library</span>
+              <span className="text-sm font-medium">フォトギャラリー管理</span>
+            </Link>
             <Link className={linkClass("/clubopenmission", true)} href="/clubopenmission">
               <span className="material-symbols-outlined" style={{ fontSize: 24 }}>task_alt</span>
               <span className="text-sm font-medium">ミッションボード</span>
