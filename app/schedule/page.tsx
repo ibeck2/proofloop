@@ -1,246 +1,433 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Input, Textarea } from "@/components/ui";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
+import { Button } from "@/components/ui";
+
+type EventWithOrg = {
+  id: string;
+  title: string | null;
+  event_date: string;
+  location: string | null;
+  description: string | null;
+  organization_id: string;
+  organizations: { name: string | null } | null;
+};
+
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
+
+function formatEventTime(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatEventDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("ja-JP", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function isSameDay(iso: string, year: number, month: number, day: number) {
+  const d = new Date(iso);
+  return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+}
 
 export default function SchedulePage() {
-  const [eventTitle, setEventTitle] = useState("");
-  const [eventDate, setEventDate] = useState("");
-  const [eventTime, setEventTime] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
+  const [events, setEvents] = useState<EventWithOrg[]>([]);
+  const [savedEventIds, setSavedEventIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const n = new Date();
+    return { year: n.getFullYear(), month: n.getMonth() };
+  });
+  const [selectedDay, setSelectedDay] = useState<{ year: number; month: number; day: number } | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const handleEventSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      eventTitle: eventTitle.trim(),
-      eventDate: eventDate.trim(),
-      eventTime: eventTime.trim(),
-      location: location.trim(),
-      description: description.trim(),
+  const fetchEvents = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("events")
+      .select(
+        `
+        id,
+        title,
+        event_date,
+        location,
+        description,
+        organization_id,
+        organizations ( name )
+      `
+      )
+      .order("event_date", { ascending: true });
+    if (error) {
+      console.error("schedule events fetch error:", error);
+      setEvents([]);
+      return;
+    }
+    setEvents((data as EventWithOrg[]) ?? []);
+  }, []);
+
+  const fetchSavedIds = useCallback(async (uid: string) => {
+    const { data, error } = await supabase
+      .from("saved_events")
+      .select("event_id")
+      .eq("user_id", uid);
+    if (error) {
+      console.error("saved_events fetch error:", error);
+      return;
+    }
+    const ids = (data ?? []).map((r: { event_id: string }) => r.event_id);
+    setSavedEventIds(ids);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (session?.user?.id) {
+        setUserId(session.user.id);
+        await fetchSavedIds(session.user.id);
+      }
+      await fetchEvents();
+      if (cancelled) return;
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
     };
-    console.log("[イベント登録 送信] 送信データ:", JSON.stringify(payload, null, 2));
-    setEventTitle("");
-    setEventDate("");
-    setEventTime("");
-    setLocation("");
-    setDescription("");
+  }, [fetchEvents, fetchSavedIds]);
+
+  const toggleSave = async (eventId: string) => {
+    if (!userId) {
+      toast.error("保存するにはログインしてください");
+      return;
+    }
+    setTogglingId(eventId);
+    const isSaved = savedEventIds.includes(eventId);
+    try {
+      if (isSaved) {
+        const { error } = await supabase
+          .from("saved_events")
+          .delete()
+          .eq("user_id", userId)
+          .eq("event_id", eventId);
+        if (error) throw error;
+        setSavedEventIds((prev) => prev.filter((id) => id !== eventId));
+        toast.success("保存を解除しました");
+      } else {
+        const { error } = await supabase.from("saved_events").insert({
+          user_id: userId,
+          event_id: eventId,
+        });
+        if (error) throw error;
+        setSavedEventIds((prev) => [...prev, eventId]);
+        toast.success("イベントを保存しました");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "保存の更新に失敗しました");
+    } finally {
+      setTogglingId(null);
+    }
   };
 
+  const eventsForSelectedDay =
+    selectedDay && events.filter((e) => isSameDay(e.event_date, selectedDay.year, selectedDay.month, selectedDay.day));
+
+  const calendarDays = (() => {
+    const { year, month } = calendarMonth;
+    const first = new Date(year, month, 1);
+    const last = new Date(year, month + 1, 0);
+    const startPad = first.getDay();
+    const daysInMonth = last.getDate();
+    const totalCells = Math.ceil((startPad + daysInMonth) / 7) * 7;
+    const result: { day: number | null; date: Date | null }[] = [];
+    for (let i = 0; i < totalCells; i++) {
+      if (i < startPad) {
+        result.push({ day: null, date: null });
+      } else if (i < startPad + daysInMonth) {
+        const day = i - startPad + 1;
+        result.push({ day, date: new Date(year, month, day) });
+      } else {
+        result.push({ day: null, date: null });
+      }
+    }
+    return result;
+  })();
+
+  const monthLabel = `${calendarMonth.year}年${calendarMonth.month + 1}月`;
+
+  if (loading) {
+    return (
+      <div className="bg-[#f5f5f7] text-slate-900 min-h-screen pb-20 md:pb-8">
+        <main className="max-w-[900px] mx-auto px-4 py-8">
+          <h1 className="text-primary text-2xl font-bold mb-6">イベントスケジュール</h1>
+          <div className="flex gap-4 mb-6">
+            <div className="h-10 w-24 bg-slate-200 rounded animate-pulse" />
+            <div className="h-10 w-24 bg-slate-200 rounded animate-pulse" />
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-28 bg-slate-100 rounded-lg animate-pulse" />
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen pb-20 md:pb-0" style={{ backgroundColor: "#f5f7f8" }}>
-      <main className="max-w-[800px] mx-auto px-4 pb-24">
-        {/* 新規イベント登録フォーム */}
-        <section className="mt-6 mb-8 p-6 bg-white dark:bg-slate-800 border border-grey-custom/20 rounded-none">
-          <h2 className="text-lg font-bold text-primary mb-4">新規イベントを登録</h2>
-          <form onSubmit={handleEventSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">イベント名</label>
-              <Input
-                value={eventTitle}
-                onChange={(e) => setEventTitle(e.target.value)}
-                placeholder="例: 新歓説明会"
-                className="bg-white dark:bg-slate-700"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">日付</label>
-                <Input
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  className="bg-white dark:bg-slate-700"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">開始時刻</label>
-                <Input
-                  type="time"
-                  value={eventTime}
-                  onChange={(e) => setEventTime(e.target.value)}
-                  className="bg-white dark:bg-slate-700"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">場所</label>
-              <Input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="例: 学生館 1号室"
-                className="bg-white dark:bg-slate-700"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">説明（任意）</label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="イベントの詳細を入力"
-                className="min-h-[80px] bg-white dark:bg-slate-700"
-              />
-            </div>
-            <Button type="submit" variant="primary" className="w-full sm:w-auto">
-              イベントを登録
-            </Button>
-          </form>
-        </section>
-        {/* View Toggle Controls */}
-        <div className="flex border-b border-grey-custom/20">
-          <button className="flex-1 py-4 text-grey-custom font-medium hover:bg-grey-custom/5 transition-colors">
-            月間表示
-          </button>
-          <button className="flex-1 py-4 text-primary font-bold border-b-2 border-primary bg-primary/5">
+    <div className="bg-[#f5f5f7] text-slate-900 min-h-screen pb-20 md:pb-8">
+      <main className="max-w-[900px] mx-auto px-4 py-8">
+        <h1 className="text-primary text-2xl font-bold mb-6">イベントスケジュール</h1>
+
+        {/* View Toggle */}
+        <div className="flex border-b border-slate-200 mb-6">
+          <button
+            type="button"
+            onClick={() => setViewMode("list")}
+            className={`flex-1 py-3 px-4 font-bold text-sm transition-colors ${
+              viewMode === "list"
+                ? "text-primary border-b-2 border-primary bg-primary/5"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
             リスト表示
           </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("calendar")}
+            className={`flex-1 py-3 px-4 font-bold text-sm transition-colors ${
+              viewMode === "calendar"
+                ? "text-primary border-b-2 border-primary bg-primary/5"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            月間表示
+          </button>
         </div>
-        {/* Date Section: 四月五日 月 */}
-        <section className="mt-8">
-          <div className="px-4 py-6">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">四月五日 月</h2>
-            <div className="h-px bg-grey-custom w-full" />
-          </div>
-          <div className="flex flex-col">
-            {/* Event Item 1 */}
-            <div className="flex items-start px-4 py-8 hover:bg-white dark:hover:bg-slate-800 transition-colors">
-              <div className="w-20 shrink-0">
-                <span className="text-primary font-bold text-lg">10:00</span>
+
+        {viewMode === "list" && (
+          <section className="space-y-4">
+            {events.length === 0 ? (
+              <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
+                <span className="material-symbols-outlined text-5xl text-slate-300">event_busy</span>
+                <p className="text-slate-600 mt-2">現在予定されているイベントはありません</p>
               </div>
-              <div className="flex-1 px-4">
-                <p className="text-primary font-bold text-sm mb-1 uppercase tracking-wider">テニスサークル</p>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">新歓説明会</h3>
-                <div className="flex items-center gap-1 text-grey-custom">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  <span className="text-sm">学生館</span>
+            ) : (
+              events.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:border-primary/20 transition-colors"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-stretch">
+                    <Link
+                      href={`/organizations/${ev.organization_id}`}
+                      className="flex-1 p-5 flex flex-col gap-2 min-w-0"
+                    >
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        {ev.organizations?.name ?? "団体"}
+                      </span>
+                      <h3 className="text-primary font-bold text-lg">{ev.title ?? "（タイトルなし）"}</h3>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[18px]">schedule</span>
+                          {formatEventDate(ev.event_date)}
+                        </span>
+                        {ev.location && (
+                          <span className="flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[18px]">
+                              {ev.location.startsWith("http") ? "videocam" : "location_on"}
+                            </span>
+                            {ev.location.length > 50 ? ev.location.slice(0, 50) + "…" : ev.location}
+                          </span>
+                        )}
+                      </div>
+                      {ev.description && (
+                        <p className="text-slate-600 text-sm line-clamp-2">{ev.description}</p>
+                      )}
+                    </Link>
+                    <div className="flex items-center px-4 py-3 sm:py-5 border-t sm:border-t-0 sm:border-l border-slate-100">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleSave(ev.id);
+                        }}
+                        disabled={togglingId === ev.id}
+                        className="p-2 rounded-full hover:bg-slate-100 transition-colors disabled:opacity-50"
+                        aria-label={savedEventIds.includes(ev.id) ? "保存を解除" : "イベントを保存"}
+                      >
+                        <span
+                          className={`material-symbols-outlined text-2xl ${
+                            savedEventIds.includes(ev.id) ? "text-blue-600 !font-[500]" : "text-slate-400"
+                          }`}
+                          style={savedEventIds.includes(ev.id) ? { fontVariationSettings: '"FILL" 1' } : undefined}
+                        >
+                          {savedEventIds.includes(ev.id) ? "bookmark" : "bookmark_border"}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="shrink-0 text-grey-custom">
-                <button className="p-2 hover:bg-grey-custom/10">
-                  <span className="material-symbols-outlined">calendar_add_on</span>
-                </button>
-              </div>
+              ))
+            )}
+          </section>
+        )}
+
+        {viewMode === "calendar" && (
+          <section className="bg-white border border-slate-200 rounded-lg p-4 md:p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="shrink-0"
+                onClick={() =>
+                  setCalendarMonth((prev) =>
+                    prev.month === 0 ? { year: prev.year - 1, month: 11 } : { year: prev.year, month: prev.month - 1 }
+                  )
+                }
+              >
+                <span className="material-symbols-outlined text-xl">chevron_left</span>
+              </Button>
+              <h2 className="text-lg font-bold text-slate-800">{monthLabel}</h2>
+              <Button
+                type="button"
+                variant="outline"
+                className="shrink-0"
+                onClick={() =>
+                  setCalendarMonth((prev) =>
+                    prev.month === 11 ? { year: prev.year + 1, month: 0 } : { year: prev.year, month: prev.month + 1 }
+                  )
+                }
+              >
+                <span className="material-symbols-outlined text-xl">chevron_right</span>
+              </Button>
             </div>
-            {/* Event Item 2 */}
-            <div className="flex items-start px-4 py-8 hover:bg-white dark:hover:bg-slate-800 transition-colors border-t border-grey-custom/10">
-              <div className="w-20 shrink-0">
-                <span className="text-primary font-bold text-lg">13:00</span>
-              </div>
-              <div className="flex-1 px-4">
-                <p className="text-primary font-bold text-sm mb-1 uppercase tracking-wider">軽音部</p>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">ライブ演奏会</h3>
-                <div className="flex items-center gap-1 text-grey-custom">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  <span className="text-sm">第一ホール</span>
+            <div className="grid grid-cols-7 gap-px bg-slate-200 rounded overflow-hidden">
+              {WEEKDAYS.map((w) => (
+                <div
+                  key={w}
+                  className="bg-slate-50 py-2 text-center text-xs font-bold text-slate-600"
+                >
+                  {w}
                 </div>
-              </div>
-              <div className="shrink-0 text-grey-custom">
-                <button className="p-2 hover:bg-grey-custom/10">
-                  <span className="material-symbols-outlined">calendar_add_on</span>
-                </button>
-              </div>
+              ))}
+              {calendarDays.map((cell, i) => {
+                const isSelected =
+                  selectedDay &&
+                  cell.date &&
+                  selectedDay.year === cell.date.getFullYear() &&
+                  selectedDay.month === cell.date.getMonth() &&
+                  selectedDay.day === cell.date.getDate();
+                const dayEvents =
+                  cell.date && events.filter((e) => isSameDay(e.event_date, calendarMonth.year, calendarMonth.month, cell.day!));
+                return (
+                  <div
+                    key={i}
+                    className={`min-h-[80px] md:min-h-[100px] bg-white p-1 ${
+                      !cell.date ? "bg-slate-50/50" : ""
+                    } ${isSelected ? "ring-2 ring-primary ring-inset" : ""}`}
+                  >
+                    {cell.date && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedDay({
+                              year: calendarMonth.year,
+                              month: calendarMonth.month,
+                              day: cell.day!,
+                            })
+                          }
+                          className={`w-full text-left text-sm font-bold mb-1 ${
+                            isSelected ? "text-primary" : "text-slate-700"
+                          }`}
+                        >
+                          {cell.day}
+                        </button>
+                        <div className="space-y-0.5">
+                          {dayEvents.slice(0, 3).map((ev) => (
+                            <Link
+                              key={ev.id}
+                              href={`/organizations/${ev.organization_id}`}
+                              className="block truncate text-[10px] md:text-xs bg-primary/10 text-primary rounded px-1 py-0.5 hover:bg-primary/20"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {formatEventTime(ev.event_date)} {ev.title ?? ""}
+                            </Link>
+                          ))}
+                          {dayEvents.length > 3 && (
+                            <span className="text-[10px] text-slate-500">+{dayEvents.length - 3}</span>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            {/* Event Item 3 */}
-            <div className="flex items-start px-4 py-8 hover:bg-white dark:hover:bg-slate-800 transition-colors border-t border-grey-custom/10">
-              <div className="w-20 shrink-0">
-                <span className="text-primary font-bold text-lg">16:30</span>
+
+            {selectedDay && eventsForSelectedDay && eventsForSelectedDay.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-slate-200">
+                <h3 className="text-sm font-bold text-slate-700 mb-3">
+                  {selectedDay.year}年{selectedDay.month + 1}月{selectedDay.day}日のイベント
+                </h3>
+                <ul className="space-y-3">
+                  {eventsForSelectedDay.map((ev) => (
+                    <li key={ev.id} className="flex items-start gap-3">
+                      <span className="text-primary font-bold text-sm shrink-0">
+                        {formatEventTime(ev.event_date)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/organizations/${ev.organization_id}`}
+                          className="text-primary font-bold hover:underline"
+                        >
+                          {ev.title ?? "（タイトルなし）"}
+                        </Link>
+                        <p className="text-slate-600 text-sm">{ev.organizations?.name ?? "団体"}</p>
+                        {ev.location && (
+                          <p className="text-slate-500 text-xs mt-0.5">{ev.location}</p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggleSave(ev.id)}
+                        disabled={togglingId === ev.id}
+                        className="p-1.5 shrink-0 rounded-full hover:bg-slate-100 disabled:opacity-50"
+                        aria-label={savedEventIds.includes(ev.id) ? "保存を解除" : "保存"}
+                      >
+                        <span
+                          className={`material-symbols-outlined text-xl ${
+                            savedEventIds.includes(ev.id) ? "text-blue-600 !font-[500]" : "text-slate-400"
+                          }`}
+                          style={savedEventIds.includes(ev.id) ? { fontVariationSettings: '"FILL" 1' } : undefined}
+                        >
+                          {savedEventIds.includes(ev.id) ? "bookmark" : "bookmark_border"}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex-1 px-4">
-                <p className="text-primary font-bold text-sm mb-1 uppercase tracking-wider">茶道研究会</p>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">体験お茶会</h3>
-                <div className="flex items-center gap-1 text-grey-custom">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  <span className="text-sm">和室二号</span>
-                </div>
+            )}
+            {selectedDay && eventsForSelectedDay?.length === 0 && (
+              <div className="mt-6 pt-4 border-t border-slate-200 text-center text-slate-500 text-sm">
+                この日のイベントはありません
               </div>
-              <div className="shrink-0 text-grey-custom">
-                <button className="p-2 hover:bg-grey-custom/10">
-                  <span className="material-symbols-outlined">calendar_add_on</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-        {/* Date Section: 四月六日 火 */}
-        <section className="mt-8">
-          <div className="px-4 py-6">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">四月六日 火</h2>
-            <div className="h-px bg-grey-custom w-full" />
-          </div>
-          <div className="flex flex-col">
-            {/* Event Item 4 */}
-            <div className="flex items-start px-4 py-8 hover:bg-white dark:hover:bg-slate-800 transition-colors">
-              <div className="w-20 shrink-0">
-                <span className="text-primary font-bold text-lg">11:00</span>
-              </div>
-              <div className="flex-1 px-4">
-                <p className="text-primary font-bold text-sm mb-1 uppercase tracking-wider">起業サークル</p>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">交流会</h3>
-                <div className="flex items-center gap-1 text-grey-custom">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  <span className="text-sm">オンライン</span>
-                </div>
-              </div>
-              <div className="shrink-0 text-grey-custom">
-                <button className="p-2 hover:bg-grey-custom/10">
-                  <span className="material-symbols-outlined">calendar_add_on</span>
-                </button>
-              </div>
-            </div>
-            {/* Event Item 5 */}
-            <div className="flex items-start px-4 py-8 hover:bg-white dark:hover:bg-slate-800 transition-colors border-t border-grey-custom/10">
-              <div className="w-20 shrink-0">
-                <span className="text-primary font-bold text-lg">14:00</span>
-              </div>
-              <div className="flex-1 px-4">
-                <p className="text-primary font-bold text-sm mb-1 uppercase tracking-wider">映画制作サークル</p>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">上映会および説明会</h3>
-                <div className="flex items-center gap-1 text-grey-custom">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  <span className="text-sm">学生会館視聴覚室</span>
-                </div>
-              </div>
-              <div className="shrink-0 text-grey-custom">
-                <button className="p-2 hover:bg-grey-custom/10">
-                  <span className="material-symbols-outlined">calendar_add_on</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-        {/* Date Section: 四月七日 水 */}
-        <section className="mt-8">
-          <div className="px-4 py-6">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">四月七日 水</h2>
-            <div className="h-px bg-grey-custom w-full" />
-          </div>
-          <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-            <span className="material-symbols-outlined text-grey-custom/30 text-6xl mb-4">event_busy</span>
-            <p className="text-grey-custom font-medium">この日の予定はありません</p>
-          </div>
-        </section>
+            )}
+          </section>
+        )}
       </main>
-      {/* Bottom Navigation (Mobile/Desktop Fixed) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-grey-custom/20 z-50">
-        <div className="max-w-[800px] mx-auto flex">
-          <a className="flex-1 flex flex-col items-center justify-center py-3 text-grey-custom hover:text-primary transition-colors" href="/">
-            <span className="material-symbols-outlined">home</span>
-            <span className="text-[10px] mt-1 font-bold">ホーム</span>
-          </a>
-          <a className="flex-1 flex flex-col items-center justify-center py-3 text-grey-custom hover:text-primary transition-colors" href="/search">
-            <span className="material-symbols-outlined">search</span>
-            <span className="text-[10px] mt-1 font-bold">検索</span>
-          </a>
-          <a className="flex-1 flex flex-col items-center justify-center py-3 text-primary bg-primary/5 transition-colors" href="/schedule">
-            <span className="material-symbols-outlined">calendar_today</span>
-            <span className="text-[10px] mt-1 font-bold">カレンダー</span>
-          </a>
-          <a className="flex-1 flex flex-col items-center justify-center py-3 text-grey-custom hover:text-primary transition-colors" href="#">
-            <span className="material-symbols-outlined">person</span>
-            <span className="text-[10px] mt-1 font-bold">マイページ</span>
-          </a>
-        </div>
-      </nav>
     </div>
   );
 }

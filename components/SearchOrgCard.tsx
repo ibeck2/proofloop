@@ -74,11 +74,11 @@ export default function SearchOrgCard({
             onFavoriteClick();
           }}
           className={`absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center bg-white/90 rounded-full shadow-sm transition-colors ${
-            isFavorite ? "text-accent" : "text-grey-custom hover:text-accent"
+            isFavorite ? "text-rose-500" : "text-grey-custom hover:text-rose-500"
           }`}
         >
           <span
-            className="material-symbols-outlined text-xl"
+            className={`material-symbols-outlined text-xl ${isFavorite ? "text-rose-500" : ""}`}
             style={isFavorite ? { fontVariationSettings: "'FILL' 1" } : undefined}
           >
             favorite

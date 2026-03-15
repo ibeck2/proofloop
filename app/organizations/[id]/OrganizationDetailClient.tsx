@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui";
+import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 
 export type EventRow = {
   id: string;
@@ -31,6 +32,14 @@ export type ReviewRow = {
   created_at: string;
 };
 
+export type SelectionFlowStep = {
+  name: string;
+  date_type: "pin" | "deadline" | "period" | "none";
+  date_value: string;
+  description: string;
+  url: string;
+};
+
 export type OrgDetailData = {
   id: string;
   name: string | null;
@@ -43,6 +52,7 @@ export type OrgDetailData = {
   is_intercollege: boolean | null;
   target_grades: string | null;
   selection_process: string | null;
+  selection_flow: SelectionFlowStep[] | null;
   gender_ratio: string | null;
   grade_composition: string | null;
   location_detail: string | null;
@@ -53,6 +63,45 @@ export type OrgDetailData = {
   line_url: string | null;
   website_url: string | null;
 };
+
+function getTargetGradesDisplay(raw: string | null): string | null {
+  if (!raw || !raw.trim()) return null;
+  let arr: string[];
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    arr = Array.isArray(parsed) ? parsed.map(String) : raw.split(",").map((s) => s.trim()).filter(Boolean);
+  } catch {
+    arr = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  if (arr.length === 0) return null;
+  const hasB1 = arr.includes("学部1年");
+  const hasB2 = arr.includes("学部2年");
+  const hasB3 = arr.includes("学部3年");
+  const hasB4 = arr.includes("学部4年");
+  const hasM1 = arr.includes("大学院1年");
+  const hasM2 = arr.includes("大学院2年");
+  const allUnder = hasB1 && hasB2 && hasB3 && hasB4 && !hasM1 && !hasM2;
+  const allSix = hasB1 && hasB2 && hasB3 && hasB4 && hasM1 && hasM2;
+  const onlyGrad = !hasB1 && !hasB2 && !hasB3 && !hasB4 && hasM1 && hasM2;
+  if (allUnder) return "学部生対象";
+  if (allSix) return "学部生・院生全員対象";
+  if (onlyGrad) return "院生対象";
+  return arr.join("・") + "のみ";
+}
+
+function formatStepDate(step: SelectionFlowStep): string {
+  if (step.date_type === "none" || !step.date_value.trim()) return "";
+  const v = step.date_value.trim();
+  if (step.date_type === "pin") {
+    const d = new Date(v);
+    if (!Number.isNaN(d.getTime()))
+      return d.toLocaleString("ja-JP", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    return v;
+  }
+  if (step.date_type === "deadline") return v + "まで";
+  if (step.date_type === "period") return v + "頃";
+  return v;
+}
 
 const TABS = [
   { id: "overview", label: "概要・基本情報" },
@@ -79,6 +128,8 @@ export default function OrganizationDetailClient({
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const { savedOrgIds, toggle: toggleSavedOrg, togglingId } = useSavedOrganizations();
+  const isSavedOrg = savedOrgIds.includes(org.id);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session ?? null));
@@ -159,8 +210,24 @@ export default function OrganizationDetailClient({
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-navy mb-2">{name}</h1>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-start gap-3 mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-navy">{name}</h1>
+              <button
+                type="button"
+                onClick={() => toggleSavedOrg(org.id)}
+                disabled={togglingId === org.id}
+                aria-label={isSavedOrg ? "お気に入りから削除" : "お気に入りに追加"}
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-colors disabled:opacity-50"
+              >
+                <span
+                  className={`material-symbols-outlined text-2xl ${isSavedOrg ? "text-rose-500" : "text-slate-400"}`}
+                  style={isSavedOrg ? { fontVariationSettings: '"FILL" 1' } : undefined}
+                >
+                  favorite
+                </span>
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-0">
               {org.university && (
                 <span className="text-sm px-2.5 py-0.5 border border-slate-300 text-slate-700 bg-slate-50 rounded">
                   {org.university}
@@ -176,9 +243,9 @@ export default function OrganizationDetailClient({
                   {org.is_intercollege ? "インカレ" : "学内団体"}
                 </span>
               )}
-              {org.target_grades && (
+              {getTargetGradesDisplay(org.target_grades) && (
                 <span className="text-xs px-2.5 py-0.5 font-medium border border-emerald-500/60 text-emerald-700 bg-emerald-50 rounded">
-                  {org.target_grades}
+                  {getTargetGradesDisplay(org.target_grades)}
                 </span>
               )}
               {org.selection_process && (
@@ -365,10 +432,10 @@ export default function OrganizationDetailClient({
               className="transition-opacity duration-200"
             >
               <div className="space-y-4 mb-6">
-                {org.target_grades && (
+                {getTargetGradesDisplay(org.target_grades) && (
                   <div>
                     <h3 className="text-sm font-bold text-slate-600 mb-1">対象学年</h3>
-                    <p className="text-slate-700">{org.target_grades}</p>
+                    <p className="text-slate-700">{getTargetGradesDisplay(org.target_grades)}</p>
                   </div>
                 )}
                 {org.selection_process && (
@@ -378,6 +445,50 @@ export default function OrganizationDetailClient({
                   </div>
                 )}
               </div>
+              {org.selection_process === "選考あり" && org.selection_flow && Array.isArray(org.selection_flow) && org.selection_flow.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-base font-bold text-navy mb-4">選考フロー</h3>
+                  <div className="relative">
+                    {org.selection_flow.map((step, index) => (
+                      <div key={index} className="flex gap-4">
+                        <div className="flex flex-col items-center shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0">
+                            {index + 1}
+                          </div>
+                          {index < org.selection_flow!.length - 1 && (
+                            <div className="w-0.5 flex-1 min-h-[24px] bg-slate-200 my-1" />
+                          )}
+                        </div>
+                        <div className="pb-6 flex-1 min-w-0">
+                          <div className="p-4 rounded-lg border border-slate-200 bg-slate-50/50">
+                            <h4 className="font-bold text-navy mb-1">{step.name || "（ステップ名）"}</h4>
+                            {formatStepDate(step) && (
+                              <p className="text-sm text-slate-600 flex items-center gap-1 mb-2">
+                                <span className="material-symbols-outlined text-[16px]">schedule</span>
+                                {formatStepDate(step)}
+                              </p>
+                            )}
+                            {step.description && (
+                              <p className="text-sm text-slate-700 whitespace-pre-wrap mb-2">{step.description}</p>
+                            )}
+                            {step.url && (
+                              <a
+                                href={step.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-sm font-bold text-accent hover:underline"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">link</span>
+                                関連リンクを開く
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="mb-6">
                 <h3 className="text-base font-bold text-navy mb-3">予定イベント</h3>
                 {events.length === 0 ? (

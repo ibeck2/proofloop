@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import SearchOrgCard from "@/components/SearchOrgCard";
 import { Button, Input } from "@/components/ui";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 import { supabase } from "@/lib/supabase";
 
 const CATEGORIES = [
@@ -43,7 +42,7 @@ export default function SearchPage() {
   const [universities, setUniversities] = useState<string[]>([]);
   const [orgs, setOrgs] = useState<OrgSearchRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [favoriteIds, toggleFavorite] = useFavorites();
+  const { savedOrgIds, toggle: toggleSavedOrg } = useSavedOrganizations();
 
   const fetchOrgs = useCallback(async () => {
     setLoading(true);
@@ -218,30 +217,24 @@ export default function SearchPage() {
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                {orgs.map((org) => {
-                  const isFavorite = favoriteIds.includes(org.id);
-                  return (
-                    <SearchOrgCard
-                      key={org.id}
-                      id={org.id}
-                      name={org.name ?? "（団体名なし）"}
-                      university={org.university}
-                      category={org.category}
-                      description={org.description}
-                      logoUrl={org.logo_url}
-                      memberCount={org.member_count}
-                      activityFrequency={org.activity_frequency}
-                      isIntercollege={org.is_intercollege}
-                      targetGrades={org.target_grades}
-                      selectionProcess={org.selection_process}
-                      isFavorite={isFavorite}
-                      onFavoriteClick={() => {
-                        toggleFavorite(org.id);
-                        toast.success(isFavorite ? "お気に入りから削除しました" : "お気に入りに追加しました");
-                      }}
-                    />
-                  );
-                })}
+                {orgs.map((org) => (
+                  <SearchOrgCard
+                    key={org.id}
+                    id={org.id}
+                    name={org.name ?? "（団体名なし）"}
+                    university={org.university}
+                    category={org.category}
+                    description={org.description}
+                    logoUrl={org.logo_url}
+                    memberCount={org.member_count}
+                    activityFrequency={org.activity_frequency}
+                    isIntercollege={org.is_intercollege}
+                    targetGrades={org.target_grades}
+                    selectionProcess={org.selection_process}
+                    isFavorite={savedOrgIds.includes(org.id)}
+                    onFavoriteClick={() => toggleSavedOrg(org.id)}
+                  />
+                ))}
               </div>
             )}
           </section>

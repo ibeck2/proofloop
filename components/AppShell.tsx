@@ -24,20 +24,51 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const showStudentNav = isStudentPath(pathname ?? "");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [session, setSession] = useState<{ user: { user_metadata?: { full_name?: string; name?: string } } } | null>(null);
+  const [session, setSession] = useState<{
+    user: { id: string; email?: string; user_metadata?: { full_name?: string; name?: string } };
+  } | null>(null);
+  const [profileDisplayName, setProfileDisplayName] = useState<string | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session ?? null));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) =>
-      setSession(session ?? null)
-    );
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session ?? null);
+      setProfileDisplayName(null);
+      setProfileLoaded(false);
+    });
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setProfileLoaded(true);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data: rows } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", session.user.id)
+        .limit(1);
+      if (cancelled) return;
+      const name = (rows?.[0] as { display_name: string | null } | undefined)?.display_name?.trim() || null;
+      setProfileDisplayName(name);
+      setProfileLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
+
   const displayName =
-    session?.user?.user_metadata?.full_name ||
-    session?.user?.user_metadata?.name ||
-    "ログイン中";
+    profileDisplayName ??
+    session?.user?.user_metadata?.full_name ??
+    session?.user?.user_metadata?.name ??
+    (session?.user?.email ? `(${session.user.email})` : null) ??
+    "ゲスト";
+  const loginLabel = `ログイン中: ${displayName}さん`;
 
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
 
@@ -58,7 +89,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
           {showStudentNav && (
             <>
-              <nav className="hidden md:flex items-center gap-8 text-text-grey font-bold text-sm">
+              <nav className="hidden md:flex items-center gap-6 md:gap-8 text-text-grey font-bold text-sm shrink-0">
                 <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/">
                   <span className="material-symbols-outlined text-[20px]">home</span>
                   ホーム
@@ -71,20 +102,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   <span className="material-symbols-outlined text-[20px]">calendar_month</span>
                   カレンダー
                 </Link>
+                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/mypage">
+                  <span className="material-symbols-outlined text-[20px]">person</span>
+                  マイページ
+                </Link>
               </nav>
               <div className="flex items-center gap-3">
                 <div className="hidden md:flex items-center gap-3">
                   {session ? (
                     <>
-                      <Link
-                        href="/mypage"
-                        className="inline-flex items-center gap-2 text-text-grey hover:text-primary font-bold text-sm transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">person</span>
-                        マイページ
-                      </Link>
-                      <span className="text-text-grey text-sm font-medium flex items-center gap-2">
-                        ログイン中: {displayName}
+                      <span className="text-text-grey text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                        {profileLoaded ? loginLabel : "ログイン中: ゲストさん"}
                       </span>
                       <button
                         type="button"
@@ -180,7 +208,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       マイページ
                     </Link>
                     <div className="flex items-center gap-2 text-text-grey text-sm font-medium px-2 py-2">
-                      ログイン中: {displayName}
+                      {profileLoaded ? loginLabel : "ログイン中: ゲストさん"}
                     </div>
                     <button
                       type="button"

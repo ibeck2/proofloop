@@ -64,7 +64,7 @@ export default function UpcomingEvents() {
       <section className="w-full flex flex-col gap-8">
         <div className="flex flex-end justify-between border-b border-[#f0f2f5] pb-4">
           <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
-          <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/search">
+          <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
             全て見る
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </Link>
@@ -86,7 +86,7 @@ export default function UpcomingEvents() {
       <section className="w-full flex flex-col gap-8">
         <div className="flex flex-end justify-between border-b border-[#f0f2f5] pb-4">
           <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
-          <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/search">
+          <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
             全て見る
             <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </Link>
@@ -102,7 +102,7 @@ export default function UpcomingEvents() {
     <section className="w-full flex flex-col gap-8">
       <div className="flex flex-end justify-between border-b border-[#f0f2f5] pb-4">
         <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
-        <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/search">
+        <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
           全て見る
           <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
         </Link>

@@ -21,6 +21,7 @@ type OrganizationRow = {
   is_intercollege: boolean | null;
   target_grades: string | null;
   selection_process: string | null;
+  selection_flow: SelectionFlowStep[] | null;
   gender_ratio: string | null;
   grade_composition: string | null;
   location_detail: string | null;
@@ -29,25 +30,41 @@ type OrganizationRow = {
   created_at: string;
 };
 
-const TARGET_GRADES_OPTIONS = [
-  "",
-  "学部1年生",
-  "学部2年生",
-  "学部3年生",
-  "学部4年生",
-  "院生可",
-  "学部生のみ",
-  "学年不問",
-  "その他",
-];
+export type SelectionFlowStep = {
+  name: string;
+  date_type: "pin" | "deadline" | "period" | "none";
+  date_value: string;
+  description: string;
+  url: string;
+};
 
-const SELECTION_PROCESS_OPTIONS = [
-  "",
-  "選考あり",
-  "選考なし",
-  "面接あり",
-  "書類選考あり",
-  "その他",
+const TARGET_GRADES_CHECKBOX_OPTIONS = [
+  "学部1年",
+  "学部2年",
+  "学部3年",
+  "学部4年",
+  "大学院1年",
+  "大学院2年",
+] as const;
+
+const SELECTION_PROCESS_RADIO_OPTIONS = [
+  { value: "選考あり", label: "選考あり" },
+  { value: "選考なし", label: "選考なし" },
+  { value: "その他", label: "その他" },
+] as const;
+
+const DATE_TYPE_OPTIONS = [
+  { value: "pin", label: "開催日時" },
+  { value: "deadline", label: "締切日時" },
+  { value: "period", label: "大体の時期" },
+  { value: "none", label: "設定なし" },
+] as const;
+
+const DEFAULT_SELECTION_FLOW: SelectionFlowStep[] = [
+  { name: "新歓説明会", date_type: "period", date_value: "", description: "", url: "" },
+  { name: "書類選考", date_type: "deadline", date_value: "", description: "", url: "" },
+  { name: "面接", date_type: "period", date_value: "", description: "", url: "" },
+  { name: "内定", date_type: "pin", date_value: "", description: "", url: "" },
 ];
 
 const CATEGORY_OPTIONS = [
@@ -61,6 +78,13 @@ const CATEGORY_OPTIONS = [
   "メディア・出版",
   "趣味・その他",
 ];
+
+const BadgeRequired = () => (
+  <span className="ml-2 text-xs font-normal text-white bg-red-500 px-2 py-0.5 rounded">必須</span>
+);
+const BadgeOptional = () => (
+  <span className="ml-2 text-xs font-normal text-slate-600 bg-slate-200 px-2 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+);
 
 export default function OrganizationProfileForm() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -76,8 +100,9 @@ export default function OrganizationProfileForm() {
   const [lineUrl, setLineUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [isIntercollege, setIsIntercollege] = useState(false);
-  const [targetGrades, setTargetGrades] = useState("");
-  const [selectionProcess, setSelectionProcess] = useState("");
+  const [targetGrades, setTargetGrades] = useState<string[]>([]);
+  const [selectionProcess, setSelectionProcess] = useState("選考なし");
+  const [selectionFlow, setSelectionFlow] = useState<SelectionFlowStep[]>([]);
   const [genderRatio, setGenderRatio] = useState("");
   const [gradeComposition, setGradeComposition] = useState("");
   const [locationDetail, setLocationDetail] = useState("");
@@ -101,7 +126,7 @@ export default function OrganizationProfileForm() {
       setErrorMessage(null);
       const { data: rows, error: fetchError } = await supabase
         .from("organizations")
-        .select("id, user_id, name, university, category, description, x_id, instagram_id, line_url, website_url, member_count, activity_frequency, logo_url, is_intercollege, target_grades, selection_process, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, created_at")
+        .select("id, user_id, name, university, category, description, x_id, instagram_id, line_url, website_url, member_count, activity_frequency, logo_url, is_intercollege, target_grades, selection_process, selection_flow, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, created_at")
         .eq("user_id", uid)
         .limit(1);
       if (cancelled) return;
@@ -122,8 +147,28 @@ export default function OrganizationProfileForm() {
         setLineUrl(org.line_url ?? "");
         setWebsiteUrl(org.website_url ?? "");
         setIsIntercollege(org.is_intercollege ?? false);
-        setTargetGrades(org.target_grades ?? "");
-        setSelectionProcess(org.selection_process ?? "");
+        if (org.target_grades) {
+          try {
+            const parsed = JSON.parse(org.target_grades) as unknown;
+            setTargetGrades(Array.isArray(parsed) ? parsed : org.target_grades.split(",").map((s) => s.trim()).filter(Boolean));
+          } catch {
+            setTargetGrades(org.target_grades.split(",").map((s) => s.trim()).filter(Boolean));
+          }
+        } else {
+          setTargetGrades([]);
+        }
+        setSelectionProcess(org.selection_process === "選考あり" || org.selection_process === "選考なし" || org.selection_process === "その他" ? org.selection_process : "選考なし");
+        if (org.selection_flow && Array.isArray(org.selection_flow) && org.selection_flow.length > 0) {
+          setSelectionFlow(org.selection_flow.map((s: unknown) => ({
+            name: (s as SelectionFlowStep).name ?? "",
+            date_type: (s as SelectionFlowStep).date_type ?? "none",
+            date_value: (s as SelectionFlowStep).date_value ?? "",
+            description: (s as SelectionFlowStep).description ?? "",
+            url: (s as SelectionFlowStep).url ?? "",
+          })));
+        } else {
+          setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+        }
         setGenderRatio(org.gender_ratio ?? "");
         setGradeComposition(org.grade_composition ?? "");
         setLocationDetail(org.location_detail ?? "");
@@ -182,8 +227,33 @@ export default function OrganizationProfileForm() {
     if (!userId) return;
     setSaveMessage(null);
     setErrorMessage(null);
-    setIsSaving(true);
 
+    if (!name.trim()) {
+      setErrorMessage("団体名は必須です。");
+      return;
+    }
+    if (!category.trim()) {
+      setErrorMessage("カテゴリは必須です。");
+      return;
+    }
+    if (!description.trim()) {
+      setErrorMessage("理念・活動内容は必須です。");
+      return;
+    }
+    if (targetGrades.length === 0) {
+      setErrorMessage("対象学年を1つ以上選択してください。");
+      return;
+    }
+    if (selectionProcess === "選考あり") {
+      const stepsToValidate = selectionFlow.length > 0 ? selectionFlow : DEFAULT_SELECTION_FLOW;
+      const emptyNameIndex = stepsToValidate.findIndex((s) => !(s.name ?? "").trim());
+      if (emptyNameIndex !== -1) {
+        setErrorMessage(`選考フロー ステップ ${emptyNameIndex + 1} のステップ名は必須です。`);
+        return;
+      }
+    }
+
+    setIsSaving(true);
     try {
       let finalLogoUrl: string | null = logoUrl;
 
@@ -218,8 +288,17 @@ export default function OrganizationProfileForm() {
         activity_frequency: activityFrequency.trim() || null,
         logo_url: finalLogoUrl,
         is_intercollege: isIntercollege,
-        target_grades: targetGrades.trim() || null,
+        target_grades: targetGrades.length > 0 ? targetGrades.join(",") : null,
         selection_process: selectionProcess.trim() || null,
+        selection_flow: selectionProcess === "選考あり"
+          ? (selectionFlow.length > 0 ? selectionFlow : DEFAULT_SELECTION_FLOW).map((step) => ({
+              name: (step.name ?? "").trim(),
+              date_type: step.date_type ?? "none",
+              date_value: (step.date_value ?? "").trim(),
+              description: (step.description ?? "").trim(),
+              url: (step.url ?? "").trim(),
+            }))
+          : null,
         gender_ratio: genderRatio.trim() || null,
         grade_composition: gradeComposition.trim() || null,
         location_detail: locationDetail.trim() || null,
@@ -274,6 +353,7 @@ export default function OrganizationProfileForm() {
         <section className="space-y-4">
           <h4 className="text-primary dark:text-white font-bold text-base border-b border-slate-200 dark:border-slate-600 pb-2">
             団体ロゴ
+            <BadgeOptional />
           </h4>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div className="flex-shrink-0">
@@ -321,6 +401,7 @@ export default function OrganizationProfileForm() {
           <div>
             <label htmlFor="org-name" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
               団体名
+              <BadgeRequired />
             </label>
             <Input
               id="org-name"
@@ -335,6 +416,7 @@ export default function OrganizationProfileForm() {
           <div>
             <label htmlFor="org-university" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
               活動拠点・大学名
+              <BadgeOptional />
             </label>
             <Input
               id="org-university"
@@ -349,6 +431,7 @@ export default function OrganizationProfileForm() {
           <div>
             <label htmlFor="org-category" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
               カテゴリ
+              <BadgeRequired />
             </label>
             <select
               id="org-category"
@@ -367,7 +450,8 @@ export default function OrganizationProfileForm() {
           </div>
           <div>
             <label htmlFor="org-description" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
-              活動内容
+              理念・活動内容
+              <BadgeRequired />
             </label>
             <Textarea
               id="org-description"
@@ -383,6 +467,7 @@ export default function OrganizationProfileForm() {
             <div>
               <label htmlFor="org-member-count" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
                 所属人数
+                <BadgeOptional />
               </label>
               <Input
                 id="org-member-count"
@@ -397,6 +482,7 @@ export default function OrganizationProfileForm() {
             <div>
               <label htmlFor="org-activity-frequency" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
                 活動頻度
+                <BadgeOptional />
               </label>
               <Input
                 id="org-activity-frequency"
@@ -434,41 +520,209 @@ export default function OrganizationProfileForm() {
             </p>
           </div>
           <div>
-            <label htmlFor="org-target-grades" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <span className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
               対象学年
-            </label>
-            <select
-              id="org-target-grades"
-              value={targetGrades}
-              onChange={(e) => setTargetGrades(e.target.value)}
-              disabled={inputDisabled}
-              className={inputClass}
-            >
-              {TARGET_GRADES_OPTIONS.map((opt) => (
-                <option key={opt || "blank"} value={opt}>
-                  {opt || "選択してください"}
-                </option>
+              <BadgeRequired />
+            </span>
+            <p className="text-text-sub dark:text-slate-400 text-xs mb-2">複数選択可</p>
+            <div className="flex flex-wrap gap-4">
+              {TARGET_GRADES_CHECKBOX_OPTIONS.map((opt) => (
+                <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={targetGrades.includes(opt)}
+                    onChange={(e) => {
+                      if (e.target.checked) setTargetGrades((prev) => [...prev, opt]);
+                      else setTargetGrades((prev) => prev.filter((g) => g !== opt));
+                    }}
+                    disabled={inputDisabled}
+                    className="w-5 h-5 border-slate-300 text-accent focus:ring-accent rounded"
+                  />
+                  <span className="text-sm text-primary dark:text-slate-200">{opt}</span>
+                </label>
               ))}
-            </select>
+            </div>
           </div>
           <div>
-            <label htmlFor="org-selection-process" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <span className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
               選考の有無
-            </label>
-            <select
-              id="org-selection-process"
-              value={selectionProcess}
-              onChange={(e) => setSelectionProcess(e.target.value)}
-              disabled={inputDisabled}
-              className={inputClass}
-            >
-              {SELECTION_PROCESS_OPTIONS.map((opt) => (
-                <option key={opt || "blank"} value={opt}>
-                  {opt || "選択してください"}
-                </option>
+              <BadgeRequired />
+            </span>
+            <div className="flex flex-wrap gap-6">
+              {SELECTION_PROCESS_RADIO_OPTIONS.map((opt) => (
+                <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="org-selection-process"
+                    value={opt.value}
+                    checked={selectionProcess === opt.value}
+                    onChange={() => {
+                      setSelectionProcess(opt.value);
+                      if (opt.value === "選考あり" && selectionFlow.length === 0)
+                        setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+                    }}
+                    disabled={inputDisabled}
+                    className="w-4 h-4 border-slate-300 text-accent focus:ring-accent"
+                  />
+                  <span className="text-sm text-primary dark:text-slate-200">{opt.label}</span>
+                </label>
               ))}
-            </select>
+            </div>
           </div>
+          {selectionProcess === "選考あり" && (
+            <div className="border border-slate-200 dark:border-slate-600 rounded-lg p-4 space-y-4 bg-slate-50/50 dark:bg-slate-800/30">
+              <h5 className="text-primary dark:text-white font-bold text-sm">選考フロー</h5>
+              <p className="text-text-sub dark:text-slate-400 text-xs">ステップを追加・編集・削除できます</p>
+              {(selectionFlow.length === 0 ? DEFAULT_SELECTION_FLOW : selectionFlow).map((step, index) => (
+                <div key={index} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500">ステップ {index + 1}</span>
+                    {selectionFlow.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectionFlow((prev) => prev.filter((_, i) => i !== index))}
+                        disabled={inputDisabled || selectionFlow.length <= 1}
+                        className="text-red-600 hover:text-red-700 text-sm disabled:opacity-40"
+                      >
+                        削除
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                      ステップ名
+                      <span className="ml-1 text-[10px] font-normal text-white bg-red-500 px-1.5 py-0.5 rounded">必須</span>
+                    </label>
+                    <Input
+                      value={step.name}
+                      onChange={(e) => {
+                        if (selectionFlow.length === 0) setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+                        setSelectionFlow((prev) => {
+                          const next = prev.length ? [...prev] : [...DEFAULT_SELECTION_FLOW];
+                          next[index] = { ...next[index], name: e.target.value };
+                          return next;
+                        });
+                      }}
+                      placeholder="例: 新歓説明会"
+                      disabled={inputDisabled}
+                      className="w-full text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                      日時タイプ
+                      <span className="ml-1 text-[10px] font-normal text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+                    </label>
+                    <select
+                      value={step.date_type}
+                      onChange={(e) => {
+                        if (selectionFlow.length === 0) setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+                        setSelectionFlow((prev) => {
+                          const next = prev.length ? [...prev] : [...DEFAULT_SELECTION_FLOW];
+                          next[index] = { ...next[index], date_type: e.target.value as SelectionFlowStep["date_type"] };
+                          return next;
+                        });
+                      }}
+                      disabled={inputDisabled}
+                      className="w-full border border-slate-300 dark:border-slate-500 rounded px-3 py-2 text-sm bg-white dark:bg-slate-700"
+                    >
+                      {DATE_TYPE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                      {step.date_type === "pin" ? "開催日時" : step.date_type === "deadline" ? "締切日時" : step.date_type === "period" ? "大体の時期" : "備考"}
+                      <span className="ml-1 text-[10px] font-normal text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+                    </label>
+                    {step.date_type === "pin" || step.date_type === "deadline" ? (
+                      <Input
+                        type="datetime-local"
+                        value={step.date_value}
+                        onChange={(e) => {
+                          if (selectionFlow.length === 0) setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+                          setSelectionFlow((prev) => {
+                            const next = prev.length ? [...prev] : [...DEFAULT_SELECTION_FLOW];
+                            next[index] = { ...next[index], date_value: e.target.value };
+                            return next;
+                          });
+                        }}
+                        disabled={inputDisabled}
+                        className="w-full text-sm"
+                      />
+                    ) : (
+                      <Input
+                        type="text"
+                        value={step.date_value}
+                        onChange={(e) => {
+                          if (selectionFlow.length === 0) setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+                          setSelectionFlow((prev) => {
+                            const next = prev.length ? [...prev] : [...DEFAULT_SELECTION_FLOW];
+                            next[index] = { ...next[index], date_value: e.target.value };
+                            return next;
+                          });
+                        }}
+                        placeholder={step.date_type === "period" ? "例: 4月上旬" : ""}
+                        disabled={inputDisabled}
+                        className="w-full text-sm"
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                      詳細説明
+                      <span className="ml-1 text-[10px] font-normal text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+                    </label>
+                    <Textarea
+                      value={step.description}
+                      onChange={(e) => {
+                        if (selectionFlow.length === 0) setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+                        setSelectionFlow((prev) => {
+                          const next = prev.length ? [...prev] : [...DEFAULT_SELECTION_FLOW];
+                          next[index] = { ...next[index], description: e.target.value };
+                          return next;
+                        });
+                      }}
+                      placeholder="説明を入力"
+                      rows={2}
+                      disabled={inputDisabled}
+                      className="w-full text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                      関連URL
+                      <span className="ml-1 text-[10px] font-normal text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={step.url}
+                      onChange={(e) => {
+                        if (selectionFlow.length === 0) setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+                        setSelectionFlow((prev) => {
+                          const next = prev.length ? [...prev] : [...DEFAULT_SELECTION_FLOW];
+                          next[index] = { ...next[index], url: e.target.value };
+                          return next;
+                        });
+                      }}
+                      placeholder="例: Google FormやZoomリンク"
+                      disabled={inputDisabled}
+                      className="w-full text-sm"
+                    />
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSelectionFlow((prev) => [...(prev.length ? prev : DEFAULT_SELECTION_FLOW), { name: "", date_type: "none", date_value: "", description: "", url: "" }])}
+                disabled={inputDisabled}
+                className="text-sm text-accent hover:underline font-bold"
+              >
+                + ステップを追加
+              </button>
+            </div>
+          )}
         </section>
 
         {/* 構成・費用セクション */}
@@ -480,6 +734,7 @@ export default function OrganizationProfileForm() {
             <div>
               <label htmlFor="org-gender-ratio" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
                 男女比
+                <BadgeOptional />
               </label>
               <Input
                 id="org-gender-ratio"
@@ -494,6 +749,7 @@ export default function OrganizationProfileForm() {
             <div>
               <label htmlFor="org-grade-composition" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
                 学年構成
+                <BadgeOptional />
               </label>
               <Input
                 id="org-grade-composition"
@@ -509,6 +765,7 @@ export default function OrganizationProfileForm() {
           <div>
             <label htmlFor="org-location-detail" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
               主な活動場所
+              <BadgeOptional />
             </label>
             <Input
               id="org-location-detail"
@@ -524,6 +781,7 @@ export default function OrganizationProfileForm() {
             <div>
               <label htmlFor="org-fee-entry" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
                 初期費用
+                <BadgeOptional />
               </label>
               <Input
                 id="org-fee-entry"
@@ -538,6 +796,7 @@ export default function OrganizationProfileForm() {
             <div>
               <label htmlFor="org-fee-annual" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
                 年会費
+                <BadgeOptional />
               </label>
               <Input
                 id="org-fee-annual"
@@ -559,7 +818,8 @@ export default function OrganizationProfileForm() {
           </h4>
           <div>
             <label htmlFor="org-x-id" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
-              X (Twitter) ID
+              公式X (Twitter) ID
+              <BadgeOptional />
             </label>
             <Input
               id="org-x-id"
@@ -573,7 +833,8 @@ export default function OrganizationProfileForm() {
           </div>
           <div>
             <label htmlFor="org-instagram-id" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
-              Instagram ID
+              公式Instagram ID
+              <BadgeOptional />
             </label>
             <Input
               id="org-instagram-id"
@@ -588,6 +849,7 @@ export default function OrganizationProfileForm() {
           <div>
             <label htmlFor="org-line-url" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
               公式LINE URL
+              <BadgeOptional />
             </label>
             <Input
               id="org-line-url"
@@ -601,7 +863,8 @@ export default function OrganizationProfileForm() {
           </div>
           <div>
             <label htmlFor="org-website-url" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
-              WebサイトURL
+              公式WebサイトURL
+              <BadgeOptional />
             </label>
             <Input
               id="org-website-url"

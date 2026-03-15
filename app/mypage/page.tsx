@@ -5,6 +5,8 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Input, Button } from "@/components/ui";
+import SearchOrgCard from "@/components/SearchOrgCard";
+import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 
 type ProfileRow = {
   id: string;
@@ -21,6 +23,7 @@ const ENROLLMENT_YEAR_OPTIONS = [
   { value: "2025", label: "2025年度" },
   { value: "2024", label: "2024年度" },
   { value: "2023", label: "2023年度" },
+  { value: "2022", label: "2022年度" },
   { value: "before", label: "それ以前" },
 ];
 
@@ -38,6 +41,30 @@ type OrgRow = {
   category: string | null;
 };
 
+type SavedOrgRow = {
+  id: string;
+  name: string | null;
+  university: string | null;
+  category: string | null;
+  description: string | null;
+  logo_url: string | null;
+  member_count: string | null;
+  activity_frequency: string | null;
+  is_intercollege: boolean | null;
+  target_grades: string | null;
+  selection_process: string | null;
+};
+
+type SavedEventWithDetails = {
+  id: string;
+  title: string | null;
+  event_date: string;
+  location: string | null;
+  description: string | null;
+  organization_id: string;
+  organizations: { name: string | null } | null;
+};
+
 export default function MypagePage() {
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -52,6 +79,11 @@ export default function MypagePage() {
   const [searchResults, setSearchResults] = useState<OrgRow[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [savedEvents, setSavedEvents] = useState<SavedEventWithDetails[]>([]);
+  const [savedEventsLoading, setSavedEventsLoading] = useState(false);
+  const [savedOrgs, setSavedOrgs] = useState<SavedOrgRow[]>([]);
+  const [savedOrgsLoading, setSavedOrgsLoading] = useState(false);
+  const { toggle: toggleSavedOrg } = useSavedOrganizations();
 
   useEffect(() => {
     let cancelled = false;
@@ -97,6 +129,100 @@ export default function MypagePage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!userId) {
+      setSavedEvents([]);
+      return;
+    }
+    let cancelled = false;
+    setSavedEventsLoading(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("saved_events")
+        .select(
+          `
+          event_id,
+          events (
+            id,
+            title,
+            event_date,
+            location,
+            description,
+            organization_id,
+            organizations ( name )
+          )
+        `
+        )
+        .eq("user_id", userId);
+      if (cancelled) return;
+      if (error) {
+        console.error("saved_events fetch error:", error);
+        setSavedEvents([]);
+        setSavedEventsLoading(false);
+        return;
+      }
+      const list: SavedEventWithDetails[] = [];
+      for (const row of data ?? []) {
+        const ev = (row as { events: SavedEventWithDetails | null }).events;
+        if (ev && typeof ev === "object" && ev.id) list.push(ev);
+      }
+      setSavedEvents(list);
+      setSavedEventsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      setSavedOrgs([]);
+      return;
+    }
+    let cancelled = false;
+    setSavedOrgsLoading(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("saved_organizations")
+        .select(
+          `
+          organization_id,
+          organizations (
+            id,
+            name,
+            university,
+            category,
+            description,
+            logo_url,
+            member_count,
+            activity_frequency,
+            is_intercollege,
+            target_grades,
+            selection_process
+          )
+        `
+        )
+        .eq("user_id", userId);
+      if (cancelled) return;
+      if (error) {
+        console.error("saved_organizations fetch error:", error);
+        setSavedOrgs([]);
+        setSavedOrgsLoading(false);
+        return;
+      }
+      const list: SavedOrgRow[] = [];
+      for (const row of data ?? []) {
+        const o = (row as { organizations: SavedOrgRow | null }).organizations;
+        if (o && typeof o === "object" && o.id) list.push(o);
+      }
+      setSavedOrgs(list);
+      setSavedOrgsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const displayNameLabel = userName && userName.length > 0 ? userName : displayName || "ゲスト";
 
@@ -151,6 +277,17 @@ export default function MypagePage() {
 
   const handleClaimClick = () => {
     alert("申請機能は準備中です");
+  };
+
+  const formatEventDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -261,6 +398,108 @@ export default function MypagePage() {
                   {isProfileSaving ? "保存中..." : "保存する"}
                 </Button>
               </form>
+            </section>
+
+            {/* お気に入り・保存リスト */}
+            <section className="mb-10">
+              <h2 className="text-primary text-lg font-bold mb-4">保存した情報</h2>
+              <div className="grid gap-6 sm:grid-cols-1">
+                <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-slate-800 font-bold text-base mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-[22px]">bookmark</span>
+                    お気に入り団体
+                  </h3>
+                  {savedOrgsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
+                      <p className="text-text-sub text-sm">読み込み中...</p>
+                    </div>
+                  ) : savedOrgs.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
+                      <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">bookmark_border</span>
+                      <p className="text-text-sub text-sm text-center">※お気に入り登録した団体はまだありません</p>
+                      <p className="text-slate-400 text-xs mt-1">団体詳細ページからお気に入り登録できます</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {savedOrgs.map((org) => (
+                        <SearchOrgCard
+                          key={org.id}
+                          id={org.id}
+                          name={org.name ?? "（団体名なし）"}
+                          university={org.university}
+                          category={org.category}
+                          description={org.description}
+                          logoUrl={org.logo_url}
+                          memberCount={org.member_count}
+                          activityFrequency={org.activity_frequency}
+                          isIntercollege={org.is_intercollege}
+                          targetGrades={org.target_grades}
+                          selectionProcess={org.selection_process}
+                          isFavorite={true}
+                          onFavoriteClick={() => {
+                            toggleSavedOrg(org.id);
+                            setSavedOrgs((prev) => prev.filter((o) => o.id !== org.id));
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                  <h3 className="text-slate-800 font-bold text-base mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-[22px]">event</span>
+                    保存したイベント
+                  </h3>
+                  {savedEventsLoading ? (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
+                      <p className="text-text-sub text-sm">読み込み中...</p>
+                    </div>
+                  ) : savedEvents.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
+                      <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">event_available</span>
+                      <p className="text-text-sub text-sm text-center">※保存したイベントはまだありません</p>
+                      <p className="text-slate-400 text-xs mt-1">イベント一覧から保存できます</p>
+                    </div>
+                  ) : (
+                    <ul className="space-y-4">
+                      {savedEvents.map((ev) => (
+                        <li key={ev.id}>
+                          <Link
+                            href={`/organizations/${ev.organization_id}`}
+                            className="block bg-slate-50/50 border border-slate-200 rounded-lg p-5 hover:border-primary/30 hover:bg-primary/5 transition-colors"
+                          >
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                              {ev.organizations?.name ?? "団体"}
+                            </span>
+                            <h4 className="text-primary font-bold text-base mt-1">{ev.title ?? "（タイトルなし）"}</h4>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600 mt-2">
+                              <span className="flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[18px]">schedule</span>
+                                {formatEventDate(ev.event_date)}
+                              </span>
+                              {ev.location && (
+                                <span className="flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-[18px]">
+                                    {ev.location.startsWith("http") ? "videocam" : "location_on"}
+                                  </span>
+                                  {ev.location.length > 50 ? ev.location.slice(0, 50) + "…" : ev.location}
+                                </span>
+                              )}
+                            </div>
+                            {ev.description && (
+                              <p className="text-slate-600 text-sm line-clamp-2 mt-2">{ev.description}</p>
+                            )}
+                            <span className="mt-2 inline-flex items-center gap-1 text-accent text-sm font-bold">
+                              団体詳細を見る
+                              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
             </section>
 
             {/* 自分の所属団体を探す */}

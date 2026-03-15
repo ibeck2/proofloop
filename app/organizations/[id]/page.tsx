@@ -37,7 +37,7 @@ export default async function OrganizationPage({
     supabase
       .from("organizations")
       .select(
-        "id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, x_id, instagram_id, line_url, website_url"
+        "id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process, selection_flow, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, x_id, instagram_id, line_url, website_url"
       )
       .eq("id", id)
       .single(),
