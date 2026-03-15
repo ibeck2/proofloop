@@ -9,9 +9,9 @@ export default function Page() {
 <main className="flex-grow w-full max-w-[1200px] mx-auto px-6 py-12 md:py-20 flex flex-col gap-16">
 {/* Hero Section */}
 <section className="flex flex-col items-center justify-center gap-10 text-center max-w-4xl mx-auto w-full">
-<h2 className="text-primary text-3xl md:text-5xl font-black leading-tight tracking-tight">
-                螺旋の先へ<br className="hidden md:block"/>
-                学生団体が社会を動かす新しい時代のスタンダード
+<h2 className="text-primary text-2xl md:text-4xl lg:text-5xl font-black leading-tight tracking-tight max-w-3xl">
+                全ての大学生のポテンシャルを<span className="whitespace-nowrap">引き出す</span><br className="hidden sm:block" />
+                プラットフォーム ProofLoop
             </h2>
 </section>
 {/* Quick Access */}

@@ -67,6 +67,24 @@ const DEFAULT_SELECTION_FLOW: SelectionFlowStep[] = [
   { name: "内定", date_type: "pin", date_value: "", description: "", url: "" },
 ];
 
+/** ISO or local datetime string → "YYYY-MM-DDTHH:mm" for datetime-local input (JST/local) */
+function toLocalDatetimeInput(isoOrLocal: string): string {
+  const d = new Date(isoOrLocal);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${y}-${m}-${day}T${h}:${min}`;
+}
+
+/** Local "YYYY-MM-DDTHH:mm" → ISO UTC for Supabase */
+function localDatetimeToISO(localStr: string): string {
+  const d = new Date(localStr);
+  return Number.isNaN(d.getTime()) ? "" : d.toISOString();
+}
+
 const CATEGORY_OPTIONS = [
   "運動系（スポーツ・アウトドア）",
   "文化系（音楽・演劇・アート）",
@@ -159,13 +177,21 @@ export default function OrganizationProfileForm() {
         }
         setSelectionProcess(org.selection_process === "選考あり" || org.selection_process === "選考なし" || org.selection_process === "その他" ? org.selection_process : "選考なし");
         if (org.selection_flow && Array.isArray(org.selection_flow) && org.selection_flow.length > 0) {
-          setSelectionFlow(org.selection_flow.map((s: unknown) => ({
-            name: (s as SelectionFlowStep).name ?? "",
-            date_type: (s as SelectionFlowStep).date_type ?? "none",
-            date_value: (s as SelectionFlowStep).date_value ?? "",
-            description: (s as SelectionFlowStep).description ?? "",
-            url: (s as SelectionFlowStep).url ?? "",
-          })));
+          setSelectionFlow(org.selection_flow.map((s: unknown) => {
+            const step = s as SelectionFlowStep;
+            const dt = step.date_type ?? "none";
+            const rawVal = (step.date_value ?? "").trim();
+            const date_value = (dt === "pin" || dt === "deadline") && rawVal
+              ? toLocalDatetimeInput(rawVal)
+              : rawVal;
+            return {
+              name: step.name ?? "",
+              date_type: dt,
+              date_value,
+              description: step.description ?? "",
+              url: step.url ?? "",
+            };
+          }));
         } else {
           setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
         }
@@ -291,13 +317,20 @@ export default function OrganizationProfileForm() {
         target_grades: targetGrades.length > 0 ? targetGrades.join(",") : null,
         selection_process: selectionProcess.trim() || null,
         selection_flow: selectionProcess === "選考あり"
-          ? (selectionFlow.length > 0 ? selectionFlow : DEFAULT_SELECTION_FLOW).map((step) => ({
-              name: (step.name ?? "").trim(),
-              date_type: step.date_type ?? "none",
-              date_value: (step.date_value ?? "").trim(),
-              description: (step.description ?? "").trim(),
-              url: (step.url ?? "").trim(),
-            }))
+          ? (selectionFlow.length > 0 ? selectionFlow : DEFAULT_SELECTION_FLOW).map((step) => {
+              const dt = step.date_type ?? "none";
+              const rawVal = (step.date_value ?? "").trim();
+              const date_value = (dt === "pin" || dt === "deadline") && rawVal
+                ? localDatetimeToISO(rawVal)
+                : rawVal;
+              return {
+                name: (step.name ?? "").trim(),
+                date_type: dt,
+                date_value,
+                description: (step.description ?? "").trim(),
+                url: (step.url ?? "").trim(),
+              };
+            })
           : null,
         gender_ratio: genderRatio.trim() || null,
         grade_composition: gradeComposition.trim() || null,

@@ -7,6 +7,8 @@ import { supabase } from "@/lib/supabase";
 import { Input, Button } from "@/components/ui";
 import SearchOrgCard from "@/components/SearchOrgCard";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
+import type { ApplicationWithOrg } from "@/lib/types/application";
+import ChatRoom from "@/components/ChatRoom";
 
 type ProfileRow = {
   id: string;
@@ -83,7 +85,27 @@ export default function MypagePage() {
   const [savedEventsLoading, setSavedEventsLoading] = useState(false);
   const [savedOrgs, setSavedOrgs] = useState<SavedOrgRow[]>([]);
   const [savedOrgsLoading, setSavedOrgsLoading] = useState(false);
+  const [entryApplications, setEntryApplications] = useState<ApplicationWithOrg[]>([]);
+  const [entryApplicationsLoading, setEntryApplicationsLoading] = useState(false);
+  const [messageModalApp, setMessageModalApp] = useState<ApplicationWithOrg | null>(null);
+  const [unreadApplicationIds, setUnreadApplicationIds] = useState<Set<string>>(new Set());
   const { toggle: toggleSavedOrg } = useSavedOrganizations();
+
+  const handleMarkedAsRead = useCallback((applicationId: string) => {
+    setUnreadApplicationIds((prev) => {
+      const n = new Set(prev);
+      n.delete(applicationId);
+      return n;
+    });
+  }, []);
+
+  const closeMessageModal = useCallback(() => {
+    setMessageModalApp(null);
+  }, []);
+
+  const openMessageModal = useCallback((app: ApplicationWithOrg) => {
+    setMessageModalApp(app);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -218,6 +240,75 @@ export default function MypagePage() {
       }
       setSavedOrgs(list);
       setSavedOrgsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) {
+      setEntryApplications([]);
+      return;
+    }
+    let cancelled = false;
+    setEntryApplicationsLoading(true);
+    (async () => {
+      const { data, error } = await supabase
+        .from("applications")
+        .select(
+          `
+          id,
+          user_id,
+          organization_id,
+          status,
+          current_step,
+          applicant_message,
+          created_at,
+          organizations (
+            id,
+            name,
+            university,
+            category,
+            logo_url
+          )
+        `
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      if (cancelled) return;
+      if (error) {
+        console.error("applications fetch error:", error);
+        setEntryApplications([]);
+        setEntryApplicationsLoading(false);
+        return;
+      }
+      const list: ApplicationWithOrg[] = (data ?? []).map((row) => ({
+        id: row.id,
+        user_id: row.user_id,
+        organization_id: row.organization_id,
+        status: row.status,
+        current_step: row.current_step ?? "",
+        applicant_message: row.applicant_message,
+        created_at: row.created_at,
+        organizations: row.organizations ?? null,
+      }));
+      setEntryApplications(list);
+      setEntryApplicationsLoading(false);
+
+      const appIds = list.map((a) => a.id);
+      if (appIds.length > 0) {
+        const { data: unreadRows } = await supabase
+          .from("application_messages")
+          .select("application_id")
+          .in("application_id", appIds)
+          .eq("is_from_club", true)
+          .is("read_at", null);
+        const ids = [...new Set((unreadRows ?? []).map((r: { application_id: string }) => r.application_id))];
+        setUnreadApplicationIds(new Set(ids));
+      } else {
+        setUnreadApplicationIds(new Set());
+      }
     })();
     return () => {
       cancelled = true;
@@ -465,7 +556,7 @@ export default function MypagePage() {
                       {savedEvents.map((ev) => (
                         <li key={ev.id}>
                           <Link
-                            href={`/organizations/${ev.organization_id}`}
+                            href={`/events/${ev.id}`}
                             className="block bg-slate-50/50 border border-slate-200 rounded-lg p-5 hover:border-primary/30 hover:bg-primary/5 transition-colors"
                           >
                             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -558,13 +649,138 @@ export default function MypagePage() {
               ) : null}
             </section>
 
-            {/* 現在の選考進捗 */}
+            {/* 現在エントリー中の団体 */}
             <section className="mb-10">
-              <h2 className="text-primary text-lg font-bold mb-4">現在の選考進捗</h2>
-              <div className="bg-white border border-slate-200 p-6 rounded">
-                <p className="text-text-sub text-sm">現在参加しているイベントはありません</p>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <h2 className="text-primary text-lg font-bold">現在エントリー中の団体</h2>
+                {entryApplications.length > 0 && (
+                  <Link
+                    href="/mypage/messages"
+                    className="inline-flex items-center gap-1.5 text-primary hover:underline font-medium text-sm"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                    すべてのメッセージを見る
+                  </Link>
+                )}
+              </div>
+              <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+                {entryApplicationsLoading ? (
+                  <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
+                    <p className="text-text-sub text-sm">読み込み中...</p>
+                  </div>
+                ) : entryApplications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
+                    <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">assignment</span>
+                    <p className="text-text-sub text-sm text-center">エントリー中の団体はまだありません</p>
+                    <p className="text-slate-400 text-xs mt-1">団体詳細ページからエントリーできます</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-4">
+                    {entryApplications.map((app) => (
+                      <li key={app.id}>
+                        <div className="bg-slate-50/50 border border-slate-200 rounded-lg p-5 hover:border-primary/30 transition-colors">
+                          <Link
+                            href={`/organizations/${app.organization_id}`}
+                            className="block hover:bg-primary/5 -m-5 p-5 rounded-lg transition-colors relative"
+                          >
+                            {unreadApplicationIds.has(app.id) && (
+                              <span className="absolute top-4 right-4 flex h-2.5 w-2.5 shrink-0" title="未読メッセージあり">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                              </span>
+                            )}
+                            <div className="flex gap-4">
+                              {app.organizations?.logo_url ? (
+                                <img
+                                  src={app.organizations.logo_url}
+                                  alt=""
+                                  className="w-14 h-14 rounded-full object-cover border border-slate-200 flex-shrink-0"
+                                />
+                              ) : (
+                                <div className="w-14 h-14 rounded-full bg-slate-200 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400">
+                                  <span className="material-symbols-outlined text-2xl">groups</span>
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-primary font-bold text-base">
+                                  {app.organizations?.name ?? "（団体名なし）"}
+                                </h4>
+                                {(app.organizations?.university ?? app.organizations?.category) && (
+                                  <p className="text-text-sub text-sm mt-1">
+                                    {[app.organizations?.university, app.organizations?.category].filter(Boolean).join(" · ")}
+                                  </p>
+                                )}
+                                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
+                                  <span className="text-xs font-medium text-primary">現在の選考ステータス：</span>
+                                  <span className="text-sm font-bold text-primary">{app.current_step || "—"}</span>
+                                </div>
+                              </div>
+                              <span className="self-center material-symbols-outlined text-slate-400">chevron_right</span>
+                            </div>
+                          </Link>
+                          <div className="mt-3 pt-3 border-t border-slate-200 flex justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openMessageModal(app)}
+                              className="inline-flex items-center gap-1.5"
+                            >
+                              <span className="material-symbols-outlined text-[18px]">chat</span>
+                              メッセージを確認する
+                            </Button>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </section>
+
+            {/* 団体からのメッセージ確認モーダル */}
+            {messageModalApp && (
+              <>
+                <div
+                  role="presentation"
+                  aria-hidden
+                  className="fixed inset-0 z-[200] bg-black/50"
+                  onClick={closeMessageModal}
+                />
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="message-modal-title"
+                  className="fixed left-1/2 top-1/2 z-[210] w-[min(480px,92vw)] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl overflow-hidden flex flex-col"
+                >
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-600">
+                    <h3 id="message-modal-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                      {messageModalApp.organizations?.name ?? "団体"} とのメッセージ
+                    </h3>
+                    <button
+                      type="button"
+                      aria-label="閉じる"
+                      onClick={closeMessageModal}
+                      className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+                  <div className="px-6 py-4 flex-1 min-h-0 flex flex-col min-h-[320px]">
+                    {messageModalApp?.id && userId ? (
+                      <ChatRoom
+                        applicationId={messageModalApp.id}
+                        userId={userId}
+                        viewerIsClub={false}
+                        onMarkedAsRead={handleMarkedAsRead}
+                        placeholder="メッセージを入力..."
+                        fillHeight={false}
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </main>

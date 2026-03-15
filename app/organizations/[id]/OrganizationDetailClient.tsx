@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
+import type { Application, ProfileForEntry } from "@/lib/types/application";
 
 export type EventRow = {
   id: string;
@@ -30,6 +31,8 @@ export type ReviewRow = {
   content: string | null;
   status: string;
   created_at: string;
+  club_reply?: string | null;
+  club_replied_at?: string | null;
 };
 
 export type SelectionFlowStep = {
@@ -92,13 +95,14 @@ function getTargetGradesDisplay(raw: string | null): string | null {
 function formatStepDate(step: SelectionFlowStep): string {
   if (step.date_type === "none" || !step.date_value.trim()) return "";
   const v = step.date_value.trim();
-  if (step.date_type === "pin") {
+  if (step.date_type === "pin" || step.date_type === "deadline") {
     const d = new Date(v);
-    if (!Number.isNaN(d.getTime()))
-      return d.toLocaleString("ja-JP", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
-    return v;
+    if (!Number.isNaN(d.getTime())) {
+      const formatted = d.toLocaleString("ja-JP", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      return step.date_type === "deadline" ? `${formatted}まで` : formatted;
+    }
+    return step.date_type === "deadline" ? v + "まで" : v;
   }
-  if (step.date_type === "deadline") return v + "まで";
   if (step.date_type === "period") return v + "頃";
   return v;
 }
@@ -130,10 +134,71 @@ export default function OrganizationDetailClient({
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const { savedOrgIds, toggle: toggleSavedOrg, togglingId } = useSavedOrganizations();
   const isSavedOrg = savedOrgIds.includes(org.id);
+  const [application, setApplication] = useState<Application | null>(null);
+  const [entryModalOpen, setEntryModalOpen] = useState(false);
+  const [applicantMessage, setApplicantMessage] = useState("");
+  const [profileForEntry, setProfileForEntry] = useState<ProfileForEntry | null>(null);
+  const [entrySubmitting, setEntrySubmitting] = useState(false);
+  const [entryCheckDone, setEntryCheckDone] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session ?? null));
   }, []);
+
+  useEffect(() => {
+    if (!session?.user?.id) {
+      setEntryCheckDone(true);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const [appRes, profileRes] = await Promise.all([
+        supabase
+          .from("applications")
+          .select("id, user_id, organization_id, status, current_step, applicant_message, created_at")
+          .eq("user_id", session.user.id)
+          .eq("organization_id", org.id)
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("display_name, university, faculty, enrollment_year")
+          .eq("id", session.user.id)
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      if (appRes.data) setApplication(appRes.data as Application);
+      if (profileRes.data) setProfileForEntry(profileRes.data as ProfileForEntry);
+      setEntryCheckDone(true);
+    })();
+    return () => { cancelled = true; };
+  }, [session?.user?.id, org.id]);
+
+  const handleEntrySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!session?.user?.id) return;
+    setEntrySubmitting(true);
+    try {
+      const { data, error } = await supabase.from("applications").insert({
+        user_id: session.user.id,
+        organization_id: org.id,
+        status: "active",
+        current_step: "新規応募",
+        applicant_message: applicantMessage.trim() || null,
+        source: "ProofLoop",
+      }).select("id, user_id, organization_id, status, current_step, applicant_message, created_at, source").single();
+      if (error) throw error;
+      setApplication(data as Application);
+      setEntryModalOpen(false);
+      setApplicantMessage("");
+      toast.success("エントリーが完了しました");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "エントリーに失敗しました");
+    } finally {
+      setEntrySubmitting(false);
+    }
+  };
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,6 +321,30 @@ export default function OrganizationDetailClient({
             </div>
           </div>
         </header>
+
+        {/* エントリーCTA */}
+        {session && (
+          <div className="py-4 border-b border-slate-200">
+            {application ? (
+              <div className="flex items-center gap-2 text-slate-600">
+                <span className="material-symbols-outlined text-2xl text-emerald-600">check_circle</span>
+                <span className="font-bold">
+                  エントリー済み（現在：{application.current_step || "—"}ステップ）
+                </span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEntryModalOpen(true)}
+                disabled={!entryCheckDone}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <span className="material-symbols-outlined">send</span>
+                この団体にエントリーする
+              </button>
+            )}
+          </div>
+        )}
 
         {/* タブナビ */}
         <nav
@@ -498,9 +587,10 @@ export default function OrganizationDetailClient({
                 ) : (
                   <div className="space-y-4">
                     {events.map((ev) => (
-                      <article
+                      <Link
                         key={ev.id}
-                        className="p-4 rounded-lg border border-slate-200 bg-white hover:border-accent/30 transition-colors"
+                        href={`/events/${ev.id}`}
+                        className="block p-4 rounded-lg border border-slate-200 bg-white hover:border-accent/30 transition-colors"
                       >
                         <h4 className="font-bold text-navy mb-2">{ev.title ?? "（タイトルなし）"}</h4>
                         <div className="flex flex-wrap gap-3 text-sm text-slate-600">
@@ -518,7 +608,11 @@ export default function OrganizationDetailClient({
                         {ev.description && (
                           <p className="text-slate-600 text-sm mt-2 line-clamp-2">{ev.description}</p>
                         )}
-                      </article>
+                        <span className="text-accent text-sm font-bold mt-2 inline-flex items-center gap-1">
+                          詳細を見る
+                          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                        </span>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -592,6 +686,12 @@ export default function OrganizationDetailClient({
                         {r.content && (
                           <p className="text-slate-700 text-sm whitespace-pre-wrap">{r.content}</p>
                         )}
+                        {r.club_reply && r.club_reply.trim() && (
+                          <div className="mt-3 pt-3 border-t border-slate-200 bg-slate-100 rounded-lg p-3">
+                            <p className="text-xs font-bold text-slate-600 mb-1">団体からの返信</p>
+                            <p className="text-slate-700 text-sm whitespace-pre-wrap">{r.club_reply}</p>
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -645,6 +745,78 @@ export default function OrganizationDetailClient({
             </section>
           )}
         </div>
+
+        {/* エントリーモーダル */}
+        {entryModalOpen && (
+          <>
+            <div
+              role="presentation"
+              aria-hidden
+              className="fixed inset-0 z-[200] bg-black/40"
+              onClick={() => !entrySubmitting && setEntryModalOpen(false)}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="entry-modal-title"
+              className="fixed left-1/2 top-1/2 z-[210] w-[min(480px,90vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl p-6 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 id="entry-modal-title" className="text-navy dark:text-white text-lg font-bold">
+                  この団体にエントリーする
+                </h3>
+                <button
+                  type="button"
+                  aria-label="閉じる"
+                  onClick={() => !entrySubmitting && setEntryModalOpen(false)}
+                  disabled={entrySubmitting}
+                  className="p-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+              <form onSubmit={handleEntrySubmit} className="space-y-6">
+                <div>
+                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
+                    送信されるプロフィール情報
+                  </h4>
+                  <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 p-4 space-y-2 text-sm">
+                    <p><span className="text-slate-500 dark:text-slate-400 font-medium">氏名</span> {profileForEntry?.display_name ?? "—"}</p>
+                    <p><span className="text-slate-500 dark:text-slate-400 font-medium">大学名</span> {profileForEntry?.university ?? "—"}</p>
+                    <p><span className="text-slate-500 dark:text-slate-400 font-medium">学部・学科</span> {profileForEntry?.faculty ?? "—"}</p>
+                    <p><span className="text-slate-500 dark:text-slate-400 font-medium">入学年度</span> {profileForEntry?.enrollment_year ?? "—"}</p>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="applicant-message" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
+                    志望動機 / 自己PR <span className="text-slate-400 font-normal">（任意）</span>
+                  </label>
+                  <textarea
+                    id="applicant-message"
+                    value={applicantMessage}
+                    onChange={(e) => setApplicantMessage(e.target.value)}
+                    placeholder="志望動機や自己PRを入力してください"
+                    rows={4}
+                    className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-primary focus:border-primary resize-y"
+                  />
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEntryModalOpen(false)}
+                    disabled={entrySubmitting}
+                  >
+                    キャンセル
+                  </Button>
+                  <Button type="submit" variant="primary" disabled={entrySubmitting}>
+                    {entrySubmitting ? "送信中..." : "送信する"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </>
+        )}
       </main>
     </div>
   );

@@ -12,12 +12,13 @@ function isStudentPath(pathname: string): boolean {
   return STUDENT_PATHS.some((p) => p !== "/" && pathname.startsWith(p));
 }
 
-const MOBILE_NAV_LINKS = [
+const MOBILE_NAV_LINKS: Array<{ href: string; label: string; icon: string; loginOnly?: boolean }> = [
   { href: "/", label: "ホーム", icon: "home" },
   { href: "/search", label: "検索", icon: "search" },
   { href: "/schedule", label: "カレンダー", icon: "calendar_month" },
+  { href: "/mypage/messages", label: "メッセージ", icon: "mail", loginOnly: true },
   { href: "/mypage", label: "マイページ", icon: "person" },
-] as const;
+];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -102,6 +103,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   <span className="material-symbols-outlined text-[20px]">calendar_month</span>
                   カレンダー
                 </Link>
+                {session && (
+                  <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/mypage/messages">
+                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                    メッセージ
+                  </Link>
+                )}
                 <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/mypage">
                   <span className="material-symbols-outlined text-[20px]">person</span>
                   マイページ
@@ -180,7 +187,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="font-display font-bold text-primary text-lg">メニュー</span>
               </div>
               <nav className="flex-1 px-2 py-4 flex flex-col gap-1">
-                {MOBILE_NAV_LINKS.map(({ href, label, icon }) => (
+                {MOBILE_NAV_LINKS.filter((link) => !link.loginOnly || session).map(({ href, label, icon }) => (
                   <Link
                     key={href}
                     href={href}
@@ -257,6 +264,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="material-symbols-outlined">calendar_month</span>
             <span className="text-[10px] font-bold">カレンダー</span>
           </Link>
+          {session && (
+            <Link
+              className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/mypage/messages") ? "text-primary" : "text-text-grey hover:text-primary"}`}
+              href="/mypage/messages"
+            >
+              <span className="material-symbols-outlined">mail</span>
+              <span className="text-[10px] font-bold">メッセージ</span>
+            </Link>
+          )}
           <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/mypage">
             <span className="material-symbols-outlined">person</span>
             <span className="text-[10px] font-bold">マイページ</span>

@@ -111,7 +111,7 @@ export default function UpcomingEvents() {
         {events.map((ev) => (
           <Link
             key={ev.id}
-            href={`/organizations/${ev.organization_id}`}
+            href={`/events/${ev.id}`}
             className="flex-none snap-start w-[320px] bg-white border border-[#f0f2f5] hover:border-text-grey/30 transition-colors rounded-lg overflow-hidden group"
           >
             <div className="h-32 bg-primary/5 flex items-center justify-center">

@@ -230,7 +230,7 @@ export default function SchedulePage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-stretch">
                     <Link
-                      href={`/organizations/${ev.organization_id}`}
+                      href={`/events/${ev.id}`}
                       className="flex-1 p-5 flex flex-col gap-2 min-w-0"
                     >
                       <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -358,7 +358,7 @@ export default function SchedulePage() {
                           {dayEvents.slice(0, 3).map((ev) => (
                             <Link
                               key={ev.id}
-                              href={`/organizations/${ev.organization_id}`}
+                              href={`/events/${ev.id}`}
                               className="block truncate text-[10px] md:text-xs bg-primary/10 text-primary rounded px-1 py-0.5 hover:bg-primary/20"
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -389,7 +389,7 @@ export default function SchedulePage() {
                       </span>
                       <div className="min-w-0 flex-1">
                         <Link
-                          href={`/organizations/${ev.organization_id}`}
+                          href={`/events/${ev.id}`}
                           className="text-primary font-bold hover:underline"
                         >
                           {ev.title ?? "（タイトルなし）"}

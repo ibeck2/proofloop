@@ -25,6 +25,8 @@ export type ReviewRow = {
   content: string | null;
   status: string;
   created_at: string;
+  club_reply?: string | null;
+  club_replied_at?: string | null;
 };
 
 export default async function OrganizationPage({
@@ -55,7 +57,7 @@ export default async function OrganizationPage({
       .order("created_at", { ascending: false }),
     supabase
       .from("reviews")
-      .select("id, organization_id, rating, content, status, created_at")
+      .select("id, organization_id, rating, content, status, created_at, club_reply, club_replied_at")
       .eq("organization_id", id)
       .eq("status", "approved")
       .order("created_at", { ascending: false }),

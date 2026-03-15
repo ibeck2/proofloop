@@ -22,11 +22,24 @@ export default function ClubEventsPage() {
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [eventDate, setEventDate] = useState("");
   const [location, setLocation] = useState("");
   const [description, setDescription] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  /** ISO → "YYYY-MM-DDTHH:mm" for datetime-local (local timezone) */
+  const isoToLocalDatetime = (iso: string) => {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const h = String(d.getHours()).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
+    return `${y}-${m}-${day}T${h}:${min}`;
+  };
 
   const loadUserAndOrg = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -73,7 +86,18 @@ export default function ClubEventsPage() {
     setEventDate("");
     setLocation("");
     setDescription("");
+    setEditingEventId(null);
     setShowForm(false);
+    setErrorMessage(null);
+  };
+
+  const startEdit = (ev: EventRow) => {
+    setEditingEventId(ev.id);
+    setTitle(ev.title ?? "");
+    setEventDate(isoToLocalDatetime(ev.event_date));
+    setLocation(ev.location ?? "");
+    setDescription(ev.description ?? "");
+    setShowForm(true);
     setErrorMessage(null);
   };
 
@@ -85,19 +109,34 @@ export default function ClubEventsPage() {
     }
     setSubmitting(true);
     setErrorMessage(null);
+    const payload = {
+      title: title.trim(),
+      event_date: new Date(eventDate).toISOString(),
+      location: location.trim() || null,
+      description: description.trim() || null,
+    };
     try {
-      const { error } = await supabase.from("events").insert({
-        organization_id: orgId,
-        title: title.trim(),
-        event_date: eventDate,
-        location: location.trim() || null,
-        description: description.trim() || null,
-      });
-      if (error) throw error;
-      resetForm();
-      loadEvents();
+      if (editingEventId) {
+        const { error } = await supabase
+          .from("events")
+          .update(payload)
+          .eq("id", editingEventId);
+        if (error) throw error;
+        resetForm();
+        loadEvents();
+      } else {
+        const { error } = await supabase.from("events").insert({
+          organization_id: orgId,
+          ...payload,
+        });
+        if (error) throw error;
+        resetForm();
+        loadEvents();
+      }
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "登録に失敗しました。");
+      setErrorMessage(
+        err instanceof Error ? err.message : editingEventId ? "更新に失敗しました。" : "登録に失敗しました。"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -153,14 +192,27 @@ export default function ClubEventsPage() {
         <Button
           variant="primary"
           size="sm"
-          onClick={() => setShowForm(true)}
+          onClick={() => {
+            setEditingEventId(null);
+            setTitle("");
+            setEventDate("");
+            setLocation("");
+            setDescription("");
+            setErrorMessage(null);
+            setShowForm(true);
+          }}
           className="mb-8"
         >
           新規イベントを作成
         </Button>
       ) : (
         <div className="mb-8 p-6 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <h3 className="text-lg font-bold text-navy dark:text-white mb-4">イベントを作成</h3>
+          <h3 className="text-lg font-bold text-navy dark:text-white mb-4">
+            {editingEventId ? "イベントを編集" : "イベントを作成"}
+          </h3>
+          {editingEventId && (
+            <p className="text-sm text-text-sub dark:text-slate-400 mb-4">登録済みイベントの内容を変更しています。</p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="event-title" className="block text-sm font-bold text-navy dark:text-slate-200 mb-2">
@@ -222,7 +274,13 @@ export default function ClubEventsPage() {
             )}
             <div className="flex gap-3">
               <Button type="submit" variant="primary" disabled={submitting}>
-                {submitting ? "登録中..." : "登録する"}
+                {submitting
+                  ? editingEventId
+                    ? "更新中..."
+                    : "登録中..."
+                  : editingEventId
+                    ? "更新する"
+                    : "登録する"}
               </Button>
               <Button type="button" variant="outlineMuted" onClick={resetForm}>
                 キャンセル
@@ -263,14 +321,23 @@ export default function ClubEventsPage() {
                     <p className="text-text-sub text-sm mt-2 line-clamp-2">{ev.description}</p>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(ev.id)}
-                  disabled={deletingId === ev.id}
-                  className="flex-shrink-0 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
-                >
-                  {deletingId === ev.id ? "削除中..." : "削除"}
-                </button>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => startEdit(ev)}
+                    className="px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded transition-colors"
+                  >
+                    編集
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(ev.id)}
+                    disabled={deletingId === ev.id}
+                    className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
+                  >
+                    {deletingId === ev.id ? "削除中..." : "削除"}
+                  </button>
+                </div>
               </article>
             ))}
           </div>
