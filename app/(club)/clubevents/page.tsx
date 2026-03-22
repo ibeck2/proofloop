@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Input, Textarea, Button } from "@/components/ui";
+import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
 type EventRow = {
   id: string;
@@ -15,10 +16,15 @@ type EventRow = {
 };
 
 export default function ClubEventsPage() {
+  const {
+    loading: ctxLoading,
+    activeOrgId: orgId,
+    hasNoMemberships,
+    isReady,
+  } = useClubOrganization();
+
   const [userId, setUserId] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
   const [events, setEvents] = useState<EventRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -41,23 +47,6 @@ export default function ClubEventsPage() {
     return `${y}-${m}-${day}T${h}:${min}`;
   };
 
-  const loadUserAndOrg = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      setLoading(false);
-      return;
-    }
-    setUserId(session.user.id);
-    const { data: rows } = await supabase
-      .from("organizations")
-      .select("id")
-      .eq("user_id", session.user.id)
-      .limit(1);
-    const org = (rows as { id: string }[] | null)?.[0];
-    if (org) setOrgId(org.id);
-    setLoading(false);
-  }, []);
-
   const loadEvents = useCallback(async () => {
     if (!orgId) return;
     const { data, error } = await supabase
@@ -74,8 +63,10 @@ export default function ClubEventsPage() {
   }, [orgId]);
 
   useEffect(() => {
-    loadUserAndOrg();
-  }, [loadUserAndOrg]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+  }, []);
 
   useEffect(() => {
     if (orgId) loadEvents();
@@ -167,7 +158,7 @@ export default function ClubEventsPage() {
     });
   };
 
-  if (loading) {
+  if (ctxLoading) {
     return (
       <div className="p-6 lg:p-10">
         <p className="text-text-sub">読み込み中...</p>
@@ -175,10 +166,12 @@ export default function ClubEventsPage() {
     );
   }
 
-  if (!orgId) {
+  if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="p-6 lg:p-10">
-        <p className="text-text-sub">団体プロフィールを登録してください。プロフィール編集から団体情報を作成すると、イベントを管理できるようになります。</p>
+        <p className="text-text-sub">
+          管理できる団体がありません。プロフィール編集から団体情報を作成すると、イベントを管理できるようになります。
+        </p>
       </div>
     );
   }

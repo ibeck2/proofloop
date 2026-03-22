@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Input, Textarea, Button } from "@/components/ui";
+import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
 type OrganizationRow = {
   id: string;
-  user_id: string;
+  user_id?: string;
   name: string | null;
   university: string | null;
   category: string | null;
@@ -104,7 +105,62 @@ const BadgeOptional = () => (
   <span className="ml-2 text-xs font-normal text-slate-600 bg-slate-200 px-2 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
 );
 
+function resetFormToEmpty(
+  setters: {
+    setOrgId: (v: string | null) => void;
+    setName: (v: string) => void;
+    setUniversity: (v: string) => void;
+    setCategory: (v: string) => void;
+    setDescription: (v: string) => void;
+    setMemberCount: (v: string) => void;
+    setActivityFrequency: (v: string) => void;
+    setXId: (v: string) => void;
+    setInstagramId: (v: string) => void;
+    setLineUrl: (v: string) => void;
+    setWebsiteUrl: (v: string) => void;
+    setIsIntercollege: (v: boolean) => void;
+    setTargetGrades: (v: string[]) => void;
+    setSelectionProcess: (v: string) => void;
+    setSelectionFlow: (v: SelectionFlowStep[]) => void;
+    setGenderRatio: (v: string) => void;
+    setGradeComposition: (v: string) => void;
+    setLocationDetail: (v: string) => void;
+    setFeeEntry: (v: string) => void;
+    setFeeAnnual: (v: string) => void;
+    setLogoUrl: (v: string | null) => void;
+  }
+) {
+  setters.setOrgId(null);
+  setters.setName("");
+  setters.setUniversity("");
+  setters.setCategory("");
+  setters.setDescription("");
+  setters.setMemberCount("");
+  setters.setActivityFrequency("");
+  setters.setXId("");
+  setters.setInstagramId("");
+  setters.setLineUrl("");
+  setters.setWebsiteUrl("");
+  setters.setIsIntercollege(false);
+  setters.setTargetGrades([]);
+  setters.setSelectionProcess("選考なし");
+  setters.setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+  setters.setGenderRatio("");
+  setters.setGradeComposition("");
+  setters.setLocationDetail("");
+  setters.setFeeEntry("");
+  setters.setFeeAnnual("");
+  setters.setLogoUrl(null);
+}
+
 export default function OrganizationProfileForm() {
+  const {
+    loading: ctxLoading,
+    activeOrgId,
+    hasNoMemberships,
+    refreshMemberships,
+  } = useClubOrganization();
+
   const [userId, setUserId] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -134,111 +190,168 @@ export default function OrganizationProfileForm() {
   const [saveMessage, setSaveMessage] = useState<"success" | "error" | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const applyOrgRow = useCallback((org: OrganizationRow) => {
+    setOrgId(org.id);
+    setName(org.name ?? "");
+    setUniversity(org.university ?? "");
+    setCategory(org.category ?? "");
+    setDescription(org.description ?? "");
+    setMemberCount(org.member_count ?? "");
+    setActivityFrequency(org.activity_frequency ?? "");
+    setXId(org.x_id ?? "");
+    setInstagramId(org.instagram_id ?? "");
+    setLineUrl(org.line_url ?? "");
+    setWebsiteUrl(org.website_url ?? "");
+    setIsIntercollege(org.is_intercollege ?? false);
+    if (org.target_grades) {
+      try {
+        const parsed = JSON.parse(org.target_grades) as unknown;
+        setTargetGrades(Array.isArray(parsed) ? parsed : org.target_grades.split(",").map((s) => s.trim()).filter(Boolean));
+      } catch {
+        setTargetGrades(org.target_grades.split(",").map((s) => s.trim()).filter(Boolean));
+      }
+    } else {
+      setTargetGrades([]);
+    }
+    setSelectionProcess(org.selection_process === "選考あり" || org.selection_process === "選考なし" || org.selection_process === "その他" ? org.selection_process : "選考なし");
+    if (org.selection_flow && Array.isArray(org.selection_flow) && org.selection_flow.length > 0) {
+      setSelectionFlow(org.selection_flow.map((s: unknown) => {
+        const step = s as SelectionFlowStep;
+        const dt = step.date_type ?? "none";
+        const rawVal = (step.date_value ?? "").trim();
+        const date_value = (dt === "pin" || dt === "deadline") && rawVal
+          ? toLocalDatetimeInput(rawVal)
+          : rawVal;
+        return {
+          name: step.name ?? "",
+          date_type: dt,
+          date_value,
+          description: step.description ?? "",
+          url: step.url ?? "",
+        };
+      }));
+    } else {
+      setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
+    }
+    setGenderRatio(org.gender_ratio ?? "");
+    setGradeComposition(org.grade_composition ?? "");
+    setLocationDetail(org.location_detail ?? "");
+    setFeeEntry(org.fee_entry ?? "");
+    setFeeAnnual(org.fee_annual ?? "");
+    setLogoUrl(org.logo_url ?? null);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    let unsubscribe: (() => void) | undefined;
 
-    const loadProfile = async (uid: string) => {
+    const loadFromContext = async (uid: string) => {
       if (cancelled) return;
-      setUserId(uid);
       setErrorMessage(null);
-      const { data: rows, error: fetchError } = await supabase
-        .from("organizations")
-        .select("id, user_id, name, university, category, description, x_id, instagram_id, line_url, website_url, member_count, activity_frequency, logo_url, is_intercollege, target_grades, selection_process, selection_flow, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, created_at")
-        .eq("user_id", uid)
-        .limit(1);
-      if (cancelled) return;
-      if (fetchError) {
-        setErrorMessage("プロフィールの取得に失敗しました。");
-      }
-      const org = (rows as OrganizationRow[] | null)?.[0];
-      if (org) {
-        setOrgId(org.id);
-        setName(org.name ?? "");
-        setUniversity(org.university ?? "");
-        setCategory(org.category ?? "");
-        setDescription(org.description ?? "");
-        setMemberCount(org.member_count ?? "");
-        setActivityFrequency(org.activity_frequency ?? "");
-        setXId(org.x_id ?? "");
-        setInstagramId(org.instagram_id ?? "");
-        setLineUrl(org.line_url ?? "");
-        setWebsiteUrl(org.website_url ?? "");
-        setIsIntercollege(org.is_intercollege ?? false);
-        if (org.target_grades) {
-          try {
-            const parsed = JSON.parse(org.target_grades) as unknown;
-            setTargetGrades(Array.isArray(parsed) ? parsed : org.target_grades.split(",").map((s) => s.trim()).filter(Boolean));
-          } catch {
-            setTargetGrades(org.target_grades.split(",").map((s) => s.trim()).filter(Boolean));
+      setIsLoading(true);
+      try {
+        if (ctxLoading) return;
+        if (activeOrgId) {
+          const { data: rows, error: fetchError } = await supabase
+            .from("organizations")
+            .select("id, user_id, name, university, category, description, x_id, instagram_id, line_url, website_url, member_count, activity_frequency, logo_url, is_intercollege, target_grades, selection_process, selection_flow, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, created_at")
+            .eq("id", activeOrgId)
+            .limit(1);
+          if (cancelled) return;
+          if (fetchError) {
+            setErrorMessage("プロフィールの取得に失敗しました。");
+            return;
           }
-        } else {
-          setTargetGrades([]);
+          const org = (rows as OrganizationRow[] | null)?.[0];
+          if (org) applyOrgRow(org);
+          else setErrorMessage("団体が見つかりません。");
+        } else if (hasNoMemberships) {
+          resetFormToEmpty({
+            setOrgId,
+            setName,
+            setUniversity,
+            setCategory,
+            setDescription,
+            setMemberCount,
+            setActivityFrequency,
+            setXId,
+            setInstagramId,
+            setLineUrl,
+            setWebsiteUrl,
+            setIsIntercollege,
+            setTargetGrades,
+            setSelectionProcess,
+            setSelectionFlow,
+            setGenderRatio,
+            setGradeComposition,
+            setLocationDetail,
+            setFeeEntry,
+            setFeeAnnual,
+            setLogoUrl,
+          });
         }
-        setSelectionProcess(org.selection_process === "選考あり" || org.selection_process === "選考なし" || org.selection_process === "その他" ? org.selection_process : "選考なし");
-        if (org.selection_flow && Array.isArray(org.selection_flow) && org.selection_flow.length > 0) {
-          setSelectionFlow(org.selection_flow.map((s: unknown) => {
-            const step = s as SelectionFlowStep;
-            const dt = step.date_type ?? "none";
-            const rawVal = (step.date_value ?? "").trim();
-            const date_value = (dt === "pin" || dt === "deadline") && rawVal
-              ? toLocalDatetimeInput(rawVal)
-              : rawVal;
-            return {
-              name: step.name ?? "",
-              date_type: dt,
-              date_value,
-              description: step.description ?? "",
-              url: step.url ?? "",
-            };
-          }));
-        } else {
-          setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
-        }
-        setGenderRatio(org.gender_ratio ?? "");
-        setGradeComposition(org.grade_composition ?? "");
-        setLocationDetail(org.location_detail ?? "");
-        setFeeEntry(org.fee_entry ?? "");
-        setFeeAnnual(org.fee_annual ?? "");
-        setLogoUrl(org.logo_url ?? null);
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-      setIsLoading(false);
-    };
-
-    const tryInitFromSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (session?.user) {
-        await loadProfile(session.user.id);
-        return true;
-      }
-      return false;
     };
 
     (async () => {
-      if (await tryInitFromSession()) return;
-      unsubscribe = supabase.auth.onAuthStateChange((event, session) => {
-        if (cancelled) return;
-        if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
-          if (session?.user) {
-            loadProfile(session.user.id);
-          } else {
-            setErrorMessage("ログイン情報を取得できませんでした。");
-            setIsLoading(false);
-          }
-          if (unsubscribe) {
-            unsubscribe();
-            unsubscribe = undefined;
-          }
-        }
-      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (!session?.user) {
+        setErrorMessage("ログイン情報を取得できませんでした。");
+        setIsLoading(false);
+        return;
+      }
+      setUserId(session.user.id);
+      if (ctxLoading) {
+        setIsLoading(true);
+        return;
+      }
+      await loadFromContext(session.user.id);
     })();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (cancelled) return;
+      if (event === "SIGNED_IN" && session?.user) {
+        setUserId(session.user.id);
+        if (!ctxLoading) void loadFromContext(session.user.id);
+      }
+      if (event === "SIGNED_OUT") {
+        setUserId(null);
+        resetFormToEmpty({
+          setOrgId,
+          setName,
+          setUniversity,
+          setCategory,
+          setDescription,
+          setMemberCount,
+          setActivityFrequency,
+          setXId,
+          setInstagramId,
+          setLineUrl,
+          setWebsiteUrl,
+          setIsIntercollege,
+          setTargetGrades,
+          setSelectionProcess,
+          setSelectionFlow,
+          setGenderRatio,
+          setGradeComposition,
+          setLocationDetail,
+          setFeeEntry,
+          setFeeAnnual,
+          setLogoUrl,
+        });
+        setIsLoading(false);
+      }
+    });
 
     return () => {
       cancelled = true;
-      if (unsubscribe) unsubscribe();
+      subscription?.unsubscribe();
     };
-  }, []);
+  }, [ctxLoading, activeOrgId, hasNoMemberships, applyOrgRow]);
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -340,9 +453,10 @@ export default function OrganizationProfileForm() {
       };
 
       if (orgId) {
+        const { user_id: _omitUserId, ...updatePayload } = payload as typeof payload & { user_id: string };
         const { error } = await supabase
           .from("organizations")
-          .update(payload)
+          .update(updatePayload)
           .eq("id", orgId);
         if (error) throw error;
       } else {
@@ -352,7 +466,16 @@ export default function OrganizationProfileForm() {
           .select("id")
           .single();
         if (error) throw error;
-        if (inserted?.id) setOrgId(inserted.id);
+        if (inserted?.id) {
+          const { error: memErr } = await supabase.from("organization_members").insert({
+            organization_id: inserted.id,
+            user_id: userId,
+            role: "owner",
+          });
+          if (memErr) throw memErr;
+          await refreshMemberships();
+          setOrgId(inserted.id);
+        }
       }
       setSaveMessage("success");
       setTimeout(() => setSaveMessage(null), 4000);

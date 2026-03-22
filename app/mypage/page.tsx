@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -9,24 +9,40 @@ import SearchOrgCard from "@/components/SearchOrgCard";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 import type { ApplicationWithOrg } from "@/lib/types/application";
 import ChatRoom from "@/components/ChatRoom";
+import {
+  fetchMyOrganizationMemberships,
+  type OrganizationMembership,
+} from "@/lib/organizationMembers";
 
 type ProfileRow = {
   id: string;
   email: string | null;
-  display_name: string | null;
+  display_name?: string | null;
+  full_name?: string | null;
   university: string | null;
   faculty: string | null;
-  enrollment_year: string | null;
+  enrollment_year?: string | null;
+  admission_year?: string | null;
+  graduation_year?: string | null;
+  contact_email?: string | null;
 };
 
-const ENROLLMENT_YEAR_OPTIONS = [
+const ADMISSION_YEAR_OPTIONS = [
   { value: "", label: "選択してください" },
   { value: "2026", label: "2026年度" },
   { value: "2025", label: "2025年度" },
   { value: "2024", label: "2024年度" },
   { value: "2023", label: "2023年度" },
   { value: "2022", label: "2022年度" },
-  { value: "before", label: "それ以前" },
+];
+
+const GRADUATION_YEAR_OPTIONS = [
+  { value: "", label: "選択してください" },
+  { value: "2030", label: "2030年度" },
+  { value: "2029", label: "2029年度" },
+  { value: "2028", label: "2028年度" },
+  { value: "2027", label: "2027年度" },
+  { value: "2026", label: "2026年度" },
 ];
 
 type UserRow = {
@@ -71,10 +87,12 @@ export default function MypagePage() {
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
-  const [displayName, setDisplayName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
   const [university, setUniversity] = useState("");
   const [faculty, setFaculty] = useState("");
-  const [enrollmentYear, setEnrollmentYear] = useState("");
+  const [admissionYear, setAdmissionYear] = useState("");
+  const [graduationYear, setGraduationYear] = useState("");
   const [isProfileSaving, setIsProfileSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -90,6 +108,18 @@ export default function MypagePage() {
   const [messageModalApp, setMessageModalApp] = useState<ApplicationWithOrg | null>(null);
   const [unreadApplicationIds, setUnreadApplicationIds] = useState<Set<string>>(new Set());
   const { toggle: toggleSavedOrg } = useSavedOrganizations();
+  // Admin request (団体管理者権限の申請)
+  const [adminRequestModalOpen, setAdminRequestModalOpen] = useState(false);
+  const [adminRequestMode, setAdminRequestMode] = useState<"existing" | "new">("existing");
+  const [adminTargetOrg, setAdminTargetOrg] = useState<OrgRow | null>(null);
+  const [adminSnsType, setAdminSnsType] = useState<string>("X (旧Twitter)");
+  const [adminProofLink, setAdminProofLink] = useState("");
+  const [adminMessage, setAdminMessage] = useState("");
+  const [newOrgName, setNewOrgName] = useState("");
+  const [newOrgUniversity, setNewOrgUniversity] = useState("");
+  const [adminSubmitting, setAdminSubmitting] = useState(false);
+  const [pendingAdminOrgIds, setPendingAdminOrgIds] = useState<Set<string>>(new Set());
+  const [managedMemberships, setManagedMemberships] = useState<OrganizationMembership[]>([]);
 
   const handleMarkedAsRead = useCallback((applicationId: string) => {
     setUnreadApplicationIds((prev) => {
@@ -117,40 +147,120 @@ export default function MypagePage() {
         return;
       }
       setUserId(authUser.id);
-      setUserEmail(authUser.email ?? "");
-      const { data: userRows, error: userError } = await supabase
-        .from("users")
-        .select("id, name, email, role")
-        .eq("id", authUser.id)
-        .limit(1);
-      if (cancelled) return;
-      if (!userError && userRows?.length) {
-        const row = userRows[0] as UserRow;
-        setUserName(row.name?.trim() || null);
-      } else {
-        setUserName(authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? null);
+
+      const authEmail =
+        authUser.email?.trim() ||
+        (typeof authUser.new_email === "string" ? authUser.new_email.trim() : "") ||
+        "";
+      setUserEmail(authEmail);
+
+      const metaName =
+        (authUser.user_metadata?.full_name as string | undefined)?.trim() ||
+        (authUser.user_metadata?.name as string | undefined)?.trim() ||
+        "";
+
+      try {
+        const { data: userRows, error: userError } = await supabase
+          .from("users")
+          .select("id, name, email, role")
+          .eq("id", authUser.id)
+          .limit(1);
+        if (cancelled) return;
+        if (!userError && userRows?.length) {
+          const row = userRows[0] as UserRow;
+          setUserName(row.name?.trim() || metaName || null);
+        } else {
+          setUserName(metaName || null);
+        }
+      } catch {
+        if (!cancelled) setUserName(metaName || null);
       }
-      const { data: profileRows } = await supabase
+
+      // 006 の必須カラムのみ select（存在しない列を指定するとクエリ全体が失敗する）
+      const { data: profileRow, error: profileError } = await supabase
         .from("profiles")
         .select("id, email, display_name, university, faculty, enrollment_year")
         .eq("id", authUser.id)
-        .limit(1);
+        .maybeSingle();
+
       if (cancelled) return;
-      if (profileRows?.length) {
-        const p = profileRows[0] as ProfileRow;
-        setDisplayName(p.display_name ?? "");
+
+      if (profileRow) {
+        const p = profileRow as ProfileRow;
+        setFullName(
+          String(p.display_name ?? metaName ?? "").trim() || metaName
+        );
         setUniversity(p.university ?? "");
         setFaculty(p.faculty ?? "");
-        setEnrollmentYear(p.enrollment_year ?? "");
+        setAdmissionYear(p.enrollment_year ?? p.admission_year ?? "");
+        setGraduationYear(p.graduation_year ?? "");
+        setContactEmail((p.contact_email ?? "").trim() || authEmail);
+        if (authEmail && !(p.email ?? "").trim()) {
+          setUserEmail(authEmail);
+        }
       } else {
-        setDisplayName(authUser.user_metadata?.full_name ?? authUser.user_metadata?.name ?? "");
+        // 未登録、または取得エラー時は認証情報でフォールバック（保存時に upsert で新規作成可能）
+        setFullName(metaName);
+        setUniversity("");
+        setFaculty("");
+        setAdmissionYear("");
+        setGraduationYear("");
+        setContactEmail(authEmail);
+        const msg =
+          profileError &&
+          typeof profileError === "object" &&
+          ("message" in profileError || "code" in profileError)
+            ? String(
+                (profileError as { message?: string; code?: string }).message ||
+                  (profileError as { code?: string }).code ||
+                  ""
+              ).trim()
+            : "";
+        if (msg) {
+          console.warn("mypage profiles fetch:", msg);
+        }
       }
+
       setIsLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  const loadManagedMemberships = useCallback(async () => {
+    if (!userId) {
+      setManagedMemberships([]);
+      return;
+    }
+    const { data, error } = await fetchMyOrganizationMemberships(supabase, userId);
+    if (error) {
+      console.warn("mypage: organization memberships:", error.message);
+    }
+    setManagedMemberships(data);
+  }, [userId]);
+
+  useEffect(() => {
+    void loadManagedMemberships();
+  }, [loadManagedMemberships]);
+
+  // 別タブで承認された直後など、フォーカス復帰時に所属を再取得
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible" && userId) {
+        void loadManagedMemberships();
+      }
+    };
+    const onFocus = () => {
+      if (userId) void loadManagedMemberships();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [userId, loadManagedMemberships]);
 
   useEffect(() => {
     if (!userId) {
@@ -315,27 +425,106 @@ export default function MypagePage() {
     };
   }, [userId]);
 
-  const displayNameLabel = userName && userName.length > 0 ? userName : displayName || "ゲスト";
+  const displayNameLabel = useMemo(() => {
+    const fromUsers = userName?.trim() ?? "";
+    const fromProfile = fullName.trim();
+    const fromEmail =
+      userEmail.includes("@") ? userEmail.split("@")[0].trim() : userEmail.trim();
+    return fromUsers || fromProfile || fromEmail || "ゲスト";
+  }, [userName, fullName, userEmail]);
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId) return;
     setIsProfileSaving(true);
     try {
-      const { error } = await supabase.from("profiles").upsert(
-        {
-          id: userId,
-          email: userEmail || null,
-          display_name: displayName.trim() || null,
-          university: university.trim() || null,
-          faculty: faculty.trim() || null,
-          enrollment_year: enrollmentYear.trim() || null,
-        },
-        { onConflict: "id" }
-      );
-      if (error) throw error;
+      const { data: authData, error: authErr } = await supabase.auth.getUser();
+      if (authErr) {
+        console.error("Profile save error (auth):", authErr);
+        toast.error(authErr.message || "ログイン情報を取得できませんでした");
+        return;
+      }
+      const authUser = authData.user;
+      if (!authUser?.id) {
+        console.error("Profile save error: no user id on session");
+        toast.error("ログイン情報を取得できませんでした");
+        return;
+      }
+
+      // 主キーは必ず現在のセッションのユーザー ID（state の userId とズレないようにする）
+      const profileId = authUser.id;
+      const sessionEmail = authUser.email?.trim() || "";
+      const emailForProfile = sessionEmail || userEmail.trim() || null;
+      const contact = contactEmail.trim() || emailForProfile || null;
+      const nameTrim = fullName.trim() || null;
+
+      // 006_profiles_table.sql のカラム（必ず存在）
+      const basePayload: Record<string, unknown> = {
+        id: profileId,
+        email: emailForProfile,
+        display_name: nameTrim,
+        university: university.trim() || null,
+        faculty: faculty.trim() || null,
+        enrollment_year: admissionYear.trim() || null,
+      };
+
+      // 019_profiles_extend_columns.sql 適用後に追加される列
+      const fullPayload: Record<string, unknown> = {
+        ...basePayload,
+        full_name: nameTrim,
+        contact_email: contact,
+        admission_year: admissionYear.trim() || null,
+        graduation_year: graduationYear.trim() || null,
+        updated_at: new Date().toISOString(),
+      };
+
+      console.log("🚀 Upsert Payload (trying full):", fullPayload);
+
+      let upsertError = (await supabase.from("profiles").upsert(fullPayload, { onConflict: "id" }))
+        .error;
+
+      if (upsertError) {
+        const msg = (upsertError.message || "").toLowerCase();
+        const likelyMissingColumn =
+          msg.includes("column") ||
+          msg.includes("does not exist") ||
+          msg.includes("schema cache") ||
+          upsertError.code === "PGRST204";
+
+        if (likelyMissingColumn) {
+          console.warn(
+            "profiles: full payload failed, retrying with 006 base columns only:",
+            JSON.stringify(upsertError),
+            upsertError
+          );
+          console.log("🚀 Upsert Payload (fallback base):", basePayload);
+          upsertError = (await supabase.from("profiles").upsert(basePayload, { onConflict: "id" }))
+            .error;
+        }
+      }
+
+      if (upsertError) {
+        console.error(
+          "Profile save error:",
+          JSON.stringify(upsertError),
+          upsertError
+        );
+        toast.error(
+          typeof upsertError.message === "string" && upsertError.message
+            ? upsertError.message
+            : "保存に失敗しました"
+        );
+        return;
+      }
+
+      if (profileId !== userId) {
+        setUserId(profileId);
+      }
+      if (emailForProfile && userEmail !== emailForProfile) {
+        setUserEmail(emailForProfile);
+      }
       toast.success("プロフィールを保存しました");
     } catch (err) {
+      console.error("Profile save error:", err);
       toast.error(err instanceof Error ? err.message : "保存に失敗しました");
     } finally {
       setIsProfileSaving(false);
@@ -346,6 +535,7 @@ export default function MypagePage() {
     const keyword = searchKeyword.trim();
     if (!keyword) {
       setSearchResults([]);
+      setPendingAdminOrgIds(new Set());
       setHasSearched(true);
       return;
     }
@@ -358,16 +548,129 @@ export default function MypagePage() {
         .ilike("name", `%${keyword}%`)
         .limit(20);
       if (error) throw error;
-      setSearchResults((rows as OrgRow[]) ?? []);
+      const list = (rows as OrgRow[]) ?? [];
+      setSearchResults(list);
+
+      // 申請中（pending）の団体を先に取得して、ボタンを無効化する（可能な場合のみ）
+      if (userId) {
+        const orgIds = list.map((o) => o.id);
+        if (orgIds.length === 0) {
+          setPendingAdminOrgIds(new Set());
+        } else {
+          try {
+            const { data: pendingRows } = await supabase
+              .from("organization_admin_requests")
+              .select("organization_id,status")
+              .eq("user_id", userId)
+              .eq("status", "pending")
+              .in("organization_id", orgIds);
+            const ids = [...new Set((pendingRows ?? []).map((r: { organization_id: string | null }) => r.organization_id).filter(Boolean))] as string[];
+            setPendingAdminOrgIds(new Set(ids));
+          } catch {
+            setPendingAdminOrgIds(new Set());
+          }
+        }
+      } else {
+        setPendingAdminOrgIds(new Set());
+      }
     } catch {
       setSearchResults([]);
+      setPendingAdminOrgIds(new Set());
     } finally {
       setIsSearching(false);
     }
-  }, [searchKeyword]);
+  }, [searchKeyword, userId]);
 
-  const handleClaimClick = () => {
-    alert("申請機能は準備中です");
+  const openAdminRequestExisting = (org: OrgRow) => {
+    setAdminRequestMode("existing");
+    setAdminTargetOrg(org);
+    setAdminSnsType("X (旧Twitter)");
+    setAdminProofLink("");
+    setAdminMessage("");
+    setNewOrgName("");
+    setNewOrgUniversity("");
+    setAdminRequestModalOpen(true);
+  };
+
+  const openAdminRequestNew = () => {
+    setAdminRequestMode("new");
+    setAdminTargetOrg(null);
+    setAdminSnsType("X (旧Twitter)");
+    setAdminProofLink("");
+    setAdminMessage("");
+    setNewOrgName(searchKeyword.trim());
+    setNewOrgUniversity("");
+    setAdminRequestModalOpen(true);
+  };
+
+  const closeAdminRequestModal = () => {
+    if (adminSubmitting) return;
+    setAdminRequestModalOpen(false);
+  };
+
+  const handleAdminRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) {
+      toast.error("ログインしてください");
+      return;
+    }
+    if (adminSubmitting) return;
+
+    setAdminSubmitting(true);
+    try {
+      if (adminRequestMode === "existing") {
+        if (!adminTargetOrg) return;
+        if (!adminProofLink.trim()) {
+          toast.error("本人確認リンクを入力してください");
+          return;
+        }
+        const { error } = await supabase.from("organization_admin_requests").insert({
+          organization_id: adminTargetOrg.id,
+          sns_type: adminSnsType,
+          proof_link: adminProofLink.trim(),
+          message: adminMessage.trim() || null,
+          user_id: userId,
+        });
+        if (error) throw error;
+      } else {
+        if (!newOrgName.trim()) {
+          toast.error("団体名を入力してください");
+          return;
+        }
+        if (!newOrgUniversity.trim()) {
+          toast.error("主な活動大学を入力してください");
+          return;
+        }
+        if (!adminProofLink.trim()) {
+          toast.error("本人確認リンクを入力してください");
+          return;
+        }
+        const { error } = await supabase.from("organization_admin_requests").insert({
+          organization_id: null,
+          new_org_name: newOrgName.trim(),
+          new_org_university: newOrgUniversity.trim(),
+          sns_type: adminSnsType,
+          proof_link: adminProofLink.trim(),
+          message: adminMessage.trim() || null,
+          user_id: userId,
+        });
+        if (error) throw error;
+      }
+
+      setAdminRequestModalOpen(false);
+      setAdminTargetOrg(null);
+      setAdminProofLink("");
+      setAdminMessage("");
+      setAdminSnsType("X (旧Twitter)");
+      setNewOrgName("");
+      setNewOrgUniversity("");
+      toast.success("運営に申請を送信しました。審査完了までお待ちください。");
+      void loadManagedMemberships();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "申請に失敗しました");
+    } finally {
+      setAdminSubmitting(false);
+    }
   };
 
   const formatEventDate = (iso: string) => {
@@ -386,13 +689,20 @@ export default function MypagePage() {
       <main className="max-w-[640px] mx-auto px-4 py-8 md:py-12">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <h1 className="text-primary text-2xl font-bold">マイページ</h1>
-          <Link
-            href="/clubdashboard"
-            className="inline-flex items-center justify-center gap-2 bg-primary text-white px-5 py-2.5 font-bold text-sm hover:bg-[#001f45] transition-colors rounded-none border-0 shrink-0"
-          >
-            <span className="material-symbols-outlined text-lg">dashboard</span>
-            団体管理ダッシュボードへ
-          </Link>
+          {managedMemberships.length > 0 ? (
+            <div className="flex flex-col gap-2 items-stretch sm:items-end shrink-0">
+              {managedMemberships.map((m) => (
+                <Link
+                  key={m.membershipId}
+                  href={`/clubdashboard?orgId=${encodeURIComponent(m.organizationId)}`}
+                  className="inline-flex items-center justify-center gap-2 bg-primary text-white px-5 py-2.5 font-bold text-sm hover:bg-[#001f45] transition-colors rounded-none border-0"
+                >
+                  <span className="material-symbols-outlined text-lg">dashboard</span>
+                  {m.organization?.name?.trim() || "団体"}の管理ダッシュボードへ
+                </Link>
+              ))}
+            </div>
+          ) : null}
         </div>
 
         {isLoading ? (
@@ -424,15 +734,28 @@ export default function MypagePage() {
                     <p className="text-slate-500 text-xs mt-1">Supabase Authで登録したメールアドレスです</p>
                   </div>
                   <div>
-                    <label htmlFor="profile-display-name" className="block text-slate-700 font-bold text-sm mb-2">
-                      氏名 / ニックネーム
+                    <label htmlFor="profile-full-name" className="block text-slate-700 font-bold text-sm mb-2">
+                      氏名
                     </label>
                     <Input
-                      id="profile-display-name"
+                      id="profile-full-name"
                       type="text"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
                       placeholder="例: 山田 太郎"
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="profile-contact-email" className="block text-slate-700 font-bold text-sm mb-2">
+                      連絡用メールアドレス
+                    </label>
+                    <Input
+                      id="profile-contact-email"
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder="Gmail等"
                       className="w-full"
                     />
                   </div>
@@ -468,11 +791,28 @@ export default function MypagePage() {
                     </label>
                     <select
                       id="profile-enrollment-year"
-                      value={enrollmentYear}
-                      onChange={(e) => setEnrollmentYear(e.target.value)}
+                      value={admissionYear}
+                      onChange={(e) => setAdmissionYear(e.target.value)}
                       className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
                     >
-                      {ENROLLMENT_YEAR_OPTIONS.map((opt) => (
+                      {ADMISSION_YEAR_OPTIONS.map((opt) => (
+                        <option key={opt.value || "blank"} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="profile-graduation-year" className="block text-slate-700 font-bold text-sm mb-2">
+                      卒業予定年度
+                    </label>
+                    <select
+                      id="profile-graduation-year"
+                      value={graduationYear}
+                      onChange={(e) => setGraduationYear(e.target.value)}
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
+                    >
+                      {GRADUATION_YEAR_OPTIONS.map((opt) => (
                         <option key={opt.value || "blank"} value={opt.value}>
                           {opt.label}
                         </option>
@@ -613,9 +953,17 @@ export default function MypagePage() {
                 <p className="text-text-sub text-sm py-6 text-center">検索中...</p>
               ) : hasSearched ? (
                 searchResults.length === 0 ? (
-                  <p className="text-text-sub text-sm py-6 text-center bg-white border border-slate-200 rounded p-6">
-                    該当する団体が見つかりませんでした
-                  </p>
+                  <div className="text-text-sub text-sm py-6 text-center bg-white border border-slate-200 rounded p-6">
+                    <p>該当する団体が見つかりませんでした</p>
+                    <button
+                      type="button"
+                      onClick={openAdminRequestNew}
+                      className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[#001f45] transition-colors font-medium text-sm"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">add</span>
+                      新規団体として登録申請する
+                    </button>
+                  </div>
                 ) : (
                   <ul className="space-y-4">
                     {searchResults.map((org) => (
@@ -636,10 +984,11 @@ export default function MypagePage() {
                           <Button
                             type="button"
                             variant="outline"
-                            onClick={handleClaimClick}
+                            onClick={() => openAdminRequestExisting(org)}
+                            disabled={pendingAdminOrgIds.has(org.id)}
                             className="shrink-0 w-full sm:w-auto"
                           >
-                            この団体の管理者になる（申請）
+                            {pendingAdminOrgIds.has(org.id) ? "申請審査中" : "この団体の管理者になる（申請）"}
                           </Button>
                         </div>
                       </li>
@@ -778,6 +1127,153 @@ export default function MypagePage() {
                       />
                     ) : null}
                   </div>
+                </div>
+              </>
+            )}
+
+            {/* 団体管理者権限の申請モーダル */}
+            {adminRequestModalOpen && (
+              <>
+                <div
+                  role="presentation"
+                  aria-hidden
+                  className="fixed inset-0 z-[200] bg-black/50"
+                  onClick={closeAdminRequestModal}
+                />
+                <div
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="admin-request-title"
+                  className="fixed left-1/2 top-1/2 z-[210] w-[min(520px,92vw)] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl overflow-hidden flex flex-col"
+                >
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-600">
+                    <h3 id="admin-request-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                      管理者権限の申請
+                    </h3>
+                    <button
+                      type="button"
+                      aria-label="閉じる"
+                      onClick={closeAdminRequestModal}
+                      disabled={adminSubmitting}
+                      className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                    >
+                      <span className="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleAdminRequestSubmit} className="px-6 py-4 flex-1 min-h-0 overflow-y-auto">
+                    <div className="space-y-4">
+                      {adminRequestMode === "existing" ? (
+                        <div>
+                          <label className="block text-slate-700 font-bold text-sm mb-2">対象団体名</label>
+                          <Input
+                            value={adminTargetOrg?.name ?? ""}
+                            readOnly
+                            disabled
+                            className="w-full bg-slate-50 cursor-not-allowed"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <div>
+                            <label className="block text-slate-700 font-bold text-sm mb-2">
+                              団体名 <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              value={newOrgName}
+                              onChange={(e) => setNewOrgName(e.target.value)}
+                              placeholder="団体名"
+                              disabled={adminSubmitting}
+                              className="w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-slate-700 font-bold text-sm mb-2">
+                              主な活動大学 <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              value={newOrgUniversity}
+                              onChange={(e) => setNewOrgUniversity(e.target.value)}
+                              placeholder="例: 東京大学"
+                              disabled={adminSubmitting}
+                              className="w-full"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      <div>
+                        <label className="block text-slate-700 font-bold text-sm mb-2">
+                          SNS・リンクの種類
+                          <span className="text-red-500"> *</span>
+                        </label>
+                        <select
+                          value={adminSnsType}
+                          onChange={(e) => setAdminSnsType(e.target.value)}
+                          disabled={adminSubmitting}
+                          className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
+                        >
+                          <option value="X (旧Twitter)">X (旧Twitter)</option>
+                          <option value="Instagram">Instagram</option>
+                          <option value="団体公式Webサイト">団体公式Webサイト</option>
+                          <option value="その他">その他</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-700 font-bold text-sm mb-2">
+                          本人確認リンク <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          value={adminProofLink}
+                          onChange={(e) => setAdminProofLink(e.target.value)}
+                          placeholder="公式SNSのURL等を入力してください"
+                          disabled={adminSubmitting}
+                          className="w-full"
+                        />
+                        <p className="text-slate-500 text-xs mt-2">
+                          ※審査のため、ご入力いただいたSNSアカウントのDMやメールアドレス宛に、運営から本人確認のご連絡を差し上げる場合がございます。必ず団体公式、もしくは代表者様のアカウントURLをご指定ください。
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-slate-700 font-bold text-sm mb-2">運営へのメッセージ</label>
+                        <textarea
+                          value={adminMessage}
+                          onChange={(e) => setAdminMessage(e.target.value)}
+                          placeholder="私が代表の〇〇です"
+                          rows={4}
+                          disabled={adminSubmitting}
+                          className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary resize-y"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={closeAdminRequestModal}
+                        disabled={adminSubmitting}
+                      >
+                        キャンセル
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        className="flex-1"
+                        disabled={
+                          adminSubmitting ||
+                          (adminRequestMode === "existing"
+                            ? !adminTargetOrg?.id || !adminProofLink.trim()
+                            : !newOrgName.trim() || !newOrgUniversity.trim() || !adminProofLink.trim())
+                        }
+                      >
+                        {adminSubmitting ? "送信中..." : "送信する"}
+                      </Button>
+                    </div>
+                  </form>
                 </div>
               </>
             )}

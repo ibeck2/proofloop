@@ -13,6 +13,7 @@ export default function MypageMessagesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [unreadIds, setUnreadIds] = useState<Set<string>>(new Set());
+  const [deeplinkAppId, setDeeplinkAppId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -85,6 +86,20 @@ export default function MypageMessagesPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  /** メール通知の「チャットを開く」用: ?app=<application_id> */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = new URLSearchParams(window.location.search).get("app");
+    if (id) setDeeplinkAppId(id);
+  }, []);
+
+  useEffect(() => {
+    if (!deeplinkAppId || applications.length === 0) return;
+    if (applications.some((a) => a.id === deeplinkAppId)) {
+      setSelectedId(deeplinkAppId);
+    }
+  }, [deeplinkAppId, applications]);
 
   const handleMarkedAsRead = useCallback((applicationId: string) => {
     setUnreadIds((prev) => {

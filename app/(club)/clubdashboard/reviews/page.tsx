@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
 type ReviewRow = {
   id: string;
@@ -15,8 +16,6 @@ type ReviewRow = {
   club_replied_at: string | null;
 };
 
-type OrgRow = { id: string; name: string | null };
-
 function formatReviewDate(iso: string): string {
   return new Date(iso).toLocaleDateString("ja-JP", {
     year: "numeric",
@@ -26,32 +25,17 @@ function formatReviewDate(iso: string): string {
 }
 
 export default function ClubDashboardReviewsPage() {
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [orgName, setOrgName] = useState<string | null>(null);
+  const {
+    loading: ctxLoading,
+    activeOrgId: orgId,
+    activeOrgName: orgName,
+    hasNoMemberships,
+    isReady,
+  } = useClubOrganization();
   const [reviews, setReviews] = useState<ReviewRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandingReplyId, setExpandingReplyId] = useState<string | null>(null);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [submittingId, setSubmittingId] = useState<string | null>(null);
-
-  const loadOrg = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      setLoading(false);
-      return;
-    }
-    const { data: rows } = await supabase
-      .from("organizations")
-      .select("id, name")
-      .eq("user_id", session.user.id)
-      .limit(1);
-    const org = (rows as OrgRow[] | null)?.[0];
-    if (org) {
-      setOrgId(org.id);
-      setOrgName(org.name ?? null);
-    }
-    setLoading(false);
-  }, []);
 
   const loadReviews = useCallback(async () => {
     if (!orgId) return;
@@ -68,10 +52,6 @@ export default function ClubDashboardReviewsPage() {
     }
     setReviews((data as ReviewRow[]) ?? []);
   }, [orgId]);
-
-  useEffect(() => {
-    loadOrg();
-  }, [loadOrg]);
 
   useEffect(() => {
     if (orgId) loadReviews();
@@ -111,7 +91,7 @@ export default function ClubDashboardReviewsPage() {
     }
   };
 
-  if (loading) {
+  if (ctxLoading) {
     return (
       <div className="p-6 lg:p-10 flex items-center justify-center min-h-[200px]">
         <p className="text-slate-500">読み込み中...</p>
@@ -119,11 +99,11 @@ export default function ClubDashboardReviewsPage() {
     );
   }
 
-  if (!orgId) {
+  if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="p-6 lg:p-10">
         <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 p-6 text-center">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">団体が登録されていません</p>
+          <p className="text-amber-800 dark:text-amber-200 font-medium">管理できる団体がありません</p>
           <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">プロフィール編集で団体を登録してください。</p>
         </div>
       </div>

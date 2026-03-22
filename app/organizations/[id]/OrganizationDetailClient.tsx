@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { fetchOrganizationOwnerUserId } from "@/lib/organizationMembers";
 import { Button } from "@/components/ui";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
+import OrganizationPageViewTracker from "@/components/OrganizationPageViewTracker";
 import type { Application, ProfileForEntry } from "@/lib/types/application";
 
 export type EventRow = {
@@ -121,6 +123,83 @@ type Props = {
   approvedReviews?: ReviewRow[];
 };
 
+/** エントリー完了後に団体管理者へ通知メール（ベストエフォート・await しない） */
+function fireApplyNotificationEmail(opts: {
+  organizationId: string;
+  applicantUserId: string;
+  clubName: string | null;
+  fallbackProfile: ProfileForEntry | null;
+}) {
+  const { organizationId, applicantUserId, clubName, fallbackProfile } = opts;
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "";
+  const atsUrl = `${origin}/clubats?orgId=${encodeURIComponent(organizationId)}`;
+
+  void (async () => {
+    try {
+      const ownerId = await fetchOrganizationOwnerUserId(supabase, organizationId);
+      if (!ownerId) {
+        console.error("apply notify: no organization owner in organization_members");
+        return;
+      }
+
+      const { data: adminProfile, error: adminErr } = await supabase
+        .from("profiles")
+        .select("contact_email")
+        .eq("id", ownerId)
+        .maybeSingle();
+
+      if (adminErr) {
+        console.error("apply notify: admin profile fetch failed", adminErr);
+        return;
+      }
+
+      const contactEmail = adminProfile?.contact_email?.trim();
+      if (!contactEmail) return;
+
+      const { data: applicantProfile, error: appErr } = await supabase
+        .from("profiles")
+        .select("full_name, display_name, university")
+        .eq("id", applicantUserId)
+        .maybeSingle();
+
+      if (appErr) {
+        console.error("apply notify: applicant profile fetch failed", appErr);
+        return;
+      }
+
+      const applicantName =
+        applicantProfile?.full_name?.trim() ||
+        applicantProfile?.display_name?.trim() ||
+        fallbackProfile?.display_name?.trim() ||
+        "応募者";
+      const applicantUniversity =
+        applicantProfile?.university?.trim() ||
+        fallbackProfile?.university?.trim() ||
+        "（大学名未設定）";
+
+      const res = await fetch("/api/emails/apply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: contactEmail,
+          clubName: clubName?.trim() || "団体",
+          applicantName,
+          applicantUniversity,
+          atsUrl,
+        }),
+      });
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        console.error("apply notify email API failed", res.status, j);
+      }
+    } catch (e) {
+      console.error("apply notify error", e);
+    }
+  })();
+}
+
 export default function OrganizationDetailClient({
   org,
   events = [],
@@ -193,6 +272,12 @@ export default function OrganizationDetailClient({
       setEntryModalOpen(false);
       setApplicantMessage("");
       toast.success("エントリーが完了しました");
+      fireApplyNotificationEmail({
+        organizationId: org.id,
+        applicantUserId: session.user.id,
+        clubName: org.name,
+        fallbackProfile: profileForEntry,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "エントリーに失敗しました");
     } finally {
@@ -251,6 +336,7 @@ export default function OrganizationDetailClient({
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-display">
+      <OrganizationPageViewTracker organizationId={org.id} />
       <main className="max-w-4xl mx-auto px-4 py-8 pb-20 md:pb-12">
         <Link
           href="/search"

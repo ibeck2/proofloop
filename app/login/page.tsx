@@ -178,6 +178,12 @@ export default function LoginPage() {
               <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
                 {isLoading ? "処理中..." : "ログイン"}
               </Button>
+              <p className="text-center text-sm text-grey-custom mt-4">
+                アカウントをお持ちでない方
+                <Link href="/signup" className="text-primary font-bold hover:underline ml-1">
+                  はこちら
+                </Link>
+              </p>
             </form>
           )}
 

@@ -6,33 +6,22 @@ import { supabase } from "@/lib/supabase";
 import type { ApplicationWithProfile } from "@/lib/types/application";
 import ChatRoom from "@/components/ChatRoom";
 import { formatRelativeTime } from "@/lib/format";
-
-type OrgRow = { id: string; name: string | null };
+import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
 export default function ClubMessagesPage() {
+  const {
+    loading: ctxLoading,
+    activeOrgId: orgId,
+    hasNoMemberships,
+    isReady,
+    withOrgQuery,
+  } = useClubOrganization();
+
   const [userId, setUserId] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
   const [applications, setApplications] = useState<ApplicationWithProfile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [unreadIds, setUnreadIds] = useState<Set<string>>(new Set());
-
-  const loadOrg = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      setLoading(false);
-      return;
-    }
-    setUserId(session.user.id);
-    const { data: rows } = await supabase
-      .from("organizations")
-      .select("id, name")
-      .eq("user_id", session.user.id)
-      .limit(1);
-    const org = (rows as OrgRow[] | null)?.[0];
-    if (org) setOrgId(org.id);
-    setLoading(false);
-  }, []);
+  const [deeplinkAppId, setDeeplinkAppId] = useState<string | null>(null);
 
   const loadApplications = useCallback(async () => {
     if (!orgId) return;
@@ -86,12 +75,28 @@ export default function ClubMessagesPage() {
   }, [orgId]);
 
   useEffect(() => {
-    loadOrg();
-  }, [loadOrg]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+  }, []);
 
   useEffect(() => {
     if (orgId) loadApplications();
   }, [orgId, loadApplications]);
+
+  /** メール通知の「チャットを開く」用: ?app=<application_id> */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = new URLSearchParams(window.location.search).get("app");
+    if (id) setDeeplinkAppId(id);
+  }, []);
+
+  useEffect(() => {
+    if (!deeplinkAppId || applications.length === 0) return;
+    if (applications.some((a) => a.id === deeplinkAppId)) {
+      setSelectedId(deeplinkAppId);
+    }
+  }, [deeplinkAppId, applications]);
 
   const handleMarkedAsRead = useCallback((applicationId: string) => {
     setUnreadIds((prev) => {
@@ -103,7 +108,7 @@ export default function ClubMessagesPage() {
 
   const selectedApp = applications.find((a) => a.id === selectedId);
 
-  if (loading) {
+  if (ctxLoading) {
     return (
       <div className="p-6 md:p-10 flex items-center justify-center min-h-[50vh]">
         <p className="text-slate-500">読み込み中...</p>
@@ -111,11 +116,11 @@ export default function ClubMessagesPage() {
     );
   }
 
-  if (!orgId) {
+  if (!ctxLoading && (hasNoMemberships || !isReady || !orgId)) {
     return (
       <div className="p-6 md:p-10">
         <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 p-6 text-center">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">団体が登録されていません</p>
+          <p className="text-amber-800 dark:text-amber-200 font-medium">管理できる団体がありません</p>
           <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">プロフィール編集で団体を登録してください。</p>
         </div>
       </div>
@@ -139,7 +144,7 @@ export default function ClubMessagesPage() {
           <h1 className="text-lg font-bold text-slate-900 dark:text-white truncate">メッセージ</h1>
         </div>
         <Link
-          href="/clubats"
+          href={withOrgQuery("/clubats")}
           className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
         >
           <span className="material-symbols-outlined text-[20px]">group_work</span>

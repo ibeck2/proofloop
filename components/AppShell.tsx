@@ -5,7 +5,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
-const STUDENT_PATHS = ["/", "/search", "/classinfo", "/schedule", "/clubprofile", "/mypage"];
+const STUDENT_PATHS = [
+  "/",
+  "/search",
+  "/classinfo",
+  "/schedule",
+  "/clubprofile",
+  "/mypage",
+  "/timeline",
+];
 
 function isStudentPath(pathname: string): boolean {
   if (pathname === "/") return true;
@@ -15,6 +23,7 @@ function isStudentPath(pathname: string): boolean {
 const MOBILE_NAV_LINKS: Array<{ href: string; label: string; icon: string; loginOnly?: boolean }> = [
   { href: "/", label: "ホーム", icon: "home" },
   { href: "/search", label: "検索", icon: "search" },
+  { href: "/timeline", label: "新着", icon: "dynamic_feed" },
   { href: "/schedule", label: "カレンダー", icon: "calendar_month" },
   { href: "/mypage/messages", label: "メッセージ", icon: "mail", loginOnly: true },
   { href: "/mypage", label: "マイページ", icon: "person" },
@@ -98,6 +107,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/search">
                   <span className="material-symbols-outlined text-[20px]">search</span>
                   検索
+                </Link>
+                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/timeline">
+                  <span className="material-symbols-outlined text-[20px]">dynamic_feed</span>
+                  新着情報
                 </Link>
                 <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/schedule">
                   <span className="material-symbols-outlined text-[20px]">calendar_month</span>
@@ -259,6 +272,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/search">
             <span className="material-symbols-outlined">search</span>
             <span className="text-[10px] font-bold">検索</span>
+          </Link>
+          <Link
+            className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/timeline") ? "text-primary" : "text-text-grey hover:text-primary"}`}
+            href="/timeline"
+          >
+            <span className="material-symbols-outlined">dynamic_feed</span>
+            <span className="text-[10px] font-bold">新着</span>
           </Link>
           <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/schedule">
             <span className="material-symbols-outlined">calendar_month</span>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui";
+import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
 type PhotoRow = {
   id: string;
@@ -12,30 +13,18 @@ type PhotoRow = {
 };
 
 export default function ClubPhotosPage() {
+  const {
+    loading: ctxLoading,
+    activeOrgId: orgId,
+    hasNoMemberships,
+    isReady,
+  } = useClubOrganization();
+
   const [userId, setUserId] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
   const [photos, setPhotos] = useState<PhotoRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const loadUserAndOrg = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      setLoading(false);
-      return;
-    }
-    setUserId(session.user.id);
-    const { data: rows } = await supabase
-      .from("organizations")
-      .select("id")
-      .eq("user_id", session.user.id)
-      .limit(1);
-    const org = (rows as { id: string }[] | null)?.[0];
-    if (org) setOrgId(org.id);
-    setLoading(false);
-  }, []);
 
   const loadPhotos = useCallback(async () => {
     if (!orgId) return;
@@ -53,8 +42,10 @@ export default function ClubPhotosPage() {
   }, [orgId]);
 
   useEffect(() => {
-    loadUserAndOrg();
-  }, [loadUserAndOrg]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+  }, []);
 
   useEffect(() => {
     if (orgId) loadPhotos();
@@ -107,7 +98,7 @@ export default function ClubPhotosPage() {
     }
   };
 
-  if (loading) {
+  if (ctxLoading) {
     return (
       <div className="p-6 lg:p-10">
         <p className="text-text-sub">読み込み中...</p>
@@ -115,10 +106,12 @@ export default function ClubPhotosPage() {
     );
   }
 
-  if (!orgId) {
+  if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="p-6 lg:p-10">
-        <p className="text-text-sub">団体プロフィールを登録してください。プロフィール編集から団体情報を作成すると、フォトギャラリーを管理できるようになります。</p>
+        <p className="text-text-sub">
+          管理できる団体がありません。プロフィール編集から団体情報を作成すると、フォトギャラリーを管理できるようになります。
+        </p>
       </div>
     );
   }

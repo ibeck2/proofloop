@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import type { ApplicationWithProfile } from "@/lib/types/application";
 import ChatRoom from "@/components/ChatRoom";
 import { Input, Button } from "@/components/ui";
+import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
 const SOURCE_OPTIONS = [
   { value: "LINE", label: "LINE" },
@@ -90,9 +91,16 @@ function laneIdToPayload(laneId: string): { status: string; current_step: string
 }
 
 export default function ClubAtsPage() {
+  const {
+    loading: ctxLoading,
+    activeOrgId: orgId,
+    activeOrgName: orgName,
+    hasNoMemberships,
+    isReady,
+    withOrgQuery,
+  } = useClubOrganization();
+
   const [userId, setUserId] = useState<string | null>(null);
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [orgName, setOrgName] = useState<string | null>(null);
   const [selectionFlow, setSelectionFlow] = useState<SelectionFlowStep[]>([]);
   const [applications, setApplications] = useState<ApplicationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,31 +121,26 @@ export default function ClubAtsPage() {
   const stepTargetRatesRef = useRef<Record<string, number>>({});
   stepTargetRatesRef.current = stepTargetRates;
 
-  const loadOrg = useCallback(async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session?.user) {
-      setLoading(false);
+  const loadOrgSettings = useCallback(async () => {
+    if (!orgId) {
+      setSelectionFlow([]);
+      setPlannedHireCount("");
+      setStepTargetRates({});
       return;
     }
-    setUserId(session.user.id);
     const { data: rows } = await supabase
       .from("organizations")
       .select("id, name, selection_flow, planned_hire_count, step_target_rates")
-      .eq("user_id", session.user.id)
+      .eq("id", orgId)
       .limit(1);
     const org = (rows as OrgRow[] | null)?.[0];
     if (org) {
-      setOrgId(org.id);
-      setOrgName(org.name ?? null);
       const flow = org.selection_flow && Array.isArray(org.selection_flow) ? org.selection_flow : [];
       setSelectionFlow(flow);
       setPlannedHireCount(org.planned_hire_count ?? "");
       setStepTargetRates(typeof org.step_target_rates === "object" && org.step_target_rates ? org.step_target_rates : {});
     }
-    setLoading(false);
-  }, []);
+  }, [orgId]);
 
   const loadApplications = useCallback(async () => {
     if (!orgId) return;
@@ -194,8 +197,23 @@ export default function ClubAtsPage() {
   }, [orgId]);
 
   useEffect(() => {
-    loadOrg();
-  }, [loadOrg]);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUserId(session?.user?.id ?? null);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (ctxLoading) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      await loadOrgSettings();
+      if (!cancelled) setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [ctxLoading, orgId, loadOrgSettings]);
 
   useEffect(() => {
     if (orgId) loadApplications();
@@ -389,12 +407,14 @@ export default function ClubAtsPage() {
     );
   }
 
-  if (!orgId) {
+  if (!ctxLoading && (hasNoMemberships || !isReady || !orgId)) {
     return (
       <div className="p-6 md:p-10">
         <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 p-6 text-center">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">団体が登録されていません</p>
-          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">プロフィール編集で団体を登録してください。</p>
+          <p className="text-amber-800 dark:text-amber-200 font-medium">管理できる団体がありません</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+            プロフィール編集で団体を登録するか、既存団体への参加申請を行ってください。
+          </p>
         </div>
       </div>
     );
@@ -411,7 +431,7 @@ export default function ClubAtsPage() {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Link
-            href="/clubmessages"
+            href={withOrgQuery("/clubmessages")}
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-sm transition-colors"
           >
             <span className="material-symbols-outlined text-[20px]">mail</span>

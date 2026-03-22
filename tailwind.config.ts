@@ -27,8 +27,6 @@ const config: Config = {
         "neutral-light": "#f0f0f5",
         "neutral-grey": "#707070",
         "border-grey": "#e5e7eb",
-        "mission-grey": "#707070",
-        "mission-red": "#8b0000",
         "neutral-gray": "#707070",
         "primary-hover": "#001f42",
         "filter-bg": "#F5F5F5",

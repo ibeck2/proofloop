@@ -2,11 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui";
-
-const ADMIN_EMAIL = "admin99@test.com";
 
 type ReviewRow = {
   id: string;
@@ -22,13 +21,12 @@ type ReviewWithOrg = ReviewRow & {
 };
 
 export default function AdminReviewsPage() {
+  const router = useRouter();
   const [reviews, setReviews] = useState<ReviewWithOrg[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
-
-  const isAdmin = userEmail?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const loadPending = useCallback(async () => {
     const { data: reviewsData, error: reviewsError } = await supabase
@@ -91,11 +89,42 @@ export default function AdminReviewsPage() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUserEmail(session?.user?.email ?? null);
+    let cancelled = false;
+    (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const user = sessionData.session?.user;
+      if (!user) {
+        if (!cancelled) {
+          setSessionChecked(true);
+          router.replace("/");
+        }
+        return;
+      }
+
+      const { data: profileRows, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, role")
+        .eq("id", user.id)
+        .limit(1);
+
+      if (cancelled) return;
+      if (profileError || !profileRows || profileRows.length === 0) {
+        setIsAdmin(false);
+        setSessionChecked(true);
+        router.replace("/");
+        return;
+      }
+
+      const role = (profileRows[0] as { role?: string }).role;
+      setIsAdmin(role === "admin");
       setSessionChecked(true);
-    });
-  }, []);
+      if (role !== "admin") router.replace("/");
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   useEffect(() => {
     if (sessionChecked && isAdmin) loadPending();
@@ -121,7 +150,7 @@ export default function AdminReviewsPage() {
           (error as { details?: unknown }).details
         );
         toast.error(
-          "更新に失敗しました。管理者権限（admin99@test.com）でログインしているか確認してください"
+          "更新に失敗しました。profiles.role が admin のアカウントでログインしているか、Supabase の RLS を確認してください"
         );
         return;
       }
@@ -133,7 +162,7 @@ export default function AdminReviewsPage() {
         typeof err === "object" && err ? JSON.stringify(err, null, 2) : ""
       );
       toast.error(
-        "更新に失敗しました。管理者権限（admin99@test.com）でログインしているか確認してください"
+        "更新に失敗しました。profiles.role が admin のアカウントでログインしているか、Supabase の RLS を確認してください"
       );
     } finally {
       setActionId(null);
@@ -149,20 +178,11 @@ export default function AdminReviewsPage() {
         <h1 className="text-2xl font-bold text-navy mb-2">口コミ承認管理</h1>
         <p className="text-slate-600 text-sm mb-8">承認待ちの口コミを一覧で確認し、承認または却下できます。</p>
 
-        {sessionChecked && !isAdmin && (
-          <div className="mb-6 p-4 rounded-lg border-2 border-amber-500 bg-amber-50 text-amber-800">
-            <p className="font-bold">このページは運営専用です</p>
-            <p className="text-sm mt-1">
-              口コミの承認・却下を行うには、管理者アカウント（{ADMIN_EMAIL}）でログインしてください。
-            </p>
-          </div>
-        )}
-
         {!sessionChecked || !isAdmin ? (
           !sessionChecked ? (
             <p className="text-slate-500">確認中...</p>
           ) : (
-            <p className="text-slate-500">上記のアカウントでログインすると操作できます。</p>
+            <p className="text-slate-500">トップへ移動しました。システム管理者（profiles.role = admin）のみアクセスできます。</p>
           )
         ) : loading ? (
           <p className="text-slate-500">読み込み中...</p>

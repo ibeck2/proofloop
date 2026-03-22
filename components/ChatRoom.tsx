@@ -5,6 +5,146 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { ApplicationMessage } from "@/lib/types/application";
 import MessageBubble from "@/components/MessageBubble";
+import { fetchOrganizationOwnerUserId } from "@/lib/organizationMembers";
+
+function firstJoin<T>(v: T | T[] | null | undefined): T | null {
+  if (v == null) return null;
+  if (Array.isArray(v)) return (v[0] ?? null) as T | null;
+  return v as T;
+}
+
+function truncateSnippetForEmail(text: string, maxLen = 50): string {
+  const t = text.trim();
+  if (t.length <= maxLen) return t;
+  return `${t.slice(0, maxLen)}...`;
+}
+
+type OrgJoin = { name: string | null };
+
+/**
+ * メッセージ送信成功後に受信者へ通知メール（ベストエフォート・await しない）
+ */
+function fireChatEmailNotification(opts: {
+  applicationId: string;
+  viewerIsClub: boolean;
+  senderUserId: string;
+  messageContent: string;
+}): void {
+  const { applicationId, viewerIsClub, senderUserId, messageContent } = opts;
+  const messageSnippet = truncateSnippetForEmail(messageContent, 50);
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : "";
+
+  void (async () => {
+    try {
+      const { data: appRow, error: appErr } = await supabase
+        .from("applications")
+        .select("user_id, organization_id, organizations ( name )")
+        .eq("id", applicationId)
+        .maybeSingle();
+
+      if (appErr) {
+        console.error(
+          "chat notify: application fetch failed",
+          appErr.message,
+          appErr
+        );
+        return;
+      }
+      if (!appRow) {
+        console.error("chat notify: application not found");
+        return;
+      }
+
+      const org = firstJoin(appRow.organizations as OrgJoin | OrgJoin[] | null);
+      const orgPk = appRow.organization_id as string;
+
+      let recipientUserId: string | null = null;
+      let senderName = "";
+      let chatUrl = "";
+
+      if (viewerIsClub) {
+        recipientUserId = appRow.user_id ?? null;
+        senderName = org?.name?.trim() || "団体";
+        chatUrl = `${origin}/mypage/messages?app=${encodeURIComponent(applicationId)}`;
+      } else {
+        recipientUserId = await fetchOrganizationOwnerUserId(supabase, orgPk);
+        chatUrl = `${origin}/clubmessages?orgId=${encodeURIComponent(orgPk)}&app=${encodeURIComponent(applicationId)}`;
+        const { data: senderProfile, error: spErr } = await supabase
+          .from("profiles")
+          .select("full_name, display_name")
+          .eq("id", senderUserId)
+          .maybeSingle();
+        if (spErr) {
+          console.error(
+            "chat notify: sender profile fetch failed",
+            spErr.message
+          );
+        }
+        const sp = senderProfile as {
+          full_name?: string | null;
+          display_name?: string | null;
+        } | null;
+        senderName =
+          sp?.full_name?.trim() ||
+          sp?.display_name?.trim() ||
+          "学生";
+      }
+
+      if (!recipientUserId) {
+        return;
+      }
+
+      const { data: recipientProfile, error: rpErr } = await supabase
+        .from("profiles")
+        .select("contact_email, full_name, display_name")
+        .eq("id", recipientUserId)
+        .maybeSingle();
+
+      if (rpErr) {
+        console.error(
+          "chat notify: recipient profile fetch failed",
+          rpErr.message
+        );
+        return;
+      }
+      if (!recipientProfile) return;
+
+      const rp = recipientProfile as {
+        contact_email: string | null;
+        full_name: string | null;
+        display_name: string | null;
+      };
+
+      const email = rp.contact_email?.trim();
+      if (!email) return;
+
+      const recipientName =
+        rp.full_name?.trim() ||
+        rp.display_name?.trim() ||
+        "ユーザー";
+
+      const res = await fetch("/api/emails/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          recipientName,
+          senderName,
+          messageSnippet,
+          chatUrl,
+        }),
+      });
+
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        console.error("chat notify email API failed", res.status, j);
+      }
+    } catch (e) {
+      console.error("chat notify error", e);
+    }
+  })();
+}
 
 export interface ChatRoomProps {
   applicationId: string | null;
@@ -112,16 +252,23 @@ export default function ChatRoom({
     e.preventDefault();
     if (!applicationId || !input.trim()) return;
     setSending(true);
+    const trimmed = input.trim();
     try {
       const { error } = await supabase.from("application_messages").insert({
         application_id: applicationId,
         sender_id: userId,
         is_from_club: viewerIsClub,
-        content: input.trim(),
+        content: trimmed,
       });
       if (error) throw error;
       setInput("");
       toast.success("送信しました");
+      fireChatEmailNotification({
+        applicationId,
+        viewerIsClub,
+        senderUserId: userId,
+        messageContent: trimmed,
+      });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "送信に失敗しました");
     } finally {
