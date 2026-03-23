@@ -3,12 +3,33 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 
-const MAGIC_EMAIL = "ibeckzoom@gmail.com";
+const OPERATIONS_EMAIL_WHITELIST = "ibeckzoom@gmail.com";
+const UNIVERSITY_DOMAIN_ERROR = "大学発行のメールアドレス（.ac.jpなど）を入力してください";
 
 type TabType = "student" | "company";
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+function isAllowedUniversityDomainFromEmail(email: string): boolean {
+  const normalized = normalizeEmail(email);
+  if (normalized === OPERATIONS_EMAIL_WHITELIST) {
+    return true;
+  }
+  const domain = normalized.split("@")[1];
+  return (
+    !!domain &&
+    (domain.endsWith(".ac.jp") ||
+      domain.endsWith(".waseda.jp") ||
+      domain === "keio.jp" ||
+      domain.endsWith(".keio.jp"))
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,9 +41,12 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    const trimmedEmail = email.trim().toLowerCase();
-    const trimmedPassword = password.trim();
+  const signIn = async (
+    email: string,
+    passwordRaw: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    const trimmedEmail = normalizeEmail(email);
+    const trimmedPassword = passwordRaw.trim();
     if (!trimmedEmail || !trimmedPassword) {
       return { success: false, error: "メールアドレスとパスワードを入力してください。" };
     }
@@ -35,6 +59,7 @@ export default function LoginPage() {
       password: trimmedPassword,
     });
     if (error) {
+      console.error("Login Error:", error);
       return { success: false, error: error.message ?? "ログインに失敗しました。" };
     }
     return { success: true };
@@ -43,11 +68,14 @@ export default function LoginPage() {
   const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    const email = acEmail.trim().toLowerCase();
-    if (email === MAGIC_EMAIL) {
-      router.push("/mypage");
+
+    const email = normalizeEmail(acEmail);
+    if (!isAllowedUniversityDomainFromEmail(email)) {
+      setErrorMessage(UNIVERSITY_DOMAIN_ERROR);
+      toast.error(UNIVERSITY_DOMAIN_ERROR);
       return;
     }
+
     setIsLoading(true);
     try {
       const result = await signIn(acEmail, password);
@@ -55,9 +83,15 @@ export default function LoginPage() {
         router.push("/mypage");
         return;
       }
-      setErrorMessage(result.error ?? "ログインに失敗しました。");
+      const msg = result.error ?? "ログインに失敗しました。";
+      setErrorMessage(msg);
+      toast.error(msg);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "予期しないエラーが発生しました。");
+      console.error("Login Error:", err);
+      const msg =
+        err instanceof Error ? err.message : "予期しないエラーが発生しました。";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -66,10 +100,6 @@ export default function LoginPage() {
   const handleCompanySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
-    if (companyEmail.trim().toLowerCase() === MAGIC_EMAIL) {
-      router.push("/companydashboard");
-      return;
-    }
     setIsLoading(true);
     try {
       const result = await signIn(companyEmail, companyPassword);
@@ -77,9 +107,15 @@ export default function LoginPage() {
         router.push("/companydashboard");
         return;
       }
-      setErrorMessage(result.error ?? "ログインに失敗しました。");
+      const msg = result.error ?? "ログインに失敗しました。";
+      setErrorMessage(msg);
+      toast.error(msg);
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "予期しないエラーが発生しました。");
+      console.error("Login Error:", err);
+      const msg =
+        err instanceof Error ? err.message : "予期しないエラーが発生しました。";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -90,14 +126,16 @@ export default function LoginPage() {
       <div className="w-full max-w-[420px] bg-white border border-slate-200 shadow-sm">
         <div className="p-8">
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 text-primary font-display font-bold text-xl tracking-tight">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-primary font-display font-bold text-xl tracking-tight"
+            >
               <span className="material-symbols-outlined text-2xl">loop</span>
               ProofLoop
             </Link>
             <p className="text-text-grey text-sm mt-2">ログイン</p>
           </div>
 
-          {/* タブ: 学生・団体 / 企業 */}
           <div className="flex border-b border-slate-200 mb-8">
             <button
               type="button"
@@ -142,7 +180,10 @@ export default function LoginPage() {
               </div>
               <div className="space-y-5">
                 <div>
-                  <label htmlFor="student-email" className="block text-primary font-bold text-sm mb-2">
+                  <label
+                    htmlFor="student-email"
+                    className="block text-primary font-bold text-sm mb-2"
+                  >
                     大学のメールアドレス（.ac.jp）でログイン
                   </label>
                   <Input
@@ -156,7 +197,10 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="student-password" className="block text-primary font-bold text-sm mb-2">
+                  <label
+                    htmlFor="student-password"
+                    className="block text-primary font-bold text-sm mb-2"
+                  >
                     パスワード
                   </label>
                   <input
@@ -175,7 +219,12 @@ export default function LoginPage() {
                   {errorMessage}
                 </p>
               )}
-              <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full"
+                disabled={isLoading}
+              >
                 {isLoading ? "処理中..." : "ログイン"}
               </Button>
               <p className="text-center text-sm text-grey-custom mt-4">
@@ -190,7 +239,9 @@ export default function LoginPage() {
           {tab === "company" && (
             <form className="space-y-5" onSubmit={handleCompanySubmit}>
               <div>
-                <label className="block text-primary font-bold text-sm mb-2">法人メールアドレス</label>
+                <label className="block text-primary font-bold text-sm mb-2">
+                  法人メールアドレス
+                </label>
                 <Input
                   type="email"
                   value={companyEmail}
@@ -200,7 +251,9 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label className="block text-primary font-bold text-sm mb-2">パスワード</label>
+                <label className="block text-primary font-bold text-sm mb-2">
+                  パスワード
+                </label>
                 <Input
                   type="password"
                   value={companyPassword}
@@ -222,7 +275,12 @@ export default function LoginPage() {
                   {errorMessage}
                 </p>
               )}
-              <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full"
+                disabled={isLoading}
+              >
                 {isLoading ? "処理中..." : "ログイン"}
               </Button>
             </form>
