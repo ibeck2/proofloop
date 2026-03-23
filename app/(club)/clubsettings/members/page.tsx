@@ -5,12 +5,11 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button, Input } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
-
-type MemberRow = {
-  id: string;
-  user_id: string;
-  role: string;
-};
+import type {
+  OrganizationMemberPermissions,
+  OrganizationMemberRole,
+  OrganizationMemberRow,
+} from "@/lib/types/organizationMember";
 
 type ProfileRow = {
   id: string;
@@ -26,11 +25,36 @@ type InvitationRow = {
   created_at: string;
 };
 
+const DEFAULT_PERMISSIONS: OrganizationMemberPermissions = {
+  can_edit_profile: false,
+  can_manage_posts: true,
+  can_manage_members: false,
+  can_manage_applications: true,
+};
+
+const PERMISSION_LABELS: Array<{
+  key: keyof OrganizationMemberPermissions;
+  label: string;
+}> = [
+  { key: "can_edit_profile", label: "プロフィール編集" },
+  { key: "can_manage_posts", label: "投稿管理" },
+  { key: "can_manage_members", label: "メンバー管理" },
+  { key: "can_manage_applications", label: "応募者管理" },
+];
+
 function roleLabel(role: string): string {
   const r = role.toLowerCase();
   if (r === "owner") return "Owner（代表者）";
   if (r === "admin") return "Admin（一般管理者）";
   return role;
+}
+
+function permissionLabel(
+  key: keyof OrganizationMemberPermissions,
+  enabled: boolean
+): string {
+  const base = PERMISSION_LABELS.find((p) => p.key === key)?.label ?? key;
+  return `${enabled ? "ON" : "OFF"}: ${base}`;
 }
 
 export default function ClubMembersSettingsPage() {
@@ -43,7 +67,7 @@ export default function ClubMembersSettingsPage() {
     isReady,
   } = useClubOrganization();
 
-  const [members, setMembers] = useState<MemberRow[]>([]);
+  const [members, setMembers] = useState<OrganizationMemberRow[]>([]);
   const [profilesByUserId, setProfilesByUserId] = useState<
     Record<string, ProfileRow>
   >({});
@@ -51,9 +75,18 @@ export default function ClubMembersSettingsPage() {
   const [listLoading, setListLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<"owner" | "admin">("admin");
+  const [inviteRole, setInviteRole] = useState<OrganizationMemberRole>("admin");
+  const [invitePermissions, setInvitePermissions] =
+    useState<OrganizationMemberPermissions>(DEFAULT_PERMISSIONS);
   const [inviteSubmitting, setInviteSubmitting] = useState(false);
   const [cancelingId, setCancelingId] = useState<string | null>(null);
+  const [editingMember, setEditingMember] = useState<OrganizationMemberRow | null>(
+    null
+  );
+  const [editRole, setEditRole] = useState<OrganizationMemberRole>("admin");
+  const [editPermissions, setEditPermissions] =
+    useState<OrganizationMemberPermissions>(DEFAULT_PERMISSIONS);
+  const [editSubmitting, setEditSubmitting] = useState(false);
 
   const canManage =
     activeRole === "owner" || activeRole === "admin";
@@ -64,7 +97,9 @@ export default function ClubMembersSettingsPage() {
     try {
       const { data: memData, error: memErr } = await supabase
         .from("organization_members")
-        .select("id, user_id, role")
+        .select(
+          "id, user_id, role, can_edit_profile, can_manage_posts, can_manage_members, can_manage_applications"
+        )
         .eq("organization_id", orgId)
         .order("role", { ascending: true });
 
@@ -74,7 +109,19 @@ export default function ClubMembersSettingsPage() {
         setMembers([]);
         setProfilesByUserId({});
       } else {
-        const list = (memData ?? []) as MemberRow[];
+        const list = ((memData ?? []) as Array<
+          Partial<OrganizationMemberRow> & { id: string; user_id: string; role: string }
+        >).map((m) => ({
+          id: m.id,
+          user_id: m.user_id,
+          role: m.role,
+          can_edit_profile: m.can_edit_profile ?? DEFAULT_PERMISSIONS.can_edit_profile,
+          can_manage_posts: m.can_manage_posts ?? DEFAULT_PERMISSIONS.can_manage_posts,
+          can_manage_members: m.can_manage_members ?? DEFAULT_PERMISSIONS.can_manage_members,
+          can_manage_applications:
+            m.can_manage_applications ??
+            DEFAULT_PERMISSIONS.can_manage_applications,
+        }));
         setMembers(list);
         const ids = list.map((m) => m.user_id).filter(Boolean);
         if (ids.length === 0) {
@@ -131,6 +178,48 @@ export default function ClubMembersSettingsPage() {
     return name || "（氏名未設定）";
   };
 
+  const openEditModal = (member: OrganizationMemberRow) => {
+    setEditingMember(member);
+    setEditRole((member.role === "owner" ? "owner" : "admin") as OrganizationMemberRole);
+    setEditPermissions({
+      can_edit_profile: member.can_edit_profile,
+      can_manage_posts: member.can_manage_posts,
+      can_manage_members: member.can_manage_members,
+      can_manage_applications: member.can_manage_applications,
+    });
+  };
+
+  const handleSaveMemberPermissions = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember) return;
+    setEditSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("organization_members")
+        .update({
+          role: editRole,
+          ...editPermissions,
+        })
+        .eq("id", editingMember.id)
+        .eq("organization_id", orgId);
+      if (error) {
+        toast.error(error.message || "権限更新に失敗しました");
+        return;
+      }
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === editingMember.id
+            ? { ...m, role: editRole, ...editPermissions }
+            : m
+        )
+      );
+      toast.success("メンバー権限を更新しました");
+      setEditingMember(null);
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     const email = inviteEmail.trim();
@@ -139,6 +228,20 @@ export default function ClubMembersSettingsPage() {
       return;
     }
     if (!orgId || !orgName) return;
+
+    const { data: registeredUsers, error: regErr } = await supabase
+      .from("users")
+      .select("id, email")
+      .ilike("email", email)
+      .limit(1);
+    if (regErr) {
+      toast.error("招待前チェックに失敗しました。時間をおいて再試行してください");
+      return;
+    }
+    if (!registeredUsers || registeredUsers.length === 0) {
+      toast.error("このメールアドレスはProofLoopに登録されていません");
+      return;
+    }
 
     const {
       data: { session },
@@ -174,6 +277,7 @@ export default function ClubMembersSettingsPage() {
           organization_id: orgId,
           email,
           role: inviteRole,
+          ...invitePermissions,
           inviterName,
           organizationName: orgName,
         }),
@@ -189,6 +293,7 @@ export default function ClubMembersSettingsPage() {
       setModalOpen(false);
       setInviteEmail("");
       setInviteRole("admin");
+      setInvitePermissions(DEFAULT_PERMISSIONS);
       await loadLists();
     } catch {
       toast.error("招待の送信に失敗しました");
@@ -268,6 +373,7 @@ export default function ClubMembersSettingsPage() {
             if (activeRole !== "owner" && inviteRole === "owner") {
               setInviteRole("admin");
             }
+            setInvitePermissions(DEFAULT_PERMISSIONS);
             setModalOpen(true);
           }}
         >
@@ -289,14 +395,44 @@ export default function ClubMembersSettingsPage() {
               {members.map((m) => (
                 <li
                   key={m.id}
-                  className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1"
+                  className="px-4 py-3 flex flex-col gap-2"
                 >
-                  <span className="font-medium text-slate-900 dark:text-white">
-                    {displayNameForUser(m.user_id)}
-                  </span>
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
-                    {roleLabel(m.role)}
-                  </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <span className="font-medium text-slate-900 dark:text-white">
+                      {displayNameForUser(m.user_id)}
+                    </span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      {roleLabel(m.role)}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      Object.keys(DEFAULT_PERMISSIONS) as Array<
+                        keyof OrganizationMemberPermissions
+                      >
+                    ).map((key) => (
+                      <span
+                        key={`${m.id}-${key}`}
+                        className={`text-xs px-2 py-0.5 rounded-full border ${
+                          m[key]
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-slate-50 text-slate-500 border-slate-200"
+                        }`}
+                      >
+                        {permissionLabel(key, m[key])}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openEditModal(m)}
+                    >
+                      権限を編集
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -364,6 +500,9 @@ export default function ClubMembersSettingsPage() {
               メンバーを招待
             </h2>
             <form onSubmit={handleSendInvite} className="space-y-4">
+              <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                ※招待する相手が、すでにProofLoopにアカウント登録（サインアップ）していることを確認してください。
+              </p>
               <div>
                 <label
                   htmlFor="invite-email"
@@ -392,7 +531,7 @@ export default function ClubMembersSettingsPage() {
                   id="invite-role"
                   value={inviteRole}
                   onChange={(e) =>
-                    setInviteRole(e.target.value as "owner" | "admin")
+                    setInviteRole(e.target.value as OrganizationMemberRole)
                   }
                   className="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 >
@@ -415,6 +554,31 @@ export default function ClubMembersSettingsPage() {
                   </p>
                 )}
               </div>
+              <div>
+                <p className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  付与する詳細権限
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {PERMISSION_LABELS.map((perm) => (
+                    <label
+                      key={perm.key}
+                      className="inline-flex items-center gap-2 rounded border border-slate-200 px-3 py-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={invitePermissions[perm.key]}
+                        onChange={(e) =>
+                          setInvitePermissions((prev) => ({
+                            ...prev,
+                            [perm.key]: e.target.checked,
+                          }))
+                        }
+                      />
+                      {perm.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
               <div className="flex gap-2 justify-end pt-2">
                 <Button
                   type="button"
@@ -430,6 +594,93 @@ export default function ClubMembersSettingsPage() {
                   disabled={inviteSubmitting}
                 >
                   {inviteSubmitting ? "送信中..." : "招待を送信"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {editingMember && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          role="presentation"
+          onClick={() => !editSubmitting && setEditingMember(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="member-edit-modal-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2
+              id="member-edit-modal-title"
+              className="text-lg font-bold text-slate-900 dark:text-white mb-4"
+            >
+              権限を編集
+            </h2>
+            <p className="text-sm text-slate-600 mb-3">
+              {displayNameForUser(editingMember.user_id)}
+            </p>
+            <form onSubmit={handleSaveMemberPermissions} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">
+                  役職
+                </label>
+                <select
+                  value={editRole}
+                  onChange={(e) =>
+                    setEditRole(e.target.value as OrganizationMemberRole)
+                  }
+                  className="w-full border border-slate-300 rounded-md px-3 py-2 bg-white text-slate-900"
+                >
+                  <option value="admin">Admin（一般管理者）</option>
+                  <option value="owner" disabled={activeRole !== "owner"}>
+                    Owner（代表者）— 代表者のみ
+                  </option>
+                </select>
+              </div>
+              <div>
+                <p className="block text-sm font-bold text-slate-700 mb-1">
+                  詳細権限
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {PERMISSION_LABELS.map((perm) => (
+                    <label
+                      key={`edit-${perm.key}`}
+                      className="inline-flex items-center gap-2 rounded border border-slate-200 px-3 py-2 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={editPermissions[perm.key]}
+                        onChange={(e) =>
+                          setEditPermissions((prev) => ({
+                            ...prev,
+                            [perm.key]: e.target.checked,
+                          }))
+                        }
+                      />
+                      {perm.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={editSubmitting}
+                  onClick={() => setEditingMember(null)}
+                >
+                  閉じる
+                </Button>
+                <Button
+                  type="submit"
+                  className="bg-primary text-white"
+                  disabled={editSubmitting}
+                >
+                  {editSubmitting ? "保存中..." : "保存"}
                 </Button>
               </div>
             </form>

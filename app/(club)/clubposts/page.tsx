@@ -5,18 +5,18 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button, Input, Textarea, Badge } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
+import {
+  TIMELINE_CATEGORIES,
+  type TimelineCategoryValue,
+  getTimelineCategoryMeta,
+} from "@/lib/timelineCategories";
+import {
+  UNIVERSITY_OPTIONS,
+  UNIVERSITY_OTHER,
+  resolveUniversityValue,
+} from "@/constants/universities";
 
 const MAX_CONTENT_LENGTH = 400;
-
-const CATEGORY_OPTIONS = [
-  { value: "新歓", label: "新歓" },
-  { value: "授業", label: "授業" },
-  { value: "飲食店", label: "飲食店" },
-  { value: "イベント", label: "イベント" },
-  { value: "その他", label: "その他" },
-] as const;
-
-type CategoryValue = (typeof CATEGORY_OPTIONS)[number]["value"];
 
 type OrgPostRow = {
   id: string;
@@ -31,14 +31,14 @@ type OrgPostRow = {
 function categoryBadgeClass(category: string | null): string {
   const c = category ?? "";
   switch (c) {
-    case "新歓":
+    case "recruitment":
       return "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800";
-    case "授業":
+    case "campus_life":
       return "bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-200 border-blue-200 dark:border-blue-800";
-    case "飲食店":
-      return "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200 border-amber-200 dark:border-amber-800";
-    case "イベント":
+    case "event":
       return "bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200 border-violet-200 dark:border-violet-800";
+    case "report":
+      return "bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200 border-sky-200 dark:border-sky-800";
     default:
       return "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600";
   }
@@ -68,8 +68,9 @@ export default function ClubPostsPage() {
   const [posts, setPosts] = useState<OrgPostRow[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [category, setCategory] = useState<CategoryValue>("新歓");
+  const [category, setCategory] = useState<TimelineCategoryValue>("recruitment");
   const [targetUniversity, setTargetUniversity] = useState("");
+  const [targetUniversityOther, setTargetUniversityOther] = useState("");
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -100,8 +101,9 @@ export default function ClubPostsPage() {
   }, [orgId, loadPosts]);
 
   const openModal = () => {
-    setCategory("新歓");
+    setCategory("recruitment");
     setTargetUniversity("");
+    setTargetUniversityOther("");
     setContent("");
     setModalOpen(true);
   };
@@ -124,7 +126,7 @@ export default function ClubPostsPage() {
       return;
     }
 
-    const target = targetUniversity.trim();
+    const target = resolveUniversityValue(targetUniversity, targetUniversityOther);
     setSubmitting(true);
     try {
       const { error } = await supabase.from("organization_posts").insert({
@@ -144,6 +146,7 @@ export default function ClubPostsPage() {
       setModalOpen(false);
       setContent("");
       setTargetUniversity("");
+      setTargetUniversityOther("");
       await loadPosts();
     } finally {
       setSubmitting(false);
@@ -240,7 +243,10 @@ export default function ClubPostsPage() {
                 <Badge
                   className={`text-xs font-bold border ${categoryBadgeClass(post.category)}`}
                 >
-                  {post.category || "（未分類）"}
+                  {(() => {
+                    const meta = getTimelineCategoryMeta(post.category);
+                    return meta ? `${meta.icon} ${meta.label}` : "（未分類）";
+                  })()}
                 </Badge>
                 {post.is_hidden ? (
                   <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
@@ -303,13 +309,13 @@ export default function ClubPostsPage() {
                   id="post-category"
                   value={category}
                   onChange={(e) =>
-                    setCategory(e.target.value as CategoryValue)
+                    setCategory(e.target.value as TimelineCategoryValue)
                   }
                   className="w-full border border-slate-300 dark:border-slate-600 rounded-none px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 >
-                  {CATEGORY_OPTIONS.map((opt) => (
+                  {TIMELINE_CATEGORIES.map((opt) => (
                     <option key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {opt.icon} {opt.label}
                     </option>
                   ))}
                 </select>
@@ -321,14 +327,33 @@ export default function ClubPostsPage() {
                 >
                   ターゲット大学（任意）
                 </label>
-                <Input
+                <select
                   id="post-target-uni"
-                  type="text"
                   value={targetUniversity}
-                  onChange={(e) => setTargetUniversity(e.target.value)}
-                  placeholder="例: 東京大学 ※空欄で全大学に公開"
-                  className="w-full"
-                />
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setTargetUniversity(v);
+                    if (v !== UNIVERSITY_OTHER) setTargetUniversityOther("");
+                  }}
+                  className="w-full border border-slate-300 dark:border-slate-600 rounded-none px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                >
+                  <option value="">全大学に公開</option>
+                  {UNIVERSITY_OPTIONS.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+                {targetUniversity === UNIVERSITY_OTHER && (
+                  <Input
+                    id="post-target-uni-other"
+                    type="text"
+                    value={targetUniversityOther}
+                    onChange={(e) => setTargetUniversityOther(e.target.value)}
+                    placeholder="大学名を入力"
+                    className="w-full mt-2"
+                  />
+                )}
               </div>
               <div>
                 <label

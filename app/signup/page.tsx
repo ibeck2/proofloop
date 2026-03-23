@@ -8,6 +8,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
+import {
+  UNIVERSITY_OPTIONS,
+  UNIVERSITY_OTHER,
+  resolveUniversityValue,
+} from "@/constants/universities";
 
 type TabType = "student" | "company";
 
@@ -52,6 +57,7 @@ export default function SignupPage() {
   const [fullName, setFullName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [university, setUniversity] = useState("");
+  const [universityOther, setUniversityOther] = useState("");
   const [faculty, setFaculty] = useState("");
   const [admissionYear, setAdmissionYear] = useState("2026");
   const [graduationYear, setGraduationYear] = useState("2026");
@@ -105,7 +111,8 @@ export default function SignupPage() {
       setSubmitError("連絡先メールアドレスを正しい形式で入力してください。");
       return;
     }
-    if (!university.trim()) {
+    const resolvedUniversity = resolveUniversityValue(university, universityOther);
+    if (!resolvedUniversity) {
       setSubmitError("大学名を入力してください。");
       return;
     }
@@ -124,14 +131,14 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data: signupData, error } = await supabase.auth.signUp({
         email: uEmail,
         password: p,
         options: {
           data: {
             full_name: fullName.trim(),
             contact_email: cEmail,
-            university: university.trim(),
+            university: resolvedUniversity,
             faculty: faculty.trim(),
             admission_year: admissionYear,
             graduation_year: graduationYear,
@@ -139,6 +146,49 @@ export default function SignupPage() {
         },
       });
       if (error) throw error;
+
+      // 可能な環境では profiles も初期作成して、マイページで年度が即表示されるようにする
+      const newUserId = signupData.user?.id;
+      if (newUserId) {
+        const profilePayload = {
+          id: newUserId,
+          email: uEmail,
+          display_name: fullName.trim() || null,
+          full_name: fullName.trim() || null,
+          contact_email: cEmail || null,
+          university: resolvedUniversity || null,
+          faculty: faculty.trim() || null,
+          enrollment_year: admissionYear || null,
+          admission_year: admissionYear || null,
+          graduation_year: graduationYear || null,
+          updated_at: new Date().toISOString(),
+        };
+        const { error: profileUpsertError } = await supabase
+          .from("profiles")
+          .upsert(profilePayload, { onConflict: "id" });
+        if (profileUpsertError) {
+          const msg = (profileUpsertError.message || "").toLowerCase();
+          const likelyMissingColumn =
+            msg.includes("column") ||
+            msg.includes("does not exist") ||
+            msg.includes("schema cache") ||
+            profileUpsertError.code === "PGRST204";
+          if (likelyMissingColumn) {
+            await supabase.from("profiles").upsert(
+              {
+                id: newUserId,
+                email: uEmail,
+                display_name: fullName.trim() || null,
+                university: resolvedUniversity || null,
+                faculty: faculty.trim() || null,
+                enrollment_year: admissionYear || null,
+              },
+              { onConflict: "id" }
+            );
+          }
+        }
+      }
+
       setSignupSuccess(true);
       setSentEmail(uEmail);
     } catch (err) {
@@ -298,14 +348,35 @@ export default function SignupPage() {
                 <label htmlFor="university" className="block text-primary font-bold text-sm mb-2">
                   大学名
                 </label>
-                <Input
+                <select
                   id="university"
-                  type="text"
                   value={university}
-                  onChange={(e) => setUniversity(e.target.value)}
-                  placeholder="例: 東京大学"
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setUniversity(v);
+                    if (v !== UNIVERSITY_OTHER) setUniversityOther("");
+                  }}
                   disabled={isLoading}
-                />
+                  className="w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 bg-white px-3 py-2"
+                >
+                  <option value="">選択してください</option>
+                  {UNIVERSITY_OPTIONS.map((u) => (
+                    <option key={u} value={u}>
+                      {u}
+                    </option>
+                  ))}
+                </select>
+                {university === UNIVERSITY_OTHER && (
+                  <Input
+                    id="university-other"
+                    type="text"
+                    value={universityOther}
+                    onChange={(e) => setUniversityOther(e.target.value)}
+                    placeholder="大学名を入力"
+                    disabled={isLoading}
+                    className="mt-2"
+                  />
+                )}
               </div>
 
               <div>

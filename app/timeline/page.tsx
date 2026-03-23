@@ -7,14 +7,15 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { formatRelativeTime } from "@/lib/format";
 import { normalizeJoinedRow } from "@/lib/organizationMembers";
+import {
+  TIMELINE_CATEGORIES,
+  type TimelineCategoryValue,
+  getTimelineCategoryMeta,
+} from "@/lib/timelineCategories";
 
 const FILTERS = [
-  { value: "すべて", label: "すべて" },
-  { value: "新歓", label: "新歓" },
-  { value: "授業", label: "授業" },
-  { value: "飲食店", label: "飲食店" },
-  { value: "イベント", label: "イベント" },
-  { value: "その他", label: "その他" },
+  { value: "all", label: "すべて", icon: "🧭" },
+  ...TIMELINE_CATEGORIES,
 ] as const;
 
 type FilterValue = (typeof FILTERS)[number]["value"];
@@ -38,14 +39,14 @@ type PostRow = {
 
 function categoryPillClass(cat: string): string {
   switch (cat) {
-    case "新歓":
+    case "recruitment":
       return "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-800";
-    case "授業":
+    case "campus_life":
       return "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-800";
-    case "飲食店":
-      return "bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800";
-    case "イベント":
+    case "event":
       return "bg-violet-50 text-violet-800 border-violet-200 dark:bg-violet-900/30 dark:text-violet-200 dark:border-violet-800";
+    case "report":
+      return "bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-200 dark:border-sky-800";
     default:
       return "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600";
   }
@@ -60,7 +61,7 @@ function targetUniversityLabel(raw: string | null | undefined): string | null {
 
 export default function TimelinePage() {
   const router = useRouter();
-  const [filter, setFilter] = useState<FilterValue>("すべて");
+  const [filter, setFilter] = useState<FilterValue>("all");
   const [posts, setPosts] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -103,8 +104,8 @@ export default function TimelinePage() {
       .eq("is_hidden", false)
       .order("created_at", { ascending: false });
 
-    if (filter !== "すべて") {
-      q = q.eq("category", filter);
+    if (filter !== "all") {
+      q = q.eq("category", filter as TimelineCategoryValue);
     }
 
     const { data, error } = await q;
@@ -251,7 +252,7 @@ export default function TimelinePage() {
                     : "bg-white dark:bg-slate-900 text-text-grey border-slate-200 dark:border-slate-700 hover:border-primary/40"
                 }`}
               >
-                {f.label}
+                {f.icon} {f.label}
               </button>
             );
           })}
@@ -312,13 +313,17 @@ export default function TimelinePage() {
                             {formatRelativeTime(post.created_at)}
                           </time>
                         </div>
-                        {post.category ? (
-                          <span
-                            className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full border ${categoryPillClass(post.category)}`}
-                          >
-                            {post.category}
-                          </span>
-                        ) : null}
+                        {post.category ? (() => {
+                          const meta = getTimelineCategoryMeta(post.category);
+                          if (!meta) return null;
+                          return (
+                            <span
+                              className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full border ${categoryPillClass(post.category)}`}
+                            >
+                              {meta.icon} {meta.label}
+                            </span>
+                          );
+                        })() : null}
                         {targetBadge ? (
                           <span className="inline-block mt-2 ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
                             {targetBadge}

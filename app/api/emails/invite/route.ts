@@ -116,6 +116,10 @@ export async function POST(request: Request) {
       typeof b.inviterName === "string" ? b.inviterName.trim() : "";
     const organizationNameBody =
       typeof b.organizationName === "string" ? b.organizationName.trim() : "";
+    const canEditProfile = b.can_edit_profile === true;
+    const canManagePosts = b.can_manage_posts === true;
+    const canManageMembers = b.can_manage_members === true;
+    const canManageApplications = b.can_manage_applications === true;
 
     if (!organizationId || !email) {
       return NextResponse.json(
@@ -125,6 +129,25 @@ export async function POST(request: Request) {
     }
 
     email = email.toLowerCase();
+
+    // 招待は登録済みユーザーのみ（public.users にメールがあること）に制限
+    const { data: registeredUsers, error: regErr } = await supabase
+      .from("users")
+      .select("id, email")
+      .ilike("email", email)
+      .limit(1);
+    if (regErr) {
+      return NextResponse.json(
+        { error: "招待対象ユーザーの確認に失敗しました" },
+        { status: 500 }
+      );
+    }
+    if (!registeredUsers || registeredUsers.length === 0) {
+      return NextResponse.json(
+        { error: "このメールアドレスはProofLoopに登録されていません" },
+        { status: 400 }
+      );
+    }
 
     if (roleRaw !== "owner" && roleRaw !== "admin") {
       return NextResponse.json(
@@ -195,16 +218,50 @@ export async function POST(request: Request) {
       user.email?.split("@")[0] ||
       "団体管理者";
 
-    const { data: inserted, error: insErr } = await supabase
-      .from("organization_invitations")
-      .insert({
-        organization_id: organizationId,
-        email,
-        role: roleRaw,
-        invited_by: user.id,
-      })
-      .select("token")
-      .single();
+    const invitePayload = {
+      organization_id: organizationId,
+      email,
+      role: roleRaw,
+      invited_by: user.id,
+      can_edit_profile: canEditProfile,
+      can_manage_posts: canManagePosts,
+      can_manage_members: canManageMembers,
+      can_manage_applications: canManageApplications,
+    };
+    let inserted: { token: string } | null = null;
+    let insErr: { code?: string; message?: string } | null = null;
+    {
+      const fullInsert = await supabase
+        .from("organization_invitations")
+        .insert(invitePayload)
+        .select("token")
+        .single();
+      inserted = fullInsert.data as { token: string } | null;
+      insErr = fullInsert.error;
+
+      if (fullInsert.error) {
+        const msg = (fullInsert.error.message || "").toLowerCase();
+        const likelyMissingColumn =
+          msg.includes("column") ||
+          msg.includes("does not exist") ||
+          msg.includes("schema cache") ||
+          fullInsert.error.code === "PGRST204";
+        if (likelyMissingColumn) {
+          const fallbackInsert = await supabase
+            .from("organization_invitations")
+            .insert({
+              organization_id: organizationId,
+              email,
+              role: roleRaw,
+              invited_by: user.id,
+            })
+            .select("token")
+            .single();
+          inserted = fallbackInsert.data as { token: string } | null;
+          insErr = fallbackInsert.error;
+        }
+      }
+    }
 
     if (insErr) {
       if (insErr.code === "23505") {

@@ -7,6 +7,12 @@ import { supabase } from "@/lib/supabase";
 import { Input, Button } from "@/components/ui";
 import SearchOrgCard from "@/components/SearchOrgCard";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
+import {
+  UNIVERSITY_OPTIONS,
+  UNIVERSITY_OTHER,
+  resolveUniversityValue,
+  toUniversityFormState,
+} from "@/constants/universities";
 import type { ApplicationWithOrg } from "@/lib/types/application";
 import ChatRoom from "@/components/ChatRoom";
 import {
@@ -90,6 +96,7 @@ export default function MypagePage() {
   const [fullName, setFullName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [university, setUniversity] = useState("");
+  const [universityOther, setUniversityOther] = useState("");
   const [faculty, setFaculty] = useState("");
   const [admissionYear, setAdmissionYear] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
@@ -176,12 +183,38 @@ export default function MypagePage() {
         if (!cancelled) setUserName(metaName || null);
       }
 
-      // 006 の必須カラムのみ select（存在しない列を指定するとクエリ全体が失敗する）
-      const { data: profileRow, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, email, display_name, university, faculty, enrollment_year")
-        .eq("id", authUser.id)
-        .maybeSingle();
+      // 019 追加列を優先取得し、未適用環境では 006 基本列へフォールバック
+      let profileRow: unknown = null;
+      let profileError: { message?: string; code?: string } | null = null;
+      {
+        const fullSelect = await supabase
+          .from("profiles")
+          .select(
+            "id, email, display_name, full_name, university, faculty, enrollment_year, admission_year, graduation_year, contact_email"
+          )
+          .eq("id", authUser.id)
+          .maybeSingle();
+        profileRow = fullSelect.data;
+        profileError = fullSelect.error;
+
+        if (fullSelect.error) {
+          const msg = (fullSelect.error.message || "").toLowerCase();
+          const likelyMissingColumn =
+            msg.includes("column") ||
+            msg.includes("does not exist") ||
+            msg.includes("schema cache") ||
+            fullSelect.error.code === "PGRST204";
+          if (likelyMissingColumn) {
+            const baseSelect = await supabase
+              .from("profiles")
+              .select("id, email, display_name, university, faculty, enrollment_year")
+              .eq("id", authUser.id)
+              .maybeSingle();
+            profileRow = baseSelect.data;
+            profileError = baseSelect.error;
+          }
+        }
+      }
 
       if (cancelled) return;
 
@@ -190,7 +223,9 @@ export default function MypagePage() {
         setFullName(
           String(p.display_name ?? metaName ?? "").trim() || metaName
         );
-        setUniversity(p.university ?? "");
+        const uniState = toUniversityFormState(p.university);
+        setUniversity(uniState.selected);
+        setUniversityOther(uniState.other);
         setFaculty(p.faculty ?? "");
         setAdmissionYear(p.enrollment_year ?? p.admission_year ?? "");
         setGraduationYear(p.graduation_year ?? "");
@@ -202,6 +237,7 @@ export default function MypagePage() {
         // 未登録、または取得エラー時は認証情報でフォールバック（保存時に upsert で新規作成可能）
         setFullName(metaName);
         setUniversity("");
+        setUniversityOther("");
         setFaculty("");
         setAdmissionYear("");
         setGraduationYear("");
@@ -458,11 +494,12 @@ export default function MypagePage() {
       const nameTrim = fullName.trim() || null;
 
       // 006_profiles_table.sql のカラム（必ず存在）
+      const resolvedUniversity = resolveUniversityValue(university, universityOther);
       const basePayload: Record<string, unknown> = {
         id: profileId,
         email: emailForProfile,
         display_name: nameTrim,
-        university: university.trim() || null,
+        university: resolvedUniversity || null,
         faculty: faculty.trim() || null,
         enrollment_year: admissionYear.trim() || null,
       };
@@ -763,14 +800,33 @@ export default function MypagePage() {
                     <label htmlFor="profile-university" className="block text-slate-700 font-bold text-sm mb-2">
                       大学名
                     </label>
-                    <Input
+                    <select
                       id="profile-university"
-                      type="text"
                       value={university}
-                      onChange={(e) => setUniversity(e.target.value)}
-                      placeholder="例: 東京大学"
-                      className="w-full"
-                    />
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setUniversity(v);
+                        if (v !== UNIVERSITY_OTHER) setUniversityOther("");
+                      }}
+                      className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
+                    >
+                      <option value="">選択してください</option>
+                      {UNIVERSITY_OPTIONS.map((u) => (
+                        <option key={u} value={u}>
+                          {u}
+                        </option>
+                      ))}
+                    </select>
+                    {university === UNIVERSITY_OTHER && (
+                      <Input
+                        id="profile-university-other"
+                        type="text"
+                        value={universityOther}
+                        onChange={(e) => setUniversityOther(e.target.value)}
+                        placeholder="大学名を入力"
+                        className="w-full mt-2"
+                      />
+                    )}
                   </div>
                   <div>
                     <label htmlFor="profile-faculty" className="block text-slate-700 font-bold text-sm mb-2">

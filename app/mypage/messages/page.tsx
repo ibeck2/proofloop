@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import type { ApplicationWithOrg } from "@/lib/types/application";
 import ChatRoom from "@/components/ChatRoom";
@@ -129,7 +128,7 @@ export default function MypageMessagesPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f5f5f7]">
-      <header className="shrink-0 flex items-center justify-between gap-4 px-4 py-3 border-b border-slate-200 bg-white">
+      <header className="shrink-0 flex items-center justify-start gap-4 px-4 py-3 border-b border-slate-200 bg-white">
         <div className="flex items-center gap-3 min-w-0">
           {selectedId && (
             <button
@@ -143,13 +142,6 @@ export default function MypageMessagesPage() {
           )}
           <h1 className="text-lg font-bold text-primary truncate">メッセージ</h1>
         </div>
-        <Link
-          href="/mypage"
-          className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm hover:bg-slate-50 transition-colors"
-        >
-          <span className="material-symbols-outlined text-[20px]">person</span>
-          マイページ
-        </Link>
       </header>
 
       <div className="flex-1 flex min-h-0">
