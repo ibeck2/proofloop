@@ -10,6 +10,7 @@ export const UNIVERSITY_OPTIONS = [
   "東京科学大学",
   "慶應義塾大学",
   "早稲田大学",
+  "上智大学",
   "国際基督教大学",
   "その他",
 ] as const;

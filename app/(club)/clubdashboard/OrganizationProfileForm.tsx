@@ -4,6 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Input, Textarea, Button } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
+import {
+  UNIVERSITY_OPTIONS,
+  UNIVERSITY_OTHER,
+  resolveUniversityValue,
+  toUniversityFormState,
+} from "@/constants/universities";
 
 type OrganizationRow = {
   id: string;
@@ -165,6 +171,7 @@ export default function OrganizationProfileForm() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [university, setUniversity] = useState("");
+  const [universityOther, setUniversityOther] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
   const [memberCount, setMemberCount] = useState("");
@@ -193,7 +200,9 @@ export default function OrganizationProfileForm() {
   const applyOrgRow = useCallback((org: OrganizationRow) => {
     setOrgId(org.id);
     setName(org.name ?? "");
-    setUniversity(org.university ?? "");
+    const uniState = toUniversityFormState(org.university);
+    setUniversity(uniState.selected);
+    setUniversityOther(uniState.other);
     setCategory(org.category ?? "");
     setDescription(org.description ?? "");
     setMemberCount(org.member_count ?? "");
@@ -416,7 +425,7 @@ export default function OrganizationProfileForm() {
       const payload = {
         user_id: userId,
         name: name.trim() || null,
-        university: university.trim() || null,
+        university: resolveUniversityValue(university, universityOther).trim() || null,
         category: category.trim() || null,
         description: description.trim() || null,
         x_id: xId.trim() || null,
@@ -564,25 +573,45 @@ export default function OrganizationProfileForm() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="例: AFPLA (Asian Future Political Leaders Association)"
+              placeholder="例: 〇〇大学野球部 / 〇〇大学公認テニスサークル"
               disabled={inputDisabled}
               className="w-full"
             />
           </div>
           <div>
             <label htmlFor="org-university" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
-              活動拠点・大学名
+              大学名
               <BadgeOptional />
             </label>
-            <Input
+            <select
               id="org-university"
-              type="text"
               value={university}
-              onChange={(e) => setUniversity(e.target.value)}
-              placeholder="例: 東京大学 駒場キャンパス"
               disabled={inputDisabled}
-              className="w-full"
-            />
+              onChange={(e) => {
+                const v = e.target.value;
+                setUniversity(v);
+                if (v !== UNIVERSITY_OTHER) setUniversityOther("");
+              }}
+              className={inputClass}
+            >
+              <option value="">選択してください</option>
+              {UNIVERSITY_OPTIONS.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
+            {university === UNIVERSITY_OTHER && (
+              <Input
+                id="org-university-other"
+                type="text"
+                value={universityOther}
+                onChange={(e) => setUniversityOther(e.target.value)}
+                placeholder="大学名を入力"
+                disabled={inputDisabled}
+                className="w-full mt-2"
+              />
+            )}
           </div>
           <div>
             <label htmlFor="org-category" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
