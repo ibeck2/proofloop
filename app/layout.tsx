@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Toaster } from "sonner";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "ProofLoop | 学生団体が社会を動かす新しい時代のスタンダード",
@@ -27,7 +28,10 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <AppShell>{children}</AppShell>
+        <AppShell>
+          {children}
+          <Footer />
+        </AppShell>
         <Toaster
           position="top-center"
           toastOptions={{

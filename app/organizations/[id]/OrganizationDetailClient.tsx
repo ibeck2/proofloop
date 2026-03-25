@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { MessageCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fetchOrganizationOwnerUserId } from "@/lib/organizationMembers";
 import { Button } from "@/components/ui";
@@ -206,6 +208,7 @@ export default function OrganizationDetailClient({
   photos = [],
   approvedReviews = [],
 }: Props) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("overview");
   const [session, setSession] = useState<{ user: { id: string } } | null>(null);
   const [reviewRating, setReviewRating] = useState(5);
@@ -223,6 +226,64 @@ export default function OrganizationDetailClient({
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session ?? null));
   }, []);
+
+  const openOrCreateChat = async () => {
+    const uid = session?.user?.id;
+    if (!uid) {
+      toast.error("メッセージ機能を利用するにはログインしてください");
+      router.push("/login");
+      return;
+    }
+
+    // 既にエントリー済みなら、そのスレッド（application）をチャットとして使う
+    const existingEntry = await supabase
+      .from("applications")
+      .select("id")
+      .eq("user_id", uid)
+      .eq("organization_id", org.id)
+      .neq("is_chat_only", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existingEntry.data?.id) {
+      router.push(`/mypage/messages?app=${encodeURIComponent(existingEntry.data.id)}`);
+      return;
+    }
+
+    // エントリーなしの場合は chat-only スレッドを再利用 or 作成
+    const existingChatOnly = await supabase
+      .from("applications")
+      .select("id")
+      .eq("user_id", uid)
+      .eq("organization_id", org.id)
+      .eq("is_chat_only", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existingChatOnly.data?.id) {
+      router.push(`/mypage/messages?app=${encodeURIComponent(existingChatOnly.data.id)}`);
+      return;
+    }
+
+    const { data: inserted, error } = await supabase
+      .from("applications")
+      .insert({
+        user_id: uid,
+        organization_id: org.id,
+        status: "chat",
+        current_step: "メッセージ",
+        applicant_message: null,
+        source: "Message",
+        is_chat_only: true,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      toast.error(error.message || "チャットの作成に失敗しました");
+      return;
+    }
+    router.push(`/mypage/messages?app=${encodeURIComponent(inserted.id)}`);
+  };
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -409,28 +470,65 @@ export default function OrganizationDetailClient({
         </header>
 
         {/* エントリーCTA */}
-        {session && (
-          <div className="py-4 border-b border-slate-200">
-            {application ? (
-              <div className="flex items-center gap-2 text-slate-600">
-                <span className="material-symbols-outlined text-2xl text-emerald-600">check_circle</span>
-                <span className="font-bold">
-                  エントリー済み（現在：{application.current_step || "—"}ステップ）
-                </span>
+        <div className="py-4 border-b border-slate-200">
+          {session ? (
+            application ? (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <span className="material-symbols-outlined text-2xl text-emerald-600">check_circle</span>
+                  <span className="font-bold">
+                    エントリー済み（現在：{application.current_step || "—"}ステップ）
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={openOrCreateChat}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" aria-hidden="true" />
+                  この団体にメッセージを送る
+                </Button>
               </div>
             ) : (
-              <button
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={openOrCreateChat}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" aria-hidden="true" />
+                  この団体にメッセージを送る
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setEntryModalOpen(true)}
+                  disabled={!entryCheckDone}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined">send</span>
+                  この団体にエントリーする
+                </button>
+              </div>
+            )
+          ) : (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <p className="text-slate-600 text-sm">
+                メッセージを送るにはログインが必要です。
+              </p>
+              <Button
                 type="button"
-                onClick={() => setEntryModalOpen(true)}
-                disabled={!entryCheckDone}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                variant="outline"
+                onClick={openOrCreateChat}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined">send</span>
-                この団体にエントリーする
-              </button>
-            )}
-          </div>
-        )}
+                <MessageCircle className="w-4 h-4" aria-hidden="true" />
+                この団体にメッセージを送る
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* タブナビ */}
         <nav

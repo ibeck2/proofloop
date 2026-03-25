@@ -10,6 +10,8 @@ export interface Application {
   current_step: string;
   applicant_message: string | null;
   created_at?: string;
+  /** エントリーではなくチャット専用のスレッドか */
+  is_chat_only?: boolean;
   /** Phase 6-A: 優先度（高・中・低・未設定） */
   priority?: string | null;
   /** 手動追加時の氏名 */
@@ -49,6 +51,7 @@ export interface ApplicationWithProfile {
   applicant_message: string | null;
   created_at?: string;
   last_message_at?: string | null;
+  is_chat_only?: boolean;
   priority?: string | null;
   manual_name?: string | null;
   manual_university?: string | null;

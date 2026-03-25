@@ -6,6 +6,7 @@ import SearchOrgCard from "@/components/SearchOrgCard";
 import { Button, Input } from "@/components/ui";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 import { supabase } from "@/lib/supabase";
+import { UNIVERSITY_OPTIONS } from "@/constants/universities";
 
 const CATEGORIES = [
   "運動系（スポーツ・アウトドア）",
@@ -39,7 +40,6 @@ export default function SearchPage() {
   const [keyword, setKeyword] = useState(initialQ);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
-  const [universities, setUniversities] = useState<string[]>([]);
   const [orgs, setOrgs] = useState<OrgSearchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const { savedOrgIds, toggle: toggleSavedOrg } = useSavedOrganizations();
@@ -79,21 +79,6 @@ export default function SearchPage() {
     fetchOrgs();
   }, [fetchOrgs]);
 
-  useEffect(() => {
-    const loadUniversities = async () => {
-      const { data } = await supabase
-        .from("organizations")
-        .select("university")
-        .not("university", "is", null);
-      const uniq = Array.from(new Set((data ?? []).map((r) => r.university).filter(Boolean))) as string[];
-      setUniversities((prev) => {
-        const merged = new Set([...prev, ...uniq]);
-        return Array.from(merged).sort();
-      });
-    };
-    loadUniversities();
-  }, []);
-
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
@@ -128,30 +113,28 @@ export default function SearchPage() {
                 </p>
               </div>
               {/* University Filter */}
-              {universities.length > 0 && (
-                <div className="border-b border-grey-custom/20 pb-6">
-                  <p className="text-navy font-bold mb-4">大学</p>
-                  <div className="space-y-3 max-h-48 overflow-y-auto">
-                    {universities.map((uni) => (
-                      <label key={uni} className="flex items-center gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          className="w-5 h-5 border-grey-custom text-accent focus:ring-0 rounded"
-                          checked={selectedUniversities.includes(uni)}
-                          onChange={() =>
-                            setSelectedUniversities((prev) =>
-                              prev.includes(uni) ? prev.filter((u) => u !== uni) : [...prev, uni]
-                            )
-                          }
-                        />
-                        <span className="text-navy text-sm group-hover:text-accent transition-colors line-clamp-1">
-                          {uni}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+              <div className="border-b border-grey-custom/20 pb-6">
+                <p className="text-navy font-bold mb-4">大学</p>
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {UNIVERSITY_OPTIONS.map((uni) => (
+                    <label key={uni} className="flex items-center gap-3 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        className="w-5 h-5 border-grey-custom text-accent focus:ring-0 rounded"
+                        checked={selectedUniversities.includes(uni)}
+                        onChange={() =>
+                          setSelectedUniversities((prev) =>
+                            prev.includes(uni) ? prev.filter((u) => u !== uni) : [...prev, uni]
+                          )
+                        }
+                      />
+                      <span className="text-navy text-sm group-hover:text-accent transition-colors line-clamp-1">
+                        {uni}
+                      </span>
+                    </label>
+                  ))}
                 </div>
-              )}
+              </div>
               {/* Category Filter */}
               <div className="pb-6">
                 <p className="text-navy font-bold mb-4">カテゴリ</p>

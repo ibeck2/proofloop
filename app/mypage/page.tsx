@@ -92,6 +92,7 @@ type SavedEventWithDetails = {
 export default function MypagePage() {
   const [userName, setUserName] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [userEmail, setUserEmail] = useState<string>("");
   const [fullName, setFullName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -150,10 +151,12 @@ export default function MypagePage() {
       const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
       if (cancelled) return;
       if (authError || !authUser) {
+        setAuthChecked(true);
         setIsLoading(false);
         return;
       }
       setUserId(authUser.id);
+      setAuthChecked(true);
 
       const authEmail =
         authUser.email?.trim() ||
@@ -421,6 +424,7 @@ export default function MypagePage() {
         `
         )
         .eq("user_id", userId)
+        .neq("is_chat_only", true)
         .order("created_at", { ascending: false });
       if (cancelled) return;
       if (error) {
@@ -744,6 +748,29 @@ export default function MypagePage() {
 
         {isLoading ? (
           <p className="text-text-sub text-sm">読み込み中...</p>
+        ) : authChecked && !userId ? (
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-8 text-center">
+              <h2 className="text-primary text-lg font-bold mb-3">
+                ログインが必要です
+              </h2>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                あなたはまだログインしていません。マイページを利用するにはログインまたは新規登録を行ってください。
+              </p>
+              <div className="mt-6 flex flex-col gap-3">
+                <Link href="/signup" className="w-full">
+                  <Button variant="primary" className="w-full">
+                    新規登録はこちら
+                  </Button>
+                </Link>
+                <Link href="/login" className="w-full">
+                  <Button variant="outline" className="w-full">
+                    ログイン
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
         ) : (
           <>
             <p className="text-slate-700 text-base mb-8">

@@ -110,8 +110,13 @@ export default function ClubDashboardContent() {
           .from("applications")
           .select("*", { count: "exact", head: true })
           .eq("organization_id", orgId)
+          .neq("is_chat_only", true)
           .gte("created_at", monthStart),
-        supabase.from("applications").select("id").eq("organization_id", orgId),
+        supabase
+          .from("applications")
+          .select("id")
+          .eq("organization_id", orgId)
+          .neq("is_chat_only", true),
         supabase
           .from("organization_page_views")
           .select("created_at")

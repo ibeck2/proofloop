@@ -146,8 +146,9 @@ export default function ClubAtsPage() {
     if (!orgId) return;
     const { data: appRows, error: appError } = await supabase
       .from("applications")
-      .select("id, user_id, organization_id, status, current_step, applicant_message, created_at, priority, manual_name, manual_university, source")
+      .select("id, user_id, organization_id, status, current_step, applicant_message, created_at, priority, manual_name, manual_university, source, is_chat_only")
       .eq("organization_id", orgId)
+      .neq("is_chat_only", true)
       .order("created_at", { ascending: false });
 
     if (appError) {
