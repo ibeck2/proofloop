@@ -13,6 +13,7 @@ const STUDENT_PATHS = [
   "/clubprofile",
   "/mypage",
   "/timeline",
+  "/baito",
 ];
 
 function isStudentPath(pathname: string): boolean {
@@ -25,6 +26,7 @@ const MOBILE_NAV_LINKS: Array<{ href: string; label: string; icon: string; login
   { href: "/search", label: "検索", icon: "search" },
   { href: "/timeline", label: "新着", icon: "dynamic_feed" },
   { href: "/schedule", label: "カレンダー", icon: "calendar_month" },
+  { href: "/baito", label: "バイト", icon: "work" },
   { href: "/mypage/messages", label: "メッセージ", icon: "mail", loginOnly: true },
   { href: "/mypage", label: "マイページ", icon: "person" },
 ];
@@ -115,6 +117,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/schedule">
                   <span className="material-symbols-outlined text-[20px]">calendar_month</span>
                   カレンダー
+                </Link>
+                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/baito">
+                  <span className="material-symbols-outlined text-[20px]">work</span>
+                  バイト・インターン
                 </Link>
                 {session && (
                   <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/mypage/messages">
@@ -283,6 +289,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/schedule">
             <span className="material-symbols-outlined">calendar_month</span>
             <span className="text-[10px] font-bold">カレンダー</span>
+          </Link>
+          <Link
+            className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/baito") ? "text-primary" : "text-text-grey hover:text-primary"}`}
+            href="/baito"
+          >
+            <span className="material-symbols-outlined">work</span>
+            <span className="text-[10px] font-bold">バイト</span>
           </Link>
           {session && (
             <Link

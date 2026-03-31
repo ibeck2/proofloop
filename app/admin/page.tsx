@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardCheck, MessageSquare, Star, Users } from "lucide-react";
+import { Briefcase, ClipboardCheck, MessageSquare, Star, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type AdminMenuItem = {
@@ -31,6 +31,12 @@ export default function AdminDashboardPage() {
         title: "レビュー管理",
         description: "承認待ちの口コミを確認し、公開可否を判断します。",
         Icon: Star,
+      },
+      {
+        href: "/admin/jobs",
+        title: "求人管理",
+        description: "バイト・インターン案件の追加・編集・削除・公開管理を行います。",
+        Icon: Briefcase,
       },
     ],
     []
@@ -152,4 +158,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-

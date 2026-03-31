@@ -4,10 +4,35 @@ import "./globals.css";
 import AppShell from "@/components/AppShell";
 import Footer from "@/components/Footer";
 
+const SITE_URL = "https://proofloop-green.vercel.app";
+
 export const metadata: Metadata = {
-  title: "ProofLoop | 学生団体が社会を動かす新しい時代のスタンダード",
+  // サブページで上書きされる際のテンプレート
+  title: {
+    default: "ProofLoop | 全ての大学生のポテンシャルを引き出す",
+    template: "%s | ProofLoop",
+  },
   description:
-    "学生団体と企業を繋ぐ次世代プラットフォーム。サークル検索、授業レビュー、過去問共有から、企業との協賛マッチングまで。",
+    "学生団体と企業を繋ぐ次世代プラットフォーム。サークル検索、授業レビュー、過去問共有から、バイト・インターン紹介まで。",
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "ProofLoop",
+    title: "ProofLoop | 全ての大学生のポテンシャルを引き出す",
+    description:
+      "学生団体と企業を繋ぐ次世代プラットフォーム。サークル検索、授業レビュー、過去問共有から、バイト・インターン紹介まで。",
+    locale: "ja_JP",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ProofLoop | 全ての大学生のポテンシャルを引き出す",
+    description:
+      "学生団体と企業を繋ぐ次世代プラットフォーム。サークル検索、授業レビュー、バイト・インターン紹介まで。",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
