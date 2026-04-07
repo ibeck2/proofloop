@@ -60,6 +60,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    // ── ガイド系ページ
+    {
+      url: `${SITE_URL}/guide`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/guide/circle`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}/guide/study-abroad`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    // { url: `${SITE_URL}/guide/credits`, ... },
+    // { url: `${SITE_URL}/guide/money`, ... },
     {
       url: `${SITE_URL}/login`,
       lastModified: new Date(),
@@ -99,4 +120,3 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [...staticPages, ...orgPages];
 }
-

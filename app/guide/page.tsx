@@ -27,7 +27,7 @@ const GUIDE_PAGES = [
     href: "/guide/study-abroad",
     icon: "flight",
     label: "留学",
-    status: "coming",
+    status: "published",
     description: "費用・期間・手続き・語学力の目安など、大学生の留学に関する疑問をまとめて解決。",
     tags: ["費用", "休学・認定", "語学"],
     color: "text-sky-600",
@@ -47,7 +47,7 @@ const GUIDE_PAGES = [
     href: "/guide/circle",
     icon: "groups",
     label: "サークル",
-    status: "coming",
+    status: "published",
     description: "新歓の仕組み・複数サークルの掛け持ち・入り方・やめ方まで、サークル選びで迷わないためのガイド。",
     tags: ["新歓", "掛け持ち", "選び方"],
     color: "text-violet-600",
@@ -69,6 +69,7 @@ export default function GuidePage() {
   return (
     <div className="bg-white text-primary min-h-screen font-body pb-20 md:pb-0">
       <main className="w-full max-w-[1200px] mx-auto px-6 py-12 md:py-20 flex flex-col gap-16">
+
         {/* Hero */}
         <section className="flex flex-col gap-6 max-w-2xl">
           <div className="flex items-center gap-2">
@@ -89,10 +90,8 @@ export default function GuidePage() {
             {GUIDE_PAGES.map((page) => (
               <div key={page.href} className="relative">
                 {page.status === "published" ? (
-                  <Link
-                    href={page.href}
-                    className="group border border-[#f0f2f5] hover:border-accent/40 hover:shadow-sm transition-all p-6 flex flex-col gap-4 h-full"
-                  >
+                  <Link href={page.href}
+                    className="group border border-[#f0f2f5] hover:border-accent/40 hover:shadow-sm transition-all p-6 flex flex-col gap-4 h-full">
                     <div className={`w-12 h-12 ${page.bg} flex items-center justify-center`}>
                       <span className={`material-symbols-outlined text-2xl ${page.color}`}>{page.icon}</span>
                     </div>
@@ -152,10 +151,8 @@ export default function GuidePage() {
               3問に答えるだけで可処分時間・月収・年収の壁を自動計算。
             </p>
           </div>
-          <Link
-            href="/baito/simulator"
-            className="shrink-0 inline-flex items-center gap-2 bg-accent text-white hover:bg-[#600000] transition-colors px-8 py-4 font-black text-base whitespace-nowrap"
-          >
+          <Link href="/baito/simulator"
+            className="shrink-0 inline-flex items-center gap-2 bg-accent text-white hover:bg-[#600000] transition-colors px-8 py-4 font-black text-base whitespace-nowrap">
             シミュレートしてみる
             <span className="material-symbols-outlined">arrow_forward</span>
           </Link>
@@ -169,16 +166,14 @@ export default function GuidePage() {
               ProofLoopでは全国の学生団体を検索できます。新歓情報・活動頻度・雰囲気がわかる詳細ページが揃っています。
             </p>
           </div>
-          <Link
-            href="/search"
-            className="shrink-0 inline-flex items-center gap-2 bg-primary text-white hover:bg-primary-hover transition-colors px-8 py-3 font-bold text-sm"
-          >
+          <Link href="/search"
+            className="shrink-0 inline-flex items-center gap-2 bg-primary text-white hover:bg-primary-hover transition-colors px-8 py-3 font-bold text-sm">
             サークルを探す
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </Link>
         </section>
+
       </main>
     </div>
   );
 }
-
