@@ -3,6 +3,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import Footer from "@/components/Footer";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
@@ -55,6 +56,7 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
+        <GoogleAnalytics />
         <AppShell>
           {children}
           <Footer />
