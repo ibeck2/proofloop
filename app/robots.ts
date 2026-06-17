@@ -1,6 +1,5 @@
 import { MetadataRoute } from "next";
-
-const SITE_URL = "https://proofloop-green.vercel.app";
+import { SITE_URL } from "@/lib/site-url";
 
 export default function robots(): MetadataRoute.Robots {
   return {

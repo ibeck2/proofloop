@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: "新入生ガイド | バイト・就活・留学・単位・サークル",
@@ -8,10 +9,10 @@ export const metadata: Metadata = {
   openGraph: {
     title: "新入生ガイド | ProofLoop",
     description: "大学生活でぶつかる疑問をまとめて解決。バイト・就活・留学・単位・サークルのガイドを網羅。",
-    url: "https://proofloop-green.vercel.app/guide",
+    url: `${SITE_URL}/guide`,
   },
   alternates: {
-    canonical: "https://proofloop-green.vercel.app/guide",
+    canonical: `${SITE_URL}/guide`,
   },
 };
 

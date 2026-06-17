@@ -1,7 +1,6 @@
 import { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
-
-const SITE_URL = "https://proofloop-green.vercel.app";
+import { SITE_URL } from "@/lib/site-url";
 
 // Supabaseをサーバーサイドで直接呼ぶ
 const supabase = createClient(

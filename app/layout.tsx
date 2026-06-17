@@ -3,8 +3,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import Footer from "@/components/Footer";
-
-const SITE_URL = "https://proofloop-green.vercel.app";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   // サブページで上書きされる際のテンプレート

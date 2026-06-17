@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-
-const SITE_URL = "https://proofloop-green.vercel.app";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   // ── タイトル ──────────────────────────────────────

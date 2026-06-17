@@ -261,7 +261,7 @@ function generateShareImage(
   // URL
   ctx.fillStyle = "rgba(255,255,255,0.3)";
   ctx.font = "14px sans-serif";
-  ctx.fillText("proofloop-green.vercel.app/baito/simulator", 60, 600);
+  ctx.fillText("proofloop.jp/baito/simulator", 60, 600);
 }
 
 // ─────────────────────────────────────────────
@@ -409,7 +409,7 @@ export default function SimulatorPage() {
       `自由時間 ${result.freeHours}h/週・月収見込み ¥${result.actualMonthlyIncome.toLocaleString()}\n` +
       `#ProofLoop #大学生活シミュレーター`
     );
-    const url = encodeURIComponent("https://proofloop-green.vercel.app/baito/simulator");
+    const url = encodeURIComponent("https://proofloop.jp/baito/simulator");
     if (platform === "x") {
       window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank");
     } else {

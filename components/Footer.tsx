@@ -78,7 +78,7 @@ export default function Footer() {
               お問い合わせ
             </h3>
             <a
-              href="https://proofloop-2cea.vercel.app/organizations/4003e084-8da8-4315-b0dc-3dcce3da42d0"
+              href="https://proofloop.jp/organizations/4003e084-8da8-4315-b0dc-3dcce3da42d0"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"

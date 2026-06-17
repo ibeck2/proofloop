@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import FaqAccordion from "./FaqAccordion";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: "留学どうする？大学生の留学完全ガイド2025 | ProofLoop",
@@ -10,9 +11,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: "留学どうする？大学生の留学完全ガイド | ProofLoop",
     description: "留学の種類・費用・時期・単位・奨学金まで、新入生の疑問をまとめて解決。",
-    url: "https://proofloop-green.vercel.app/guide/study-abroad",
+    url: `${SITE_URL}/guide/study-abroad`,
   },
-  alternates: { canonical: "https://proofloop-green.vercel.app/guide/study-abroad" },
+  alternates: { canonical: `${SITE_URL}/guide/study-abroad` },
 };
 
 // ─────────────────────────────────────────────

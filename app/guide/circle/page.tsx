@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   title: "サークルどうする？新入生のためのサークル選び完全ガイド | ProofLoop",
@@ -9,9 +10,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: "サークルどうする？新入生のためのサークル選び完全ガイド | ProofLoop",
     description: "新歓の仕組みからサークルの選び方・やめ方まで。ProofLoopが新入生向けにまとめました。",
-    url: "https://proofloop-green.vercel.app/guide/circle",
+    url: `${SITE_URL}/guide/circle`,
   },
-  alternates: { canonical: "https://proofloop-green.vercel.app/guide/circle" },
+  alternates: { canonical: `${SITE_URL}/guide/circle` },
 };
 
 // ─────────────────────────────────────────────
