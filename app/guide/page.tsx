@@ -57,7 +57,7 @@ const GUIDE_PAGES = [
     href: "/guide/money",
     icon: "savings",
     label: "お金・奨学金",
-    status: "coming",
+    status: "published",
     description: "大学生の平均生活費・奨学金の種類・返済・節約術まで。お金の不安を解消するための基礎知識。",
     tags: ["奨学金", "生活費", "節約"],
     color: "text-rose-600",

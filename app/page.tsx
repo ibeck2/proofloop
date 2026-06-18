@@ -68,9 +68,9 @@ export default function Page() {
               { href:"/baito", icon:"work", label:"バイト・インターン", color:"text-blue-600", bg:"bg-blue-50", ready:true },
               { href:"/guide/career", icon:"business_center", label:"就活", color:"text-emerald-600", bg:"bg-emerald-50", ready:false },
               { href:"/guide/study-abroad", icon:"flight", label:"留学", color:"text-sky-600", bg:"bg-sky-50", ready:true },
-              { href:"/guide/credits", icon:"school", label:"単位・授業", color:"text-amber-600", bg:"bg-amber-50", ready:false },
+              { href:"/guide/credits", icon:"school", label:"単位・授業", color:"text-amber-600", bg:"bg-amber-50", ready:true },
               { href:"/guide/circle", icon:"groups", label:"サークル", color:"text-violet-600", bg:"bg-violet-50", ready:true },
-              { href:"/guide/money", icon:"savings", label:"お金・奨学金", color:"text-rose-600", bg:"bg-rose-50", ready:false },
+              { href:"/guide/money", icon:"savings", label:"お金・奨学金", color:"text-rose-600", bg:"bg-rose-50", ready:true },
             ].map((item) => (
               item.ready ? (
                 <Link key={item.href} href={item.href}
