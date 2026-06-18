@@ -37,7 +37,7 @@ const GUIDE_PAGES = [
     href: "/guide/credits",
     icon: "school",
     label: "単位・授業",
-    status: "coming",
+    status: "published",
     description: "単位の取り方・落とし方・GPA・必修と選択の違いなど、履修計画で失敗しないための基礎知識。",
     tags: ["履修登録", "GPA", "必修・選択"],
     color: "text-amber-600",
