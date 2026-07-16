@@ -64,6 +64,93 @@ const GUIDE_ITEMS = [
   },
 ] as const;
 
+// タイプ別おすすめバイト（エディトリアル・非広告）
+const RECOMMENDED_BAITO = [
+  {
+    name: "塾講師・家庭教師",
+    wage: "1,200〜2,500円",
+    balance: "◎",
+    skill: "学力・伝える力・就活ネタ",
+    forWhom: "高時給とスキルを両立したい人",
+  },
+  {
+    name: "カフェ・飲食店",
+    wage: "1,050〜1,300円",
+    balance: "○",
+    skill: "接客・臨機応変さ",
+    forWhom: "未経験から始めたい・仲間が欲しい人",
+  },
+  {
+    name: "コンビニ",
+    wage: "1,050〜1,250円",
+    balance: "◎",
+    skill: "幅広い業務対応力",
+    forWhom: "家や大学の近くで働きたい人",
+  },
+  {
+    name: "在宅ワーク（データ入力・採点）",
+    wage: "1,100〜1,500円",
+    balance: "◎",
+    skill: "PC操作・自己管理",
+    forWhom: "スキマ時間を使いたい・通勤したくない人",
+  },
+  {
+    name: "単発・スキマバイト",
+    wage: "1,100〜1,500円",
+    balance: "◎",
+    skill: "多様な現場経験",
+    forWhom: "予定が不規則・まず試したい人",
+  },
+  {
+    name: "アパレル・販売",
+    wage: "1,050〜1,300円",
+    balance: "○",
+    skill: "接客・提案力・服割",
+    forWhom: "ファッションが好きな人",
+  },
+  {
+    name: "イベント・設営",
+    wage: "1,200〜1,800円",
+    balance: "○（単発）",
+    skill: "体力・チーム連携",
+    forWhom: "短期でまとめて稼ぎたい人",
+  },
+  {
+    name: "長期インターン・IT",
+    wage: "1,300〜2,000円",
+    balance: "△〜○",
+    skill: "実務スキル・就活で有利",
+    forWhom: "将来のキャリアに繋げたい人",
+  },
+] as const;
+
+const BAITO_FAQ = [
+  {
+    q: "大学生のバイトはいつから始めるべき？",
+    a: "多くの学生は入学直後の4〜5月から始めます。授業の時間割が固まる履修登録後に探し始めると、無理なくシフトを組めます。前期の生活リズムに慣れてから始めても遅くはありません。",
+  },
+  {
+    q: "大学生に一番おすすめのバイトは？",
+    a: "「両立×スキル×時給」のバランスなら塾講師・家庭教師、通勤なしでスキマ時間を活かすなら在宅ワーク、未経験から始めるなら飲食・コンビニが定番です。目的（稼ぐ／スキル／楽さ）を決めてから選ぶのが失敗しないコツです。",
+  },
+  {
+    q: "楽なバイトはどれ？",
+    a: "監視・受付や、在宅の採点・データ入力などは体力的な負担が軽めです。ただし「楽」の感じ方は人それぞれ。人と話すのが苦手なら在宅、単純作業が退屈なら接客、と自分の性格に合うものを選ぶと長続きします。",
+  },
+  {
+    q: "一番稼げるバイトは？",
+    a: "時給水準なら塾講師・家庭教師・イベント設営・長期インターンが高めです。ただし稼ぐほど年収の壁（扶養）に近づくため、下の「年収の壁」の項目を必ず確認してください。",
+  },
+  {
+    q: "週何回・何時間くらいが目安？",
+    a: "学業と両立するなら週2〜3回・月40〜60時間が目安です。テスト期間にシフトを減らせるバイトを選ぶと安心。週4回以上は生活が回るか慎重に判断しましょう。",
+  },
+  {
+    q: "扶養を外れない年収はいくら？",
+    a: "2025年の改正で大学生（19〜22歳）は年収150万円まで親の控除が満額適用されます。ただし社会保険の130万円の壁は据え置きです。詳しくは本ページの「年収の壁」の項目を参照してください。",
+  },
+] as const;
+
 // ─────────────────────────────────────────────
 // スコアバー
 // ─────────────────────────────────────────────
@@ -81,6 +168,23 @@ function ScoreBar({ label, score }: { label: string; score: number | null }) {
         ))}
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// FAQアコーディオン
+// ─────────────────────────────────────────────
+function FaqItem({ q, a }: { q: string; a: string }) {
+  return (
+    <details className="border-b border-[#f0f2f5] last:border-0 group">
+      <summary className="flex items-center justify-between gap-4 py-5 cursor-pointer list-none">
+        <span className="font-bold text-primary text-sm leading-snug">{q}</span>
+        <span className="material-symbols-outlined text-text-grey shrink-0 group-open:rotate-180 transition-transform duration-200">
+          expand_more
+        </span>
+      </summary>
+      <p className="text-text-grey text-sm leading-relaxed pb-5">{a}</p>
+    </details>
   );
 }
 
@@ -301,6 +405,49 @@ export default function BaitoPage() {
           </div>
         </section>
 
+        {/* ── タイプ別おすすめバイト ── */}
+        <section className="flex flex-col gap-6">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-primary text-xl md:text-2xl font-black">
+              大学生におすすめのバイト【タイプ別】
+            </h2>
+            <p className="text-text-grey text-sm leading-relaxed">
+              「時給の高さ」「授業との両立しやすさ」「身につくスキル」は種類ごとに大きく違います。
+              代表的な8タイプを比較して、自分の目的に合うバイトを見つけましょう。
+            </p>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border border-[#f0f2f5]">
+              <thead>
+                <tr className="bg-primary text-white">
+                  <th className="px-4 py-3 text-left font-bold text-xs whitespace-nowrap">バイトの種類</th>
+                  <th className="px-4 py-3 text-left font-bold text-xs whitespace-nowrap">時給目安</th>
+                  <th className="px-4 py-3 text-center font-bold text-xs whitespace-nowrap">両立</th>
+                  <th className="px-4 py-3 text-left font-bold text-xs whitespace-nowrap hidden md:table-cell">身につくもの</th>
+                  <th className="px-4 py-3 text-left font-bold text-xs">こんな人におすすめ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {RECOMMENDED_BAITO.map((row, i) => (
+                  <tr key={row.name} className={`border-t border-[#f0f2f5] ${i % 2 === 1 ? "bg-slate-50/50" : "bg-white"}`}>
+                    <td className="px-4 py-3 font-bold text-primary">{row.name}</td>
+                    <td className="px-4 py-3 text-accent font-bold whitespace-nowrap">{row.wage}</td>
+                    <td className="px-4 py-3 text-center font-black text-primary">{row.balance}</td>
+                    <td className="px-4 py-3 text-text-grey text-xs hidden md:table-cell">{row.skill}</td>
+                    <td className="px-4 py-3 text-text-grey text-xs">{row.forWhom}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="text-xs text-text-grey">
+            ※時給は2026年時点の一般的な目安。地域・企業・経験により変動します。両立のしやすさ（◎○△）はシフトの融通・拘束時間からの編集部評価です。
+            具体的な求人は<a href="#jobs" className="text-accent font-bold underline">下の求人一覧</a>から探せます。
+          </p>
+        </section>
+
         {/* ── 年収の壁コラム（2025年改正版） ── */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
@@ -412,8 +559,21 @@ export default function BaitoPage() {
           </p>
         </section>
 
-        {/* ── 案件一覧 ── */}
+        {/* ── よくある質問 ── */}
         <section className="flex flex-col gap-6">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-accent text-xl">help</span>
+            <h2 className="text-primary text-xl md:text-2xl font-black">大学生のバイト・よくある質問</h2>
+          </div>
+          <div className="border border-[#f0f2f5] px-6">
+            {BAITO_FAQ.map((item, i) => (
+              <FaqItem key={i} q={item.q} a={item.a} />
+            ))}
+          </div>
+        </section>
+
+        {/* ── 案件一覧 ── */}
+        <section id="jobs" className="flex flex-col gap-6 scroll-mt-20">
           <h2 className="text-primary text-xl md:text-2xl font-black">
             ProofLoop厳選 求人一覧
           </h2>
@@ -486,6 +646,34 @@ export default function BaitoPage() {
               ))}
             </div>
           )}
+        </section>
+
+        {/* ── 関連ガイド ── */}
+        <section className="border border-[#f0f2f5] p-6 flex flex-col gap-4">
+          <h3 className="text-primary font-black text-base">お金・生活の関連ガイド</h3>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/guide/money"
+              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">savings</span>
+              お金・奨学金どうする？
+            </Link>
+            <Link
+              href="/guide/living-alone"
+              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">cottage</span>
+              一人暮らしどうする？
+            </Link>
+            <Link
+              href="/guide"
+              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">menu_book</span>
+              新入生ガイド一覧へ
+            </Link>
+          </div>
         </section>
 
         {/* ── 次のステップ：サークルを探す ── */}
