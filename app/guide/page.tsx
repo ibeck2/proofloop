@@ -63,6 +63,16 @@ const GUIDE_PAGES = [
     color: "text-rose-600",
     bg: "bg-rose-50",
   },
+  {
+    href: "/guide/living-alone",
+    icon: "cottage",
+    label: "一人暮らし",
+    status: "published",
+    description: "初期費用・毎月の生活費・家賃相場・食費から、部屋探し・必要なものチェックリスト・仕送りなしで暮らす方法まで。",
+    tags: ["初期費用", "家賃", "食費・自炊"],
+    color: "text-teal-600",
+    bg: "bg-teal-50",
+  },
 ] as const;
 
 export default function GuidePage() {

@@ -615,6 +615,13 @@ export default function MoneyGuidePage() {
           <h3 className="text-primary font-black text-base">他のガイドも読む</h3>
           <div className="flex flex-wrap gap-3">
             <Link
+              href="/guide/living-alone"
+              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">cottage</span>
+              一人暮らしどうする？
+            </Link>
+            <Link
               href="/baito"
               className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
             >

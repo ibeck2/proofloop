@@ -557,6 +557,13 @@ export default function CreditsGuidePage() {
               留学どうする？
             </Link>
             <Link
+              href="/guide/living-alone"
+              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">cottage</span>
+              一人暮らしどうする？
+            </Link>
+            <Link
               href="/guide"
               className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
             >
