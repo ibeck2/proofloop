@@ -1,39 +1,31 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import {
-  ArrowRight,
-  CalendarDays,
-  Inbox,
-  Kanban,
-  LayoutGrid,
-  ListTodo,
-  MessageSquare,
-  Rss,
-  Sparkles,
-  UserPlus,
-  Users,
+  ArrowRight, CalendarDays, Inbox, Kanban, LayoutGrid,
+  ListTodo, MessageSquare, Rss, Sparkles, UserPlus, Users,
+  CheckCircle2, TrendingUp, Shield, Zap,
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "学生団体の皆様へ | ProofLoop",
+  title: "学生団体の運営を、もっとスマートに | ProofLoop",
   description:
-    "新メンバー募集からタスク共有、イベント告知まで。学生団体の運営を一つの画面でスムーズに。ProofLoop。",
+    "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。LINEのDM管理・バラバラのスプレッドシートから卒業しよう。ProofLoop——学生団体のための無料プラットフォーム。",
 };
 
+// ─────────────────────────────────────────────
+// Mock UI Components
+// ─────────────────────────────────────────────
 function MockChrome() {
   return (
     <div className="rounded-t-lg border-b border-slate-200/80 bg-slate-100/90 px-3 py-2 flex items-center gap-1.5">
       <span className="size-2.5 rounded-full bg-red-400/90" />
       <span className="size-2.5 rounded-full bg-amber-400/90" />
       <span className="size-2.5 rounded-full bg-emerald-400/90" />
-      <span className="ml-2 text-[10px] text-slate-400 font-medium tracking-wide">
-        proofloop.app
-      </span>
+      <span className="ml-2 text-[10px] text-slate-400 font-medium tracking-wide">proofloop.app</span>
     </div>
   );
 }
 
-/** Inbox + 応募者カンバン */
 function MockInboxKanban() {
   return (
     <div className="bg-gradient-to-br from-slate-100 to-slate-200/80 rounded-xl aspect-video shadow-inner border border-slate-200/60 overflow-hidden flex flex-col">
@@ -45,10 +37,7 @@ function MockInboxKanban() {
             <span className="text-[11px] font-bold">Inbox</span>
           </div>
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="rounded-md bg-slate-50 border border-slate-100 p-2 flex gap-2"
-            >
+            <div key={i} className="rounded-md bg-slate-50 border border-slate-100 p-2 flex gap-2">
               <div className="size-8 rounded-full bg-slate-200 shrink-0" />
               <div className="flex-1 space-y-1">
                 <div className="h-2 w-3/4 rounded bg-slate-200" />
@@ -64,16 +53,9 @@ function MockInboxKanban() {
           </div>
           <div className="flex-1 flex gap-2 min-h-0">
             {["新規", "面談中", "内定"].map((label, idx) => (
-              <div
-                key={label}
-                className="flex-1 rounded-md bg-slate-50 border border-dashed border-slate-200 p-2"
-              >
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                  {label}
-                </span>
-                {idx === 0 && (
-                  <div className="mt-2 h-14 rounded bg-white border border-slate-200 shadow-sm" />
-                )}
+              <div key={label} className="flex-1 rounded-md bg-slate-50 border border-dashed border-slate-200 p-2">
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
+                {idx === 0 && <div className="mt-2 h-14 rounded bg-white border border-slate-200 shadow-sm" />}
                 {idx === 1 && (
                   <div className="mt-2 space-y-2">
                     <div className="h-10 rounded bg-white border border-slate-200" />
@@ -89,7 +71,6 @@ function MockInboxKanban() {
   );
 }
 
-/** タイムライン */
 function MockTimeline() {
   return (
     <div className="bg-gradient-to-br from-slate-100 to-slate-200/80 rounded-xl aspect-video shadow-inner border border-slate-200/60 overflow-hidden flex flex-col">
@@ -101,10 +82,7 @@ function MockTimeline() {
         </div>
         <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div
-              key={i}
-              className="rounded-xl bg-white border border-slate-200 shadow-sm p-3"
-            >
+            <div key={i} className="rounded-xl bg-white border border-slate-200 shadow-sm p-3">
               <div className="flex gap-3">
                 <div className="size-10 rounded-full bg-slate-200 shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -127,7 +105,6 @@ function MockTimeline() {
   );
 }
 
-/** カレンダー + 詳細 */
 function MockCalendarEvent() {
   return (
     <div className="bg-gradient-to-br from-slate-100 to-slate-200/80 rounded-xl aspect-video shadow-inner border border-slate-200/60 overflow-hidden flex flex-col">
@@ -139,20 +116,14 @@ function MockCalendarEvent() {
             <span className="text-[11px] font-bold">イベントカレンダー</span>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center text-[8px] text-slate-400 font-medium mb-1">
-            {["日", "月", "火", "水", "木", "金", "土"].map((d) => (
-              <span key={d}>{d}</span>
-            ))}
+            {["日","月","火","水","木","金","土"].map((d) => <span key={d}>{d}</span>)}
           </div>
           <div className="grid grid-cols-7 gap-1">
             {Array.from({ length: 28 }).map((_, i) => (
-              <div
-                key={i}
+              <div key={i}
                 className={`aspect-square rounded text-[9px] flex items-center justify-center ${
-                  i === 10
-                    ? "bg-primary text-white font-bold shadow"
-                    : "bg-slate-50 text-slate-500"
-                }`}
-              >
+                  i === 10 ? "bg-primary text-white font-bold shadow" : "bg-slate-50 text-slate-500"
+                }`}>
                 {i + 1}
               </div>
             ))}
@@ -171,7 +142,6 @@ function MockCalendarEvent() {
   );
 }
 
-/** タスク + メンバー招待 */
 function MockTasksInvite() {
   return (
     <div className="bg-gradient-to-br from-slate-100 to-slate-200/80 rounded-xl aspect-video shadow-inner border border-slate-200/60 overflow-hidden flex flex-col">
@@ -184,10 +154,7 @@ function MockTasksInvite() {
           </div>
           <div className="flex gap-2 flex-1 min-h-0">
             {["未対応", "進行中"].map((t) => (
-              <div
-                key={t}
-                className="flex-1 rounded-md bg-slate-50 border border-slate-100 p-2"
-              >
+              <div key={t} className="flex-1 rounded-md bg-slate-50 border border-slate-100 p-2">
                 <span className="text-[9px] text-slate-400 font-bold">{t}</span>
                 <div className="mt-2 space-y-2">
                   <div className="h-8 rounded border border-slate-200 bg-white" />
@@ -213,189 +180,270 @@ function MockTasksInvite() {
   );
 }
 
+// ─────────────────────────────────────────────
+// Page
+// ─────────────────────────────────────────────
 export default function ForClubsPage() {
   return (
-    <main className="min-h-screen bg-white text-slate-900 font-display antialiased break-keep">
-      {/* Hero */}
+    <main className="min-h-screen bg-white text-slate-900 antialiased break-keep">
+
+      {/* ── Hero ── */}
       <section className="relative overflow-hidden border-b border-slate-100">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(0,43,92,0.12),transparent)]"
-          aria-hidden
-        />
-        <div className="relative max-w-5xl mx-auto px-6 pt-24 pb-28 md:pt-32 md:pb-36 text-center">
-          <p className="text-sm font-bold tracking-widest text-primary/80 uppercase mb-8 leading-relaxed">
-            For student organizations
-          </p>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.5] md:leading-[1.3] text-center max-w-4xl mx-auto">
-            「知ってもらう」から「仲間になる」、
-            <br className="hidden md:inline" />
-            そして「活動を広げる」まで。
-            <br />
-            <span className="block mt-4 md:mt-6 text-2xl md:text-4xl font-bold text-primary leading-snug md:leading-[1.35] tracking-tight">
-              学生団体の運営を劇的にラクにする
-              <br className="md:hidden" />
-              プラットフォーム、ProofLoop。
-            </span>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(0,43,92,0.10),transparent)]" aria-hidden />
+        <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32 text-center">
+          {/* バッジ */}
+          <div className="inline-flex items-center gap-2 border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-bold text-primary mb-8">
+            学生団体・サークル向け　完全無料
+          </div>
+
+          <h1 className="text-3xl md:text-[2.75rem] lg:text-5xl font-black text-slate-900 tracking-tight leading-tight md:leading-tight max-w-4xl mx-auto">
+            LINEのDM管理、もう限界じゃないですか。
           </h1>
-          <p className="mt-12 max-w-3xl mx-auto text-base md:text-lg text-slate-600 leading-loose text-pretty break-keep">
-            SNSのDM管理、バラバラのツールでの名簿作成、誰が何をやっているか分からないタスク管理……。毎年繰り返される煩雑な作業はもう終わりにしましょう。ProofLoopなら、新メンバーの募集から日々のタスク共有、イベントの告知まで、一つの画面でスムーズに完結します。
+          <p className="mt-6 text-lg md:text-xl text-primary font-bold">
+            新メンバー募集・タスク管理・イベント告知を、一つの画面で。
           </p>
-          <div className="mt-14">
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-8 py-4 text-base font-bold text-white leading-relaxed shadow-lg shadow-primary/20 transition hover:bg-[#001f42] hover:shadow-xl hover:shadow-primary/25"
-            >
+          <p className="mt-4 max-w-2xl mx-auto text-base text-slate-600 leading-relaxed">
+            「返信漏れで候補者を逃した」「誰が何をやっているかわからない」「毎年の新歓で同じ失敗を繰り返す」——
+            学生団体あるあるを、ProofLoopがまとめて解決します。
+          </p>
+
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/signup"
+              className="inline-flex items-center justify-center gap-2 bg-primary px-8 py-4 text-base font-bold text-white shadow-lg shadow-primary/20 transition hover:bg-[#001f42] hover:shadow-xl">
               無料で団体を登録する
               <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} />
             </Link>
+            <a href="#features" className="text-sm font-bold text-primary/70 hover:text-primary transition underline underline-offset-4">
+              機能を見る
+            </a>
+          </div>
+
+          {/* 信頼指標 */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500">
+            {[
+              { icon: <CheckCircle2 className="size-4 text-emerald-500" />, text: "無料で始められる" },
+              { icon: <Shield className="size-4 text-blue-500" />, text: "メンバー招待・権限管理あり" },
+              { icon: <Zap className="size-4 text-amber-500" />, text: "登録5分で即公開" },
+              { icon: <TrendingUp className="size-4 text-primary" />, text: "将来の協賛獲得にも繋がる" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-1.5 font-medium">
+                {item.icon}
+                {item.text}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Features Z-layout */}
-      <div className="max-w-6xl mx-auto px-6 py-24 md:py-32 space-y-28 md:space-y-40">
-        {/* ① */}
-        <section className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
-          <div className="order-2 lg:order-1 space-y-8">
-            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold text-primary leading-relaxed">
-              <MessageSquare className="size-3.5 shrink-0" />
-              01
-            </span>
-            <h2 className="text-2xl md:text-3xl font-bold text-primary leading-relaxed text-balance break-keep">
-              興味を持ってくれた人を、スムーズに「仲間」へ。
+      {/* ── 課題提起：Before ── */}
+      <section className="bg-slate-50 border-b border-slate-100 py-16 md:py-20">
+        <div className="max-w-4xl mx-auto px-6">
+          <p className="text-center text-xs font-bold tracking-widest text-slate-400 uppercase mb-8">こんな悩み、ありませんか？</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              "SNSのDMで応募が来るが、誰がどこまで対応したか把握できない",
+              "スプレッドシートの名簿が古くなって、どれが最新版かわからない",
+              "新歓のLINEグループが毎年増えて、過去の連絡が見つからない",
+              "タスクを口頭で振ったが、締め切り当日に「忘れてた」と言われた",
+              "代替わりのたびに引き継ぎがぐちゃぐちゃになる",
+              "せっかくのイベントも告知が上手くいかず、集客に失敗した",
+            ].map((pain, i) => (
+              <div key={i} className="flex items-start gap-3 bg-white border border-slate-200 p-4">
+                <span className="text-slate-300 font-black text-lg leading-none shrink-0 mt-0.5">×</span>
+                <p className="text-sm text-slate-600 leading-relaxed">{pain}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-center mt-8 text-sm font-bold text-primary">
+            これ、全部ProofLoopで解決できます。
+          </p>
+        </div>
+      </section>
+
+      {/* ── 機能紹介 Zレイアウト ── */}
+      <div id="features" className="max-w-6xl mx-auto px-6 py-20 md:py-32 space-y-24 md:space-y-36">
+
+        {/* ① 応募管理 */}
+        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="order-2 lg:order-1 space-y-6">
+            <div className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1.5 text-xs font-bold text-primary">
+              <MessageSquare className="size-3.5 shrink-0" />01 ／ 応募・採用管理
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-primary leading-snug">
+              「あの子、もう連絡した？」を<br />なくす。
             </h2>
-            <p className="text-base md:text-lg text-slate-600 leading-loose text-pretty break-keep">
-              SNSで質問が来たけど、返信が遅れて他サークルに流れてしまった……。そんなすれ違いを防ぎます。学生はワンタップで応募が可能。その後のメッセージのやり取りや、面談の進み具合もすべてProofLoop上で一覧できるため、連絡漏れをなくし、せっかくの縁を確実につなぎます。
+            <p className="text-base text-slate-600 leading-relaxed">
+              学生はワンタップで応募。その後のメッセージのやり取りから面談の進捗まで、カンバンボードで全員分を一覧管理。返信漏れで候補者を逃すことがなくなります。
             </p>
+            <ul className="flex flex-col gap-2">
+              {["応募フォームを自動生成", "Inboxで連絡を一元管理", "採用ステータスをカンバンで可視化"].map(f => (
+                <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
+                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="order-1 lg:order-2">
-            <div className="bg-gray-100 rounded-xl aspect-video p-4 md:p-6 shadow-sm border border-slate-200/60">
-              <MockInboxKanban />
-            </div>
-            <p className="mt-4 text-center text-xs text-slate-400 leading-relaxed break-keep">
-              Inboxと応募者管理カンバンボード（イメージ）
-            </p>
+            <MockInboxKanban />
+            <p className="mt-3 text-center text-xs text-slate-400">Inboxと応募者管理カンバンボード（イメージ）</p>
           </div>
         </section>
 
-        {/* ② */}
-        <section className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+        {/* ② タイムライン */}
+        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-1">
-            <div className="bg-gray-100 rounded-xl aspect-video p-4 md:p-6 shadow-sm border border-slate-200/60">
-              <MockTimeline />
-            </div>
-            <p className="mt-4 text-center text-xs text-slate-400 leading-relaxed break-keep">
-              タイムライン（フィード）（イメージ）
-            </p>
+            <MockTimeline />
+            <p className="mt-3 text-center text-xs text-slate-400">タイムライン（イメージ）</p>
           </div>
-          <div className="order-2 space-y-8">
-            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold text-primary leading-relaxed">
-              <Rss className="size-3.5 shrink-0" />
-              02
-            </span>
-            <h2 className="text-2xl md:text-3xl font-bold text-primary leading-relaxed text-balance break-keep">
-              春の公式オリエンテーションに頼らない。いつでも学生の目に留まる。
+          <div className="order-2 space-y-6">
+            <div className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1.5 text-xs font-bold text-primary">
+              <Rss className="size-3.5 shrink-0" />02 ／ タイムライン発信
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-primary leading-snug">
+              4月だけじゃない。<br />年間を通じて目に留まる。
             </h2>
-            <p className="text-base md:text-lg text-slate-600 leading-loose text-pretty break-keep">
-              大学の公式な新歓期間は4月で終わってしまいますが、ProofLoopなら時期を問わず新しいメンバーを歓迎できます。普段の活動風景や「おすすめの授業」などの情報をタイムラインに投稿することで、年間を通じて学生にあなたの団体を知ってもらうチャンスが圧倒的に増えます。
+            <p className="text-base text-slate-600 leading-relaxed">
+              大学の新歓期間は4月で終わっても、ProofLoopなら通年でメンバーを募集できます。普段の活動風景・イベント報告・お役立ち情報を投稿して、学生との接点を増やし続けましょう。
             </p>
+            <ul className="flex flex-col gap-2">
+              {["写真・テキストを投稿してフォロワーに届く", "新歓期以外もメンバー募集を継続できる", "投稿が団体の実績として蓄積される"].map(f => (
+                <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
+                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
 
-        {/* ③ */}
-        <section className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
-          <div className="order-2 lg:order-1 space-y-8">
-            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold text-primary leading-relaxed">
-              <CalendarDays className="size-3.5 shrink-0" />
-              03
-            </span>
-            <h2 className="text-2xl md:text-3xl font-bold text-primary leading-relaxed text-balance break-keep">
-              新歓も、日々の「イベント集客」も。人を集めたいすべての活動に。
+        {/* ③ イベント */}
+        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="order-2 lg:order-1 space-y-6">
+            <div className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1.5 text-xs font-bold text-primary">
+              <CalendarDays className="size-3.5 shrink-0" />03 ／ イベント告知・集客
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-primary leading-snug">
+              新歓も、公演も、勉強会も。<br />人が集まる仕組みを作る。
             </h2>
-            <p className="text-base md:text-lg text-slate-600 leading-loose text-pretty break-keep">
-              メンバー募集はもちろん、学園祭の出し物、定期公演、学生向けセミナーなど、人を集めたいイベントの情報も自由に発信できます。ProofLoopの団体ページやカレンダー機能を使って、同じ大学の学生へ向けてイベントの魅力を効果的にアピールしましょう。
+            <p className="text-base text-slate-600 leading-relaxed">
+              メンバー募集だけでなく、学園祭・定期公演・セミナーなどのイベント告知もProofLoopで一元化。カレンダーページで同じ大学の学生に向けて効果的に発信できます。
             </p>
+            <ul className="flex flex-col gap-2">
+              {["イベントページをワンクリックで作成", "日時・場所・参加申込フォームを設定", "学内の学生のカレンダーに表示される"].map(f => (
+                <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
+                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="order-1 lg:order-2">
-            <div className="bg-gray-100 rounded-xl aspect-video p-4 md:p-6 shadow-sm border border-slate-200/60">
-              <MockCalendarEvent />
-            </div>
-            <p className="mt-4 text-center text-xs text-slate-400 leading-relaxed break-keep">
-              イベントカレンダーと詳細ページ（イメージ）
-            </p>
+            <MockCalendarEvent />
+            <p className="mt-3 text-center text-xs text-slate-400">イベントカレンダーと詳細ページ（イメージ）</p>
           </div>
         </section>
 
-        {/* ④ */}
-        <section className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+        {/* ④ タスク・メンバー管理 */}
+        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-1">
-            <div className="bg-gray-100 rounded-xl aspect-video p-4 md:p-6 shadow-sm border border-slate-200/60">
-              <MockTasksInvite />
-            </div>
-            <p className="mt-4 text-center text-xs text-slate-400 leading-relaxed break-keep">
-              タスク管理ボードとメンバー招待（イメージ）
-            </p>
+            <MockTasksInvite />
+            <p className="mt-3 text-center text-xs text-slate-400">タスク管理ボードとメンバー招待（イメージ）</p>
           </div>
-          <div className="order-2 space-y-8">
-            <span className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-bold text-primary leading-relaxed">
-              <Users className="size-3.5 shrink-0" />
-              04
-            </span>
-            <h2 className="text-2xl md:text-3xl font-bold text-primary leading-relaxed text-balance break-keep">
-              新歓期も、それ以外の日常も。運営メンバー全員で状況を共有。
+          <div className="order-2 space-y-6">
+            <div className="inline-flex items-center gap-2 bg-slate-100 px-3 py-1.5 text-xs font-bold text-primary">
+              <Users className="size-3.5 shrink-0" />04 ／ タスク・メンバー管理
+            </div>
+            <h2 className="text-2xl md:text-3xl font-black text-primary leading-snug">
+              「誰が何をやるか」を<br />全員で見える化する。
             </h2>
-            <p className="text-base md:text-lg text-slate-600 leading-loose text-pretty break-keep">
-              複数の運営メンバーを招待し、権限を分けて安全にアカウントを共有できます。新歓期の忙しい連絡対応だけでなく、1年を通じた日々の活動に向けたタスクも全員で可視化。「誰がどの作業をやっているか分からない」という引き継ぎのトラブルをなくし、代表者や一部のメンバーだけに負担が偏るのを防ぎます。
+            <p className="text-base text-slate-600 leading-relaxed">
+              運営メンバーを招待し、権限を分けて安全にアカウントを共有。タスクをカンバンで管理することで「言った・言ってない」をなくし、代替わりの引き継ぎも格段にスムーズになります。
             </p>
+            <ul className="flex flex-col gap-2">
+              {["複数メンバーを招待・権限設定", "タスクをカンバンで全員と共有", "引き継ぎ資料として活用できる"].map(f => (
+                <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
+                  <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       </div>
 
-      {/* Killer content — 穏やかな背景 + 赤はアクセントのみ */}
-      <section className="relative py-24 md:py-32 overflow-hidden bg-gray-50 border-y border-slate-100/80">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(0,43,92,0.06),transparent)]"
-          aria-hidden
-        />
+      {/* ── 協賛マッチング（Coming Soon） ── */}
+      <section className="relative py-20 md:py-28 overflow-hidden bg-primary">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,rgba(255,255,255,0.08),transparent)]" aria-hidden />
         <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-red-950/5 border border-red-950/10 mb-10">
-            <Sparkles className="size-7 text-red-950/90" strokeWidth={2} />
+          <div className="inline-flex items-center gap-2 border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold text-white/80 mb-8">
+            近日公開予定
           </div>
-          <h2 className="text-2xl md:text-3xl lg:text-[2rem] font-bold text-red-950 leading-loose text-balance break-keep">
-            【今後の新機能】日々の活動実績が、企業からの「協賛金」に変わる。
+          <div className="inline-flex items-center justify-center size-14 bg-white/10 border border-white/20 mb-6">
+            <Sparkles className="size-7 text-white" strokeWidth={2} />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-black text-white leading-snug mb-6">
+            日々の活動実績が、<br />企業からの「協賛金」に変わる。
           </h2>
-          <p className="mt-10 text-base md:text-lg text-slate-700 leading-loose text-pretty max-w-3xl mx-auto break-keep">
-            ProofLoopは、ただの便利ツールで終わるつもりはありません。ダッシュボードに貯まっていく「ページの閲覧数」や「日々の投稿を通じた活発な活動実績」は、将来的にリリース予定の【協賛マッチング機能】において、企業へ団体の魅力を伝える強力なアピール材料になります。日々の運営をProofLoopで行い、実績を積み重ねておくことが、未来の活動資金獲得への第一歩になります。
+          <p className="text-base text-white/70 leading-relaxed max-w-2xl mx-auto">
+            ProofLoopで活動を続けることで蓄積される「閲覧数」「投稿実績」「メンバー数」は、
+            将来リリース予定の<strong className="text-white">協賛マッチング機能</strong>で企業へのアピール材料になります。
+            今から使い始めることが、未来の活動資金獲得への最短ルートです。
           </p>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-24 md:py-32 bg-slate-50 border-t border-slate-100">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary leading-loose text-balance break-keep">
-            これからの学生団体運営の、新しいスタンダード。初期設定は数分で完了。まずは無料で、あなたの団体のページを作成してみませんか？
-          </h2>
-          <div className="mt-14">
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-8 py-4 text-base font-bold text-white leading-relaxed shadow-lg shadow-primary/15 transition hover:bg-[#001f42]"
-            >
-              無料で団体を登録する
-              <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} />
-            </Link>
+      {/* ── FAQ ── */}
+      <section className="bg-slate-50 border-y border-slate-100 py-20 md:py-24">
+        <div className="max-w-3xl mx-auto px-6">
+          <h2 className="text-xl md:text-2xl font-black text-primary text-center mb-12">よくある質問</h2>
+          <div className="flex flex-col divide-y divide-slate-200">
+            {[
+              { q: "本当に無料ですか？", a: "はい、現在提供しているすべての機能を無料でご利用いただけます。将来的に有料プランを追加する場合も、無料プランは継続する予定です。" },
+              { q: "何人まで運営メンバーを招待できますか？", a: "現在は人数制限なく招待できます。権限（管理者・編集者・閲覧者）を設定できるため、安心して複数人での運営が可能です。" },
+              { q: "登録から公開までどのくらいかかりますか？", a: "アカウント作成・団体情報の入力・プロフィール設定まで最短5分で完了します。登録後すぐに団体ページが公開されます。" },
+              { q: "どんな学生団体でも登録できますか？", a: "サークル・部活・学生NPO・ゼミ・インカレ団体など、学生が主体となって活動する団体であれば基本的にご利用いただけます。" },
+              { q: "既存のSNSやLINEと併用できますか？", a: "もちろん可能です。ProofLoopをメンバー管理・タスク管理の中心にしつつ、拡散はSNSで行うというハイブリッドな使い方をされている団体が多いです。" },
+            ].map((item, i) => (
+              <div key={i} className="py-5">
+                <p className="font-bold text-primary text-sm mb-2">{item.q}</p>
+                <p className="text-text-grey text-sm leading-relaxed">{item.a}</p>
+              </div>
+            ))}
           </div>
-          <p className="mt-10 text-sm text-slate-500 leading-relaxed break-keep">
+        </div>
+      </section>
+
+      {/* ── 最終CTA ── */}
+      <section className="py-20 md:py-28 bg-white">
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <h2 className="text-2xl md:text-3xl font-black text-primary leading-snug mb-4">
+            まず、あなたの団体の<br />ページを作ってみませんか？
+          </h2>
+          <p className="text-slate-600 text-base mb-10 leading-relaxed">
+            登録無料・5分で完了・クレジットカード不要。
+            いつでも削除できます。
+          </p>
+          <Link href="/signup"
+            className="inline-flex items-center justify-center gap-2 bg-primary px-10 py-4 text-base font-black text-white shadow-lg shadow-primary/20 transition hover:bg-[#001f42] hover:shadow-xl">
+            無料で団体を登録する
+            <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} />
+          </Link>
+          <p className="mt-6 text-sm text-slate-500">
             すでにアカウントをお持ちの方は{" "}
-            <Link
-              href="/login"
-              className="font-bold text-primary underline-offset-4 hover:underline"
-            >
+            <Link href="/login" className="font-bold text-primary hover:underline underline-offset-4">
               ログイン
+            </Link>
+          </p>
+          <p className="mt-3 text-sm text-slate-500">
+            使い方を確認したい方は{" "}
+            <Link href="/manual" className="font-bold text-primary hover:underline underline-offset-4">
+              運営マニュアル
             </Link>
           </p>
         </div>
       </section>
+
     </main>
   );
 }
