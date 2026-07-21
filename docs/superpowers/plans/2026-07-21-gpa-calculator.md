@@ -918,6 +918,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { calculateGpa, toGpaBand } from "@/lib/gpa/calculate";
+import type { CalculateOutput } from "@/lib/gpa/calculate";
 import {
   UNIVERSITIES,
   findScaleById,
@@ -956,9 +957,12 @@ function trackCalculate(params: {
   w.gtag("event", "gpa_calculate", params);
 }
 
-/** calculateGpa のエラー種別を、画面に出す日本語メッセージへ変換する */
-function errorMessage(reason: string): string {
-  switch (reason) {
+/** calculateGpa のエラーを、画面に出す日本語メッセージへ変換する */
+function errorMessage(
+  output: Extract<CalculateOutput, { ok: false }>,
+  courses: Course[]
+): string {
+  switch (output.reason) {
     case "no_courses":
       return "科目を1つ以上入力してください。";
     case "zero_credits":
@@ -967,8 +971,23 @@ function errorMessage(reason: string): string {
       return "単位数は0以上の数値で入力してください。";
     case "invalid_grade":
       return "すべての科目で成績を選択してください。";
-    case "invalid_score":
+    case "invalid_score": {
+      const course = courses.find((c) => c.id === output.courseId);
+      const score = course?.score;
+      // 0〜100 に収まっているのに換算できない場合は、その大学の公式資料に
+      // その点数帯のGP定義が無いことを意味する（例：大阪大学 令和7年度以前は
+      // 60-64・70-74・80-84 が未定義）。範囲内の点数を入れた学生に
+      // 「0〜100の範囲で入力してください」と返すと確実に混乱させるため、分けて出す。
+      if (
+        score !== undefined &&
+        Number.isFinite(score) &&
+        score >= 0 &&
+        score <= 100
+      ) {
+        return "入力された点数は、選択した大学の公式資料にGPの定義がないため計算できません。上の換算方式の注記をご確認ください。";
+      }
       return "素点は0〜100の範囲で入力してください。";
+    }
     default:
       return "入力内容を確認してください。";
   }
@@ -1021,7 +1040,7 @@ export default function GpaCalculatorClient() {
 
     if (!output.ok) {
       setResult(null);
-      setFormError(errorMessage(output.reason));
+      setFormError(errorMessage(output, courses));
       return;
     }
 
