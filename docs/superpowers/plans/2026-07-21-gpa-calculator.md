@@ -449,6 +449,27 @@ describe("calculateGpa", () => {
     expect(out.result.gpa).toBe(2.67);
   });
 
+  it("ちょうど .xx5 の値を切り上げる（浮動小数点誤差で切り下げない）", () => {
+    // GPと単位数はいずれも整数なので、商が 23/40 = 0.575 のような
+    // 「ちょうど .xx5」になる組み合わせは現実に発生する。
+    // 単純な Math.round(x * 100) / 100 だとここが 0.57 に落ちる。
+    // 秀(4)×1単位 + 不可(0)×3単位 + 可(1)×... ではなく、単純に総和23・総単位40を作る:
+    // 優(3)×7単位 = 21 、可(1)×2単位 = 2 → 計23。単位数 7+2 = 9 ではなく40にするため
+    // 不可(0)×31単位 を足す。 23 / 40 = 0.575
+    const out = calculateGpa({
+      scale: gradeScale,
+      courses: [
+        { id: "1", name: "A", credits: 7, grade: "優" }, // 3*7 = 21
+        { id: "2", name: "B", credits: 2, grade: "可" }, // 1*2 = 2
+        { id: "3", name: "C", credits: 31, grade: "不可" }, // 0*31 = 0
+      ],
+    });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.result.totalCredits).toBe(40);
+    expect(out.result.gpa).toBe(0.58);
+  });
+
   it("素点換算方式では scoreToPoint の結果を使う", () => {
     // 85点 → floor(35/10) = 3 、65点 → floor(15/10) = 1
     // (3*2 + 1*2) / 4 = 2
@@ -509,6 +530,7 @@ describe("toGpaBand", () => {
     expect(toGpaBand(2.0)).toBe("2.0-2.5");
     expect(toGpaBand(2.49)).toBe("2.0-2.5");
     expect(toGpaBand(2.5)).toBe("2.5-3.0");
+    expect(toGpaBand(2.99)).toBe("2.5-3.0");
     expect(toGpaBand(3.0)).toBe("3.0-3.5");
     expect(toGpaBand(3.49)).toBe("3.0-3.5");
     expect(toGpaBand(3.5)).toBe("3.5~");
@@ -541,9 +563,17 @@ export type CalculateOutput =
   | { ok: true; result: GpaResult }
   | { ok: false; reason: CalculateErrorReason; courseId?: string };
 
-/** 小数第2位まで四捨五入する */
+/**
+ * 小数第2位まで四捨五入する。
+ *
+ * 単純な `Math.round(value * 100) / 100` は使えない。GPと単位数はいずれも整数なので
+ * 商は 23/40 = 0.575 のような「ちょうど .xx5」の値になりうるが、この値は二進浮動小数点で
+ * 正確に表現できず、100倍した時点で 57.499... となって切り下がってしまう
+ * （0.575 が 0.58 ではなく 0.57 になる）。単位数40は1学期で普通に到達する値であり、
+ * 机上の極端な例ではない。EPSILON を加えてから丸めることでこのずれを打ち消す。
+ */
 function roundTo2(value: number): number {
-  return Math.round(value * 100) / 100;
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 /**
@@ -637,7 +667,7 @@ Expected: PASS。11件すべて green。
 npx tsc --noEmit
 ```
 
-Expected: エラーなしで終了（exit code 0）。
+Expected: 出力されるエラー行に `lib/gpa/` が1件も含まれないこと。既存の型エラー9件（`app/events/[id]/page.tsx` 他）はこのプランのスコープ外なので修正しない。
 
 - [ ] **Step 11: Commit**
 
@@ -854,7 +884,9 @@ Expected: PASS。Task 2 の11件と合わせて全て green。
 npx tsc --noEmit
 ```
 
-Expected: エラーなしで終了。
+Expected: 出力されるエラー行に `lib/gpa/` および `app/gpa/` が**1件も含まれない**こと。
+
+このリポジトリには、本タスク以前から `app/events/[id]/page.tsx`・`app/mypage/page.tsx`・`app/schedule/page.tsx`・`components/UpcomingEvents.tsx`・`lib/organizationMembers.ts` に型エラーが9件存在する（`next.config.ts` の `typescript: { ignoreBuildErrors: true }` によりビルドは通る）。これらは既存の債務であり、本プランのスコープ外なので修正しない。`tsc` は非ゼロで終了するのが正常な状態である。判定は exit code ではなく、**自分が触ったファイルがエラー行に出ていないこと**で行う。
 
 - [ ] **Step 7: Commit**
 
@@ -1238,7 +1270,9 @@ function GpaResultPanel({ result, maxGpa }: { result: GpaResult; maxGpa: number 
 npx tsc --noEmit
 ```
 
-Expected: エラーなしで終了。
+Expected: 出力されるエラー行に `lib/gpa/` および `app/gpa/` が**1件も含まれない**こと。
+
+このリポジトリには、本タスク以前から `app/events/[id]/page.tsx`・`app/mypage/page.tsx`・`app/schedule/page.tsx`・`components/UpcomingEvents.tsx`・`lib/organizationMembers.ts` に型エラーが9件存在する（`next.config.ts` の `typescript: { ignoreBuildErrors: true }` によりビルドは通る）。これらは既存の債務であり、本プランのスコープ外なので修正しない。`tsc` は非ゼロで終了するのが正常な状態である。判定は exit code ではなく、**自分が触ったファイルがエラー行に出ていないこと**で行う。
 
 - [ ] **Step 3: lint が通ることを確認する**
 
@@ -1497,7 +1531,9 @@ export default function GpaPage() {
 npx tsc --noEmit
 ```
 
-Expected: エラーなしで終了。
+Expected: 出力されるエラー行に `lib/gpa/` および `app/gpa/` が**1件も含まれない**こと。
+
+このリポジトリには、本タスク以前から `app/events/[id]/page.tsx`・`app/mypage/page.tsx`・`app/schedule/page.tsx`・`components/UpcomingEvents.tsx`・`lib/organizationMembers.ts` に型エラーが9件存在する（`next.config.ts` の `typescript: { ignoreBuildErrors: true }` によりビルドは通る）。これらは既存の債務であり、本プランのスコープ外なので修正しない。`tsc` は非ゼロで終了するのが正常な状態である。判定は exit code ではなく、**自分が触ったファイルがエラー行に出ていないこと**で行う。
 
 - [ ] **Step 3: ビルドが通ることを確認する**
 
@@ -1607,10 +1643,17 @@ Expected: 出力に `components/AppShell.tsx` が**含まれない**こと。CLA
 - [ ] **Step 6: ビルドとテストが通ることを確認する**
 
 ```bash
-npm test && npx tsc --noEmit && npm run build
+npm test
+npx tsc --noEmit
+npm run build
 ```
 
-Expected: テスト全件 PASS、型エラーなし、ビルド成功。
+3つを個別に実行する（`&&` で繋がない。`tsc` は既存エラーにより非ゼロ終了するため、後続が実行されなくなる）。
+
+Expected:
+- `npm test`：全件 PASS
+- `npx tsc --noEmit`：エラー行に `lib/gpa/` と `app/gpa/` が1件も含まれない（既存の9件はスコープ外）
+- `npm run build`：成功し、ルート一覧に `/gpa` が含まれる
 
 - [ ] **Step 7: 内部リンクの動作を確認する**
 
