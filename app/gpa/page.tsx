@@ -5,7 +5,9 @@ import { UNIVERSITIES } from "@/lib/gpa/universities";
 import GpaCalculatorClient from "./GpaCalculatorClient";
 
 export const metadata: Metadata = {
-  title: "GPA計算機｜大学別の換算方式に対応（東大・京大・早慶ほか） | ProofLoop",
+  // 東大は全学でGPAを算出しておらず非対応のため、タイトルに含めない。
+  // 検索結果に「東大対応」と読める文言を出すのは、この施策の前提である正確性に反する。
+  title: "GPA計算機｜大学別の換算方式に対応（京大・阪大・早慶ほか） | ProofLoop",
   description:
     "大学ごとに異なるGPAの換算方式に対応したGPA計算機。評語とGPの対応は各大学の公式資料を出典として明示しています。単位数で加重した正確なGPAを、その場で計算できます。",
   keywords: [
