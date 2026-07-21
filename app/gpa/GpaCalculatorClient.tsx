@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { calculateGpa, toGpaBand } from "@/lib/gpa/calculate";
 import type { CalculateOutput } from "@/lib/gpa/calculate";
@@ -104,6 +104,15 @@ export default function GpaCalculatorClient() {
     return findScaleById(university.scaleId) ?? getDefaultScale();
   }, [university]);
 
+  // 大学を切り替えたら、前の大学の方式で計算した結果とエラーを消す。
+  // result は送信時にしか更新されないのに scale は選択に追従するため、
+  // これを消さないと「一橋の方式で出した3.80」を「3.80 / 4.0（京大の満点）」
+  // として表示してしまい、学生に誤った数値を見せることになる。
+  useEffect(() => {
+    setResult(null);
+    setFormError(null);
+  }, [universityId]);
+
   const onSubmit = (values: FormValues) => {
     const courses: Course[] = values.courses
       // 完全に空の行は無視する（入力途中の行でエラーを出さないため）
@@ -143,7 +152,14 @@ export default function GpaCalculatorClient() {
 
   return (
     <div className="font-body">
-      <form onSubmit={handleSubmit(onSubmit)} className="border border-border-grey p-6">
+      {/* noValidate：ブラウザ標準のバリデーションが submit を止めると、
+          自前の日本語メッセージ（特に「素点は0〜100の範囲で」）が表示されなくなるため無効化する。
+          検証は calculateGpa 側で一元的に行う。 */}
+      <form
+        noValidate
+        onSubmit={handleSubmit(onSubmit)}
+        className="border border-border-grey p-6"
+      >
         {/* ── 大学選択 ───────────────────────── */}
         <div className="mb-6">
           <label
@@ -202,8 +218,9 @@ export default function GpaCalculatorClient() {
             {fields.map((field, index) => (
               <div key={field.id} className="flex flex-wrap items-end gap-2">
                 <div className="min-w-[8rem] flex-1">
-                  <label className="block text-xs text-text-grey">科目名（任意）</label>
+                  <label htmlFor={`course-${field.id}-name`} className="block text-xs text-text-grey">科目名（任意）</label>
                   <input
+                    id={`course-${field.id}-name`}
                     type="text"
                     {...register(`courses.${index}.name`)}
                     className="mt-1 w-full border border-border-grey p-2 text-primary"
@@ -212,8 +229,9 @@ export default function GpaCalculatorClient() {
                 </div>
 
                 <div className="w-24">
-                  <label className="block text-xs text-text-grey">単位数</label>
+                  <label htmlFor={`course-${field.id}-credits`} className="block text-xs text-text-grey">単位数</label>
                   <input
+                    id={`course-${field.id}-credits`}
                     type="number"
                     min={0}
                     step={1}
@@ -226,8 +244,9 @@ export default function GpaCalculatorClient() {
 
                 {scale.method === "grade" ? (
                   <div className="w-32">
-                    <label className="block text-xs text-text-grey">成績</label>
+                    <label htmlFor={`course-${field.id}-grade`} className="block text-xs text-text-grey">成績</label>
                     <select
+                      id={`course-${field.id}-grade`}
                       {...register(`courses.${index}.grade`)}
                       className="mt-1 w-full border border-border-grey bg-white p-2 text-primary"
                     >
@@ -241,8 +260,9 @@ export default function GpaCalculatorClient() {
                   </div>
                 ) : (
                   <div className="w-32">
-                    <label className="block text-xs text-text-grey">素点（0〜100）</label>
+                    <label htmlFor={`course-${field.id}-score`} className="block text-xs text-text-grey">素点（0〜100）</label>
                     <input
+                      id={`course-${field.id}-score`}
                       type="number"
                       min={0}
                       max={100}
