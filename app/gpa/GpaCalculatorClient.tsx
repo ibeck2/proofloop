@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { calculateGpa, toGpaBand } from "@/lib/gpa/calculate";
 import type { CalculateOutput } from "@/lib/gpa/calculate";
@@ -82,6 +82,13 @@ function errorMessage(
 export default function GpaCalculatorClient() {
   const [result, setResult] = useState<GpaResult | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+
+  // ラベルと入力欄を紐付けるための id 接頭辞。
+  // react-hook-form の `field.id` はランダムUUIDでサーバーとクライアントで
+  // 値が異なるため、id/htmlFor に使うとハイドレーション不一致エラーになる。
+  // useId() はSSRセーフで、index と組み合わせれば行ごとに一意になる。
+  // （React の key には従来どおり field.id を使う。行削除で index がずれるため）
+  const fieldIdPrefix = useId();
 
   const { register, control, handleSubmit, watch } = useForm<FormValues>({
     defaultValues: {
@@ -218,9 +225,9 @@ export default function GpaCalculatorClient() {
             {fields.map((field, index) => (
               <div key={field.id} className="flex flex-wrap items-end gap-2">
                 <div className="min-w-[8rem] flex-1">
-                  <label htmlFor={`course-${field.id}-name`} className="block text-xs text-text-grey">科目名（任意）</label>
+                  <label htmlFor={`${fieldIdPrefix}-course-${index}-name`} className="block text-xs text-text-grey">科目名（任意）</label>
                   <input
-                    id={`course-${field.id}-name`}
+                    id={`${fieldIdPrefix}-course-${index}-name`}
                     type="text"
                     {...register(`courses.${index}.name`)}
                     className="mt-1 w-full border border-border-grey p-2 text-primary"
@@ -229,9 +236,9 @@ export default function GpaCalculatorClient() {
                 </div>
 
                 <div className="w-24">
-                  <label htmlFor={`course-${field.id}-credits`} className="block text-xs text-text-grey">単位数</label>
+                  <label htmlFor={`${fieldIdPrefix}-course-${index}-credits`} className="block text-xs text-text-grey">単位数</label>
                   <input
-                    id={`course-${field.id}-credits`}
+                    id={`${fieldIdPrefix}-course-${index}-credits`}
                     type="number"
                     min={0}
                     step={1}
@@ -244,9 +251,9 @@ export default function GpaCalculatorClient() {
 
                 {scale.method === "grade" ? (
                   <div className="w-32">
-                    <label htmlFor={`course-${field.id}-grade`} className="block text-xs text-text-grey">成績</label>
+                    <label htmlFor={`${fieldIdPrefix}-course-${index}-grade`} className="block text-xs text-text-grey">成績</label>
                     <select
-                      id={`course-${field.id}-grade`}
+                      id={`${fieldIdPrefix}-course-${index}-grade`}
                       {...register(`courses.${index}.grade`)}
                       className="mt-1 w-full border border-border-grey bg-white p-2 text-primary"
                     >
@@ -260,9 +267,9 @@ export default function GpaCalculatorClient() {
                   </div>
                 ) : (
                   <div className="w-32">
-                    <label htmlFor={`course-${field.id}-score`} className="block text-xs text-text-grey">素点（0〜100）</label>
+                    <label htmlFor={`${fieldIdPrefix}-course-${index}-score`} className="block text-xs text-text-grey">素点（0〜100）</label>
                     <input
-                      id={`course-${field.id}-score`}
+                      id={`${fieldIdPrefix}-course-${index}-score`}
                       type="number"
                       min={0}
                       max={100}
