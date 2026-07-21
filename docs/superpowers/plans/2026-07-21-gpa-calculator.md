@@ -1451,7 +1451,12 @@ export default function GpaPage() {
   };
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12 font-body">
+    // 外側の bg-white / text-primary は必須。既存のコンテンツページ
+    // （app/guide/credits/page.tsx:229 など）は全てこのラッパを持っており、
+    // 付けないとアプリ既定の暗色背景を継承し、text-primary(#002b5c) の
+    // 見出しが暗背景に沈んでほぼ読めなくなる。
+    <div className="bg-white text-primary min-h-screen font-body pb-20 md:pb-0">
+      <main className="mx-auto w-full max-w-3xl px-6 py-12 md:py-20">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
@@ -1591,10 +1596,13 @@ export default function GpaPage() {
           </li>
         </ul>
       </section>
-    </main>
+      </main>
+    </div>
   );
 }
 ```
+
+> **注意：** 上記の JSX は `<div className="bg-white ...">` → `<main>` の2階層になった。`<main>` 内の各要素のインデントも1段深くなる点に注意すること。
 
 - [ ] **Step 2: 型チェックが通ることを確認する**
 
@@ -1628,6 +1636,7 @@ npm run dev
 4. GPA 3.0以上のとき留学ガイドへのCTA、3.0未満のとき履修ガイドへのCTAが出る
 5. 科目を空のまま計算すると「科目を1つ以上入力してください。」が表示される
 6. 就活系のリンクがページ上に1つも無い
+7. **背景が白く、見出し・本文が読める**（既存の `/guide/credits` と並べて比較する）。`bg-white` ラッパが無いとアプリ既定の暗色背景を継承し、`text-primary` の見出しが沈んで読めなくなる
 
 - [ ] **Step 5: Commit**
 
