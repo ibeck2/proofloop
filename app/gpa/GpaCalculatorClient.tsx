@@ -11,6 +11,8 @@ import {
 } from "@/lib/gpa/universities";
 import type { Course, MetricResult, GradeScale } from "@/lib/gpa/types";
 import { coursesFromGradeTotals, supportsBulkInput } from "@/lib/gpa/bulk";
+import { coursesFromFormRows, toNumber } from "@/lib/gpa/formCourses";
+import { excludeFailCourses } from "@/lib/gpa/failExclusion";
 import ScaleInfoPanel from "./ScaleInfoPanel";
 import MetricResultPanel from "./MetricResultPanel";
 import GradeTotalsInput from "./GradeTotalsInput";
@@ -40,12 +42,6 @@ const EMPTY_COURSE: CourseField = {
   score: "",
   weight: "1",
 };
-
-/** 空文字を 0 ではなく NaN にする。Number("") === 0 のため、
- *  素点や単位数の入力漏れが「0点」「0単位」として黙って計算に入ってしまう。 */
-function toNumber(value: string): number {
-  return value.trim() === "" ? NaN : Number(value);
-}
 
 function trackCalculate(params: {
   university_id: string;
@@ -163,29 +159,9 @@ export default function GpaCalculatorClient() {
               Object.entries(gradeTotals).map(([k, v]) => [k, toNumber(v)])
             )
           )
-        : values.courses
-            // 完全に空の行は無視する（入力途中の行でエラーを出さないため）
-            .filter(
-              (c) =>
-                c.name.trim() !== "" ||
-                c.credits.trim() !== "" ||
-                c.grade.trim() !== "" ||
-                c.score.trim() !== ""
-            )
-            .map((c, index) => ({
-              id: String(index),
-              name: c.name,
-              credits: toNumber(c.credits),
-              grade: scale.method === "grade" ? c.grade : undefined,
-              score: scale.method === "score" ? toNumber(c.score) : undefined,
-              weight: scale.usesWeight ? toNumber(c.weight) : undefined,
-            }));
+        : coursesFromFormRows(values.courses, scale);
 
-    const failLabels = scale.failExclusionToggle?.failLabels ?? [];
-    const targetCourses =
-      excludeFail && failLabels.length > 0
-        ? courses.filter((c) => !(c.grade && failLabels.includes(c.grade)))
-        : courses;
+    const targetCourses = excludeFailCourses(courses, scale, excludeFail);
 
     // 不可除外のチェックで全科目が消えた場合。calculateMetric は "no_courses" を返すが、
     // 「科目を1つ以上入力してください」では、実際に入力した学生に原因が伝わらない。
@@ -268,7 +244,7 @@ export default function GpaCalculatorClient() {
         <div>
           <p className="font-display text-sm font-bold text-primary">履修科目</p>
           <p className="mt-1 text-xs text-text-grey">
-            GPAに算入される科目のみ入力してください（認定単位・履修中の科目は除きます）。
+            {scale.metricLabel}に算入される科目のみ入力してください（認定単位・履修中の科目は除きます）。
           </p>
 
           {bulkSupported ? (
@@ -356,7 +332,9 @@ export default function GpaCalculatorClient() {
                   </div>
                 ) : (
                   <div className="w-32">
-                    <label htmlFor={`${fieldIdPrefix}-course-${index}-score`} className="block text-xs text-text-grey">素点（0〜100）</label>
+                    <label htmlFor={`${fieldIdPrefix}-course-${index}-score`} className="block text-xs text-text-grey">
+                      {scale.method === "raw" ? "評点（0〜100）" : "素点（0〜100）"}
+                    </label>
                     <input
                       id={`${fieldIdPrefix}-course-${index}-score`}
                       type="number"
@@ -458,7 +436,7 @@ export default function GpaCalculatorClient() {
           type="submit"
           className="mt-6 w-full bg-primary px-6 py-4 font-display text-base font-bold text-white"
         >
-          GPAを計算する
+          {scale.metricLabel}を計算する
         </button>
       </form>
 

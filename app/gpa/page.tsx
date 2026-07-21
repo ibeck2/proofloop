@@ -5,8 +5,6 @@ import { UNIVERSITIES } from "@/lib/gpa/universities";
 import GpaCalculatorClient from "./GpaCalculatorClient";
 
 export const metadata: Metadata = {
-  // 東大は全学でGPAを算出しておらず非対応のため、タイトルに含めない。
-  // 検索結果に「東大対応」と読める文言を出すのは、この施策の前提である正確性に反する。
   // 末尾に「| ProofLoop」を付けない。app/layout.tsx が
   // title.template = "%s | ProofLoop" を持っており自動で付与されるため、
   // ここに書くと「… | ProofLoop | ProofLoop」と二重になる。
@@ -22,6 +20,8 @@ export const metadata: Metadata = {
     "GPA 平均",
     "GPA 出し方",
     "交換留学 GPA",
+    "基本平均点",
+    "成績評価係数",
   ],
   openGraph: {
     title: "GPA計算機｜大学別の換算方式に対応 | ProofLoop",

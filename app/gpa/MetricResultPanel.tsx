@@ -15,6 +15,12 @@ export default function MetricResultPanel({
   const showStudyAbroad =
     policy === "always-study-abroad" ||
     (policy === "gpa-threshold" && result.value >= 3.0);
+  // always-study-abroad は「この指標が交換留学の選考に使われる」ことを示すもので、
+  // 値が要件を満たすことの主張ではない（出典がない）。見出しを分ける。
+  const studyAbroadHeading =
+    policy === "always-study-abroad"
+      ? "この指標は交換留学の学内選考に使われます"
+      : "交換留学の出願要件を満たしている可能性があります";
 
   return (
     <section className="mt-8 border border-primary p-6">
@@ -32,13 +38,18 @@ export default function MetricResultPanel({
       <p className="mt-2 text-sm text-text-grey">
         算入科目：{result.countedCourses}科目／合計 {result.totalCredits} 単位
       </p>
+      {scale.unitSuffix ? (
+        <p className="mt-1 text-xs text-text-grey">
+          小数第2位に四捨五入した参考値です。大学が公表する値は小数第3位以下まで算出されます。
+        </p>
+      ) : null}
 
       {/* 方式の ctaPolicy に応じた次アクション。就活系の導線は置かない */}
       <div className="mt-6 border-t border-border-grey pt-6">
         {showStudyAbroad ? (
           <div>
             <p className="font-display text-base font-bold text-primary">
-              交換留学の出願要件を満たしている可能性があります
+              {studyAbroadHeading}
             </p>
             <p className="mt-2 text-sm text-text-grey">
               多くの大学の交換留学プログラムはGPAを出願要件に置いています。必要なGPAの目安と、
@@ -62,10 +73,10 @@ export default function MetricResultPanel({
         ) : (
           <div>
             <p className="font-display text-base font-bold text-primary">
-              GPAは履修設計で変えられます
+              {scale.metricLabel}は履修設計で変えられます
             </p>
             <p className="mt-2 text-sm text-text-grey">
-              単位の取り方・必修と選択のバランス・成績評価の仕組みを理解すると、GPAは戦略的に上げられます。
+              単位の取り方・必修と選択のバランス・成績評価の仕組みを理解すると、{scale.metricLabel}は戦略的に上げられます。
             </p>
             <div className="mt-4">
               <Link

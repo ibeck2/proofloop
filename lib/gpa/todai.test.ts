@@ -325,3 +325,35 @@ describe("東京大学 基本平均点：公式計算例との一致", () => {
     expect(out.result.value).toBe(76.08);
   });
 });
+
+/**
+ * 東京大学が公式に公開している成績評価係数計算表の「記入例」シートの数値を、
+ * そのまま回帰テストにする。
+ * 出典：https://www.u-tokyo.ac.jp/content/400125968.xls（確認日 2026-07-21）。
+ * 学部分：評価ポイント3の単位数50、評価ポイント2の単位数90、評価ポイント1の単位数10、
+ * 評価ポイント0の単位数0。
+ * (3×50 + 2×90 + 1×10) ÷ (50+90+10) = 340 ÷ 150 = 2.2666… → 2.27（記入例シート記載の学部係数と一致）。
+ * 詳細は docs/seo/gpa-university-scales.md の「手計算による検証（記入例シート）」を参照。
+ */
+describe("東京大学 成績評価係数：公式計算例との一致", () => {
+  const scale = findScaleById("u-tokyo-grade-coefficient-scale");
+
+  it("方式がマスタに登録されている", () => {
+    expect(scale).toBeDefined();
+  });
+
+  it("記入例シート（学部）：340÷150=2.27", () => {
+    const pointToLabel = (point: number) =>
+      scale!.grades!.find((g) => g.point === point)!.label;
+
+    const courses: Course[] = [
+      { id: "1", name: "評価ポイント3の科目", credits: 50, grade: pointToLabel(3) },
+      { id: "2", name: "評価ポイント2の科目", credits: 90, grade: pointToLabel(2) },
+      { id: "3", name: "評価ポイント1の科目", credits: 10, grade: pointToLabel(1) },
+    ];
+    const out = calculateMetric({ courses, scale: scale! });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.result.value).toBe(2.27);
+  });
+});
