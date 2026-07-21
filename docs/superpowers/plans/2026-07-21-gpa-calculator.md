@@ -805,8 +805,13 @@ describe("大学マスタ", () => {
     }
   });
 
+  it("1校以上が登録されている", () => {
+    // 0校の場合はプラン Task 1 Step 4 の指示どおり実装を止めるため、
+    // ここに到達する時点で必ず1校以上あるはず。
+    expect(UNIVERSITIES.length).toBeGreaterThan(0);
+  });
+
   it("findUniversityById が登録済みの大学を引ける", () => {
-    if (UNIVERSITIES.length === 0) return;
     const first = UNIVERSITIES[0];
     expect(findUniversityById(first.id)).toEqual(first);
   });
