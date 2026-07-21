@@ -565,14 +565,17 @@ export type CalculateOutput =
 /**
  * 小数第2位まで四捨五入する。
  *
- * 単純な `Math.round(value * 100) / 100` は使えない。GPと単位数はいずれも整数なので
- * 商は 23/40 = 0.575 のような「ちょうど .xx5」の値になりうるが、この値は二進浮動小数点で
- * 正確に表現できず、100倍した時点で 57.499... となって切り下がってしまう
- * （0.575 が 0.58 ではなく 0.57 になる）。単位数40は1学期で普通に到達する値であり、
- * 机上の極端な例ではない。EPSILON を加えてから丸めることでこのずれを打ち消す。
+ * 単純な `Math.round(value * 100) / 100` は使えない。GPと単位数から作られる商は
+ * 23/40 = 0.575 や 8.7/4 = 2.175 のような「ちょうど .xx5」になりうるが、
+ * これらは二進浮動小数点で正確に表現できず、100倍すると 57.4999... /
+ * 217.4999... となって切り下がってしまう。
+ *
+ * `Number.EPSILON` を足す方法は使えない。EPSILON は 1.0 の ulp なので、
+ * 2以上の値では丸め誤差に飲まれて完全に無効化される（実際 2.175 が 2.17 になる）。
+ * GPAの桁で確実に効き、かつ本物の境界間隔より十分小さい絶対値でずらす。
  */
 function roundTo2(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100;
+  return Math.round(value * 100 + 1e-9) / 100;
 }
 
 /**
@@ -956,6 +959,16 @@ function trackCalculate(params: {
   w.gtag("event", "gpa_calculate", params);
 }
 
+/**
+ * 空文字を 0 ではなく NaN にする。
+ * `Number("")` は 0 になるため、素点や単位数の入力漏れが
+ * 「0点」「0単位」として黙って計算に入り、誤ったGPAが表示されてしまう。
+ * NaN にすれば calculateGpa 側の既存ガードが invalid_score / invalid_credits を返す。
+ */
+function toNumber(value: string): number {
+  return value.trim() === "" ? NaN : Number(value);
+}
+
 /** calculateGpa のエラーを、画面に出す日本語メッセージへ変換する */
 function errorMessage(
   output: Extract<CalculateOutput, { ok: false }>,
@@ -1046,9 +1059,9 @@ export default function GpaCalculatorClient() {
       .map((c, index) => ({
         id: String(index),
         name: c.name,
-        credits: Number(c.credits),
+        credits: toNumber(c.credits),
         grade: scale.method === "grade" ? c.grade : undefined,
-        score: scale.method === "score" ? Number(c.score) : undefined,
+        score: scale.method === "score" ? toNumber(c.score) : undefined,
       }));
 
     const output = calculateGpa({ courses, scale });
@@ -1251,7 +1264,11 @@ export default function GpaCalculatorClient() {
       </form>
 
       {/* ── 結果 ───────────────────────── */}
-      {result ? <GpaResultPanel result={result} maxGpa={scale.maxGpa} /> : null}
+      {/* aria-live は内容より先にDOMへ存在している必要があるため、
+          パネルの有無にかかわらずラッパを常設し、中身だけ差し替える。 */}
+      <div aria-live="polite">
+        {result ? <GpaResultPanel result={result} maxGpa={scale.maxGpa} /> : null}
+      </div>
     </div>
   );
 }
@@ -1260,7 +1277,7 @@ function GpaResultPanel({ result, maxGpa }: { result: GpaResult; maxGpa: number 
   const band = toGpaBand(result.gpa);
 
   return (
-    <section aria-live="polite" className="mt-8 border border-primary p-6">
+    <section className="mt-8 border border-primary p-6">
       <p className="font-display text-sm font-bold text-text-grey">あなたのGPA</p>
       <p className="mt-2 font-display text-5xl font-bold text-primary">
         {result.gpa.toFixed(2)}
@@ -1467,7 +1484,7 @@ export default function GpaPage() {
     // （app/guide/credits/page.tsx:229 など）は全てこのラッパを持っており、
     // 付けないとアプリ既定の暗色背景を継承し、text-primary(#002b5c) の
     // 見出しが暗背景に沈んでほぼ読めなくなる。
-    <div className="bg-white text-primary min-h-screen font-body pb-20 md:pb-0">
+    <div className="bg-white text-primary min-h-screen font-body">
       <main className="mx-auto w-full max-w-3xl px-6 py-12 md:py-20">
       <script
         type="application/ld+json"
