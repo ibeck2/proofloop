@@ -52,7 +52,6 @@
 | `app/sitemap.ts` | 変更 | `/gpa` を静的ページに追加 |
 | `app/guide/credits/page.tsx` | 変更 | `/gpa` への内部リンクを追加 |
 | `app/guide/page.tsx` | 変更 | `/gpa` への内部リンクを追加 |
-| `components/Footer.tsx` | 変更 | `/gpa` への内部リンクを追加 |
 | `package.json` | 変更 | `vitest` 追加、`test` スクリプト追加 |
 
 ---
@@ -1645,7 +1644,8 @@ git commit -m "feat: /gpa ページ（メタデータ・構造化データ・出
 - Modify: `app/sitemap.ts`
 - Modify: `app/guide/credits/page.tsx`
 - Modify: `app/guide/page.tsx`
-- Modify: `components/Footer.tsx`
+
+> **フッターは今回触らない（2026-07-21 オーナー判断）。** 調査の結果、フッターには現在ガイド系ページが1つもリンクされておらず、CLAUDE.md §5 の「導線は `/guide` ハブ＋フッターで設計する」は未実装のままだった。フッターは `md:grid-cols-4` の4カラム構成で、列を足すとサイト全体のレイアウト変更になる。「ガイド系6ページをまとめてフッターに載せる」のは GPA計算機とは別の課題なので、**別タスクに切り出す**。`/gpa` への導線は `/guide/credits` 本文と `/guide` ハブの2経路で確保する。
 
 **Interfaces:**
 - Consumes: `/gpa` ルート（Task 5）
@@ -1692,17 +1692,7 @@ git commit -m "feat: /gpa ページ（メタデータ・構造化データ・出
 
 既存カードの構造をそのまま流用すること。新しいスタイルを持ち込まない。
 
-- [ ] **Step 4: フッターにリンクを追加する**
-
-`components/Footer.tsx` を開き、ガイド系ページのリンクが並んでいるリストを探す。同じ形式で以下を追加する。
-
-```tsx
-              <li>
-                <Link href="/gpa">GPA計算機</Link>
-              </li>
-```
-
-既存の `<li>` のクラス指定に合わせること。
+**`label` は `"GPA"` とすること（`"GPA計算機"` ではない）。** カード見出しは JSX 側で `{page.label}どうする？` と組み立てられており、`"GPA計算機"` だと「GPA計算機どうする？」という不自然な日本語になる。`"GPA"` なら「GPAどうする？」となり、既存の「バイト／サークル／留学／単位／お金」と同じ語感に揃う。共通のレンダリングロジックには手を入れないこと。
 
 - [ ] **Step 5: ヘッダーナビゲーションに追加していないことを確認する**
 
@@ -1737,14 +1727,13 @@ npm run dev
 
 1. `http://localhost:3000/guide/credits` → 「GPA計算機を使う」→ `/gpa` に遷移する
 2. `http://localhost:3000/guide` → 追加したカード → `/gpa` に遷移する
-3. フッターの「GPA計算機」→ `/gpa` に遷移する
-4. ヘッダーナビゲーションに「GPA計算機」が**出ていない**
+3. ヘッダーナビゲーションに「GPA」「GPA計算機」が**出ていない**
 
 - [ ] **Step 8: Commit**
 
 ```bash
-git add app/sitemap.ts app/guide/credits/page.tsx app/guide/page.tsx components/Footer.tsx
-git commit -m "feat: /gpa をsitemapに登録し、guide・フッターから内部リンクを敷設"
+git add app/sitemap.ts app/guide/credits/page.tsx app/guide/page.tsx
+git commit -m "feat: /gpa をsitemapに登録し、guideハブ・単位ガイドから内部リンクを敷設"
 ```
 
 ---
@@ -1758,3 +1747,4 @@ git commit -m "feat: /gpa をsitemapに登録し、guide・フッターから内
 3. 公開1ヶ月後、`university_tier = 'top'` の比率を集計し、`docs/seo/keyword-facts.md` に追記する。この数値が上位学生ターゲット仮説の判定材料になる。
 4. `gpa 計算` の順位を Rank Tracker の追跡KWに追加する。
 5. GPA 3.0以上の利用者の `/guide/study-abroad` 遷移率を確認し、第二弾（交換留学）の着手判断に使う。
+6. **フッターのガイド導線を別タスクで整備する。** 現状フッターにはガイド系ページが1本もリンクされておらず、CLAUDE.md §5 の「導線は `/guide` ハブ＋フッターで設計する」が未実装。`/baito`・`/guide/circle`・`/guide/study-abroad`・`/guide/credits`・`/guide/money`・`/guide/living-alone`・`/gpa` をまとめて載せる設計として切り出す（フッターは `md:grid-cols-4` のため列追加＝サイト全体のレイアウト変更になる点に注意）。
