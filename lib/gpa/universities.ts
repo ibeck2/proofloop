@@ -21,7 +21,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "D", point: 1.0 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.3,
+    maxValue: 4.3,
+    metricLabel: "GPA",
     note: "不合格科目を含む全ての履修単位に係る成績がGPAに算入されます。",
   },
   {
@@ -36,7 +37,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C", point: 2.0 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.3,
+    maxValue: 4.3,
+    metricLabel: "GPA",
     note: "総履修登録単位数（分母）にF（不合格）取得単位数を含みます。同要項第3条第2項には、4.0を上限として換算する別表（A+とAをともに4.0とする）も存在します。",
   },
   {
@@ -46,7 +48,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
     label: "東京科学大学の素点換算方式（(素点－55)÷10）",
     method: "score",
     scoreToPoint: (score: number) => (score <= 59 ? 0 : (score - 55) / 10),
-    maxGpa: 4.5,
+    maxValue: 4.5,
+    metricLabel: "GPA",
     note: "GP＝(素点－55)÷10（59点以下は0）。再履修で合格した場合は不合格時の成績をGPAの算出から除外する規定がありますが、初回不合格時に分母へ算入するかを明記した条文は確認できていません。",
   },
   {
@@ -68,7 +71,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "D-", point: 0.7 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.3,
+    maxValue: 4.3,
+    metricLabel: "GPA",
   },
   {
     // 出典：東北大学におけるGPA制度に関する申し合わせ 第3条
@@ -83,7 +87,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       if (score >= 60) return 1.0;
       return 0.0;
     },
-    maxGpa: 4.0,
+    maxValue: 4.0,
+    metricLabel: "GPA",
     note: "AA(100-90)=4.0／A(89-80)=3.0／B(79-70)=2.0／C(69-60)=1.0／D(59-0)=0.0。",
   },
   {
@@ -100,7 +105,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C-", point: 1.0 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.3,
+    maxValue: 4.3,
+    metricLabel: "GPA",
     note: "GPは学士課程のみに適用されます（大学院には適用されません）。Fの評価を受けた科目を再履修して合格した場合、Fの評価は累積GPAに算入されません。",
   },
   {
@@ -120,7 +126,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       if (score >= 60) return 1.0; // C-
       return 0.0; // F
     },
-    maxGpa: 4.0,
+    maxValue: 4.0,
+    metricLabel: "GPA",
   },
   {
     // 出典：大阪大学「GPA制度」得点率と評価・GPの対応表（令和7年度以前入学）
@@ -141,7 +148,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       if (score >= 60) return null; // 未定義（60-64）
       return 0.0; // F（0-59）
     },
-    maxGpa: 4.0,
+    maxValue: 4.0,
+    metricLabel: "GPA",
     note: "出典の得点区分は90-100(S)/85-89(A)/75-79(B)/65-69(C)/0-59(F)のみで、80-84・70-74・60-64点は出典の対応表に定義がありません。これらの点数は本方式では計算できません（該当する場合はエラーになります）。",
   },
   {
@@ -156,7 +164,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C", point: 1 },
       { label: "F", point: 0 },
     ],
-    maxGpa: 4,
+    maxValue: 4,
+    metricLabel: "GPA",
   },
   {
     // 出典：早稲田大学発行「早稲田大学におけるGPA制度に関して」（waseda.jp、出典ドメイン例外・プロジェクトオーナー承認済み、2026-07-21）
@@ -170,7 +179,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C", point: 1 },
       { label: "不合格", point: 0 },
     ],
-    maxGpa: 4,
+    maxValue: 4,
+    metricLabel: "GPA",
     note: "2010年度以降入学者が対象。総登録単位数（分母）に不合格科目の単位を含みます。N・P・Qで評価される科目はGPA算出の対象外です。",
   },
   {
@@ -186,7 +196,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "D", point: 1.0 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.0,
+    maxValue: 4.0,
+    metricLabel: "GPA",
     note: "QPI（Quality Point Index）と呼ばれる方式です。W・N・P・Xの科目は出典により分母（履修登録科目の総単位数）から除外されるため、この計算機では入力しないでください。F（不可）は算入されます。A評価の付与は2割以内が目安（最大3割）とされています。",
   },
   {
@@ -201,7 +212,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "D", point: 1 },
       { label: "E", point: 0 },
     ],
-    maxGpa: 4,
+    maxValue: 4,
+    metricLabel: "GPA",
     note: "満点GPAは公式ページに明示の記載がなく、A評価の値（4pt）から導いています。",
   },
 ];

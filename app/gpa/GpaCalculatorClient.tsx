@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { useEffect, useId, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { calculateGpa, toGpaBand } from "@/lib/gpa/calculate";
+import { calculateMetric, toValueBand } from "@/lib/gpa/calculate";
 import type { CalculateOutput } from "@/lib/gpa/calculate";
 import {
   UNIVERSITIES,
   findScaleById,
   getDefaultScale,
 } from "@/lib/gpa/universities";
-import type { Course, GpaResult, GradeScale } from "@/lib/gpa/types";
+import type { Course, MetricResult, GradeScale } from "@/lib/gpa/types";
 
 type GtagWindow = Window & { gtag?: (...args: unknown[]) => void };
 
@@ -49,7 +49,7 @@ function trackCalculate(params: {
   w.gtag("event", "gpa_calculate", params);
 }
 
-/** calculateGpa のエラーを、画面に出す日本語メッセージへ変換する */
+/** calculateMetric のエラーを、画面に出す日本語メッセージへ変換する */
 function errorMessage(
   output: Extract<CalculateOutput, { ok: false }>,
   courses: Course[]
@@ -86,7 +86,7 @@ function errorMessage(
 }
 
 export default function GpaCalculatorClient() {
-  const [result, setResult] = useState<GpaResult | null>(null);
+  const [result, setResult] = useState<MetricResult | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   // ラベルと入力欄を紐付けるための id 接頭辞。
@@ -144,7 +144,7 @@ export default function GpaCalculatorClient() {
         score: scale.method === "score" ? toNumber(c.score) : undefined,
       }));
 
-    const output = calculateGpa({ courses, scale });
+    const output = calculateMetric({ courses, scale });
 
     if (!output.ok) {
       setResult(null);
@@ -158,7 +158,7 @@ export default function GpaCalculatorClient() {
     trackCalculate({
       university_id: university ? university.id : OTHER_UNIVERSITY,
       university_tier: university ? university.tier : "unset",
-      gpa_band: toGpaBand(output.result.gpa),
+      gpa_band: toValueBand(output.result.value, scale.maxValue),
       course_count: output.result.countedCourses,
     });
   };
@@ -167,7 +167,7 @@ export default function GpaCalculatorClient() {
     <div className="font-body">
       {/* noValidate：ブラウザ標準のバリデーションが submit を止めると、
           自前の日本語メッセージ（特に「素点は0〜100の範囲で」）が表示されなくなるため無効化する。
-          検証は calculateGpa 側で一元的に行う。 */}
+          検証は calculateMetric 側で一元的に行う。 */}
       <form
         noValidate
         onSubmit={handleSubmit(onSubmit)}
@@ -327,21 +327,21 @@ export default function GpaCalculatorClient() {
       {/* aria-live は内容より先にDOMへ存在している必要があるため、
           パネルの有無にかかわらずラッパを常設し、中身だけ差し替える。 */}
       <div aria-live="polite">
-        {result ? <GpaResultPanel result={result} maxGpa={scale.maxGpa} /> : null}
+        {result ? <GpaResultPanel result={result} maxValue={scale.maxValue} /> : null}
       </div>
     </div>
   );
 }
 
-function GpaResultPanel({ result, maxGpa }: { result: GpaResult; maxGpa: number }) {
-  const band = toGpaBand(result.gpa);
+function GpaResultPanel({ result, maxValue }: { result: MetricResult; maxValue: number }) {
+  const band = toValueBand(result.value, maxValue);
 
   return (
     <section className="mt-8 border border-primary p-6">
       <p className="font-display text-sm font-bold text-text-grey">あなたのGPA</p>
       <p className="mt-2 font-display text-5xl font-bold text-primary">
-        {result.gpa.toFixed(2)}
-        <span className="ml-2 text-lg text-text-grey">/ {maxGpa.toFixed(1)}</span>
+        {result.value.toFixed(2)}
+        <span className="ml-2 text-lg text-text-grey">/ {maxValue.toFixed(1)}</span>
       </p>
       <p className="mt-2 text-sm text-text-grey">
         算入科目：{result.countedCourses}科目／合計 {result.totalCredits} 単位
@@ -349,7 +349,7 @@ function GpaResultPanel({ result, maxGpa }: { result: GpaResult; maxGpa: number 
 
       {/* GPA帯に応じた次アクション。就活系の導線は置かない */}
       <div className="mt-6 border-t border-border-grey pt-6">
-        {band === "3.0-3.5" || band === "3.5~" ? (
+        {band === "75-87%" || band === "87-100%" ? (
           <div>
             <p className="font-display text-base font-bold text-primary">
               交換留学の出願要件を満たしている可能性があります
