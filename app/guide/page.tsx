@@ -73,6 +73,16 @@ const GUIDE_PAGES = [
     color: "text-teal-600",
     bg: "bg-teal-50",
   },
+  {
+    href: "/gpa",
+    icon: "calculate",
+    label: "GPA",
+    status: "published",
+    description: "大学別の換算方式に対応。出典つきで正確にGPAを計算できます。",
+    tags: ["GPA", "換算方式", "出典つき"],
+    color: "text-indigo-600",
+    bg: "bg-indigo-50",
+  },
 ] as const;
 
 export default function GuidePage() {
