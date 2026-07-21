@@ -67,6 +67,16 @@ describe("換算方式マスタ", () => {
     }
   });
 
+  it("同じ方式の中で評語ラベルが重複していない", () => {
+    for (const scale of ALL_SCALES) {
+      const labels = scale.grades?.map((g) => g.label) ?? [];
+      expect(
+        new Set(labels).size,
+        `${scale.id} の grades に重複したラベルがあります`
+      ).toBe(labels.length);
+    }
+  });
+
   it("failExclusionToggle の failLabels は実在する評語を指している", () => {
     for (const scale of ALL_SCALES) {
       const toggle = scale.failExclusionToggle;
