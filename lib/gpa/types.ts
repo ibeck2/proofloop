@@ -15,8 +15,12 @@ export type GradeScale = {
   method: "grade" | "score";
   /** method === 'grade' のとき必須。表示順は配列順 */
   grades?: GradeOption[];
-  /** method === 'score' のとき必須。素点(0-100)からGPを返す */
-  scoreToPoint?: (score: number) => number;
+  /**
+   * method === 'score' のとき必須。素点(0-100)からGPを返す。
+   * 出典の対応表がその素点区間を定義していない場合は `null` を返すこと
+   * （下位の区分に丸めて数値を捏造してはならない）。
+   */
+  scoreToPoint?: (score: number) => number | null;
   /** この方式の満点GPA */
   maxGpa: number;
   /** 方式の補足説明。UIに表示する */

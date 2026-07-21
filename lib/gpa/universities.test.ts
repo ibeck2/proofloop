@@ -82,3 +82,38 @@ describe("大学マスタ", () => {
     expect(findUniversityById(first.id)).toEqual(first);
   });
 });
+
+describe("大阪大学（令和7年度以前入学）の素点換算", () => {
+  const scale = findScaleById("osaka-university-pre-reform-scale");
+  if (!scale || !scale.scoreToPoint) {
+    throw new Error("osaka-university-pre-reform-scale が見つかりません");
+  }
+  const scoreToPoint = scale.scoreToPoint;
+
+  it("出典に定義された各帯の上限・下限で正しいGPを返す", () => {
+    // 90-100「Ｓ」4.0
+    expect(scoreToPoint(90)).toBe(4.0);
+    expect(scoreToPoint(100)).toBe(4.0);
+    // 85-89「Ａ」3.0
+    expect(scoreToPoint(85)).toBe(3.0);
+    expect(scoreToPoint(89)).toBe(3.0);
+    // 75-79「Ｂ」2.0
+    expect(scoreToPoint(75)).toBe(2.0);
+    expect(scoreToPoint(79)).toBe(2.0);
+    // 65-69「Ｃ」1.0
+    expect(scoreToPoint(65)).toBe(1.0);
+    expect(scoreToPoint(69)).toBe(1.0);
+    // 0-59「Ｆ」0.0
+    expect(scoreToPoint(0)).toBe(0.0);
+    expect(scoreToPoint(59)).toBe(0.0);
+  });
+
+  it("出典に定義のない帯（80-84・70-74・60-64）はnullを返し、数値を捏造しない", () => {
+    expect(scoreToPoint(80)).toBeNull();
+    expect(scoreToPoint(84)).toBeNull();
+    expect(scoreToPoint(70)).toBeNull();
+    expect(scoreToPoint(74)).toBeNull();
+    expect(scoreToPoint(60)).toBeNull();
+    expect(scoreToPoint(64)).toBeNull();
+  });
+});

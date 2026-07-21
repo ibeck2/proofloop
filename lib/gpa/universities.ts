@@ -128,15 +128,21 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
     id: "osaka-university-pre-reform-scale",
     label: "大阪大学の素点換算方式（令和7年度以前入学・5段階）",
     method: "score",
-    scoreToPoint: (score: number) => {
+    // 出典の得点区分は 90-100(S)/85-89(A)/75-79(B)/65-69(C)/0-59(F) の5帯のみで、
+    // 80-84・70-74・60-64点は出典に定義がない（2026-07-21、osaka-u.ac.jp公式ページを再確認済み）。
+    // 下位の区分に丸めて数値を捏造しないよう、未定義の帯は null を返す。
+    scoreToPoint: (score: number): number | null => {
       if (score >= 90) return 4.0; // S
       if (score >= 85) return 3.0; // A
+      if (score >= 80) return null; // 未定義（80-84）
       if (score >= 75) return 2.0; // B
+      if (score >= 70) return null; // 未定義（70-74）
       if (score >= 65) return 1.0; // C
-      return 0.0; // F
+      if (score >= 60) return null; // 未定義（60-64）
+      return 0.0; // F（0-59）
     },
     maxGpa: 4.0,
-    note: "出典の得点区分は90-100(S)/85-89(A)/75-79(B)/65-69(C)/0-59(F)で、80-84・70-74・60-64点の区分は出典に明記がありません。本方式ではこれらを直下の区分（B・C・F）として扱っています。",
+    note: "出典の得点区分は90-100(S)/85-89(A)/75-79(B)/65-69(C)/0-59(F)のみで、80-84・70-74・60-64点は出典の対応表に定義がありません。これらの点数は本方式では計算できません（該当する場合はエラーになります）。",
   },
   {
     // 出典：九州大学「GPA制度」評語対応表 https://www.kyushu-u.ac.jp/ja/faculty/class/learning/gpa/（2026-07-21）
@@ -179,9 +185,10 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C", point: 2.0 },
       { label: "D", point: 1.0 },
       { label: "F", point: 0.0 },
+      { label: "X", point: 0.0 },
     ],
     maxGpa: 4.0,
-    note: "QPI（Quality Point Index）と呼ばれる方式です。分母（履修登録科目の総単位数）から除外されるのはW・N・P・Xのみで、F（不可）は算入されます。A評価の付与は2割以内が目安（最大3割）とされています。",
+    note: "QPI（Quality Point Index）と呼ばれる方式です。出典の対応表はF・XをともにQPI0としています。分母（履修登録科目の総単位数）から除外されるのはW・N・P・Xのみで、F（不可）は算入されます。A評価の付与は2割以内が目安（最大3割）とされています。",
   },
   {
     // 出典：ICU公式サイト「成績評価」https://www.icu.ac.jp/academics/undergraduate/evaluation/（2026-07-21）

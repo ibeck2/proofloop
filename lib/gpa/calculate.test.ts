@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { calculateGpa, toGpaBand } from "./calculate";
 import { GENERIC_SCALES } from "./scales";
+import { findScaleById } from "./universities";
 import type { GradeScale } from "./types";
 
 const gradeScale = GENERIC_SCALES[0]; // 秀4 / 優3 / 良2 / 可1 / 不可0
@@ -144,6 +145,19 @@ describe("calculateGpa", () => {
       courses: [{ id: "c2", name: "A", credits: 2, score: 120 }],
     });
     expect(out).toEqual({ ok: false, reason: "invalid_score", courseId: "c2" });
+  });
+
+  it("出典の対応表が定義していない素点帯（大阪大学・令和7年度以前）はinvalid_scoreを返し、値を捏造しない", () => {
+    // 大阪大学（令和7年度以前）の出典は 90-100/85-89/75-79/65-69/0-59 の5帯のみを定義し、
+    // 80-84・70-74・60-64 には値を割り当てていない。scoreToPoint はこれらの点数で null を返す。
+    const osakaPreReform = findScaleById("osaka-university-pre-reform-scale");
+    if (!osakaPreReform) throw new Error("osaka-university-pre-reform-scale が見つかりません");
+
+    const out = calculateGpa({
+      scale: osakaPreReform,
+      courses: [{ id: "c3", name: "未定義帯の科目", credits: 2, score: 82 }],
+    });
+    expect(out).toEqual({ ok: false, reason: "invalid_score", courseId: "c3" });
   });
 });
 
