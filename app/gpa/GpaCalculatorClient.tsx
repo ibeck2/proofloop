@@ -197,6 +197,14 @@ export default function GpaCalculatorClient() {
       return;
     }
 
+    // まとめ入力モードでは「科目を1つ以上入力してください」が科目行を指す文言になり、
+    // 単位数欄を見ている学生に噛み合わない。
+    if (inputMode === "by-grade" && courses.length === 0) {
+      setResult(null);
+      setFormError("成績ごとの合計単位数を1つ以上入力してください。");
+      return;
+    }
+
     const output = calculateMetric({ courses: targetCourses, scale });
 
     if (!output.ok) {
@@ -272,6 +280,7 @@ export default function GpaCalculatorClient() {
                   setResult(null);
                   setFormError(null);
                 }}
+                aria-pressed={inputMode === "per-course"}
                 className={`border px-4 py-2 text-sm font-bold ${
                   inputMode === "per-course"
                     ? "border-primary bg-primary text-white"
@@ -287,6 +296,7 @@ export default function GpaCalculatorClient() {
                   setResult(null);
                   setFormError(null);
                 }}
+                aria-pressed={inputMode === "by-grade"}
                 className={`border px-4 py-2 text-sm font-bold ${
                   inputMode === "by-grade"
                     ? "border-primary bg-primary text-white"
@@ -418,7 +428,11 @@ export default function GpaCalculatorClient() {
                 <input
                   type="checkbox"
                   checked={excludeFail}
-                  onChange={(e) => setExcludeFail(e.target.checked)}
+                  onChange={(e) => {
+                    setExcludeFail(e.target.checked);
+                    setResult(null);
+                    setFormError(null);
+                  }}
                   className="mt-1"
                 />
                 <span>
