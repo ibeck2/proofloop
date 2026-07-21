@@ -627,6 +627,16 @@ export function toValueBand(value: number, maxValue: number): ValueBand {
 - `toGpaBand(output.result.gpa)` → `toValueBand(output.result.value, scale.maxValue)`
 - `maxGpa={scale.maxGpa}` → `maxValue={scale.maxValue}`、`GpaResultPanel` の props とその本体の `maxGpa` も `maxValue` に改名
 - `gpa_band: toGpaBand(...)` の送信は `value_band` ではなく **`gpa_band` のまま**にしておく（GA4パラメータの変更は Task 5 で行う）
+- **結果パネルのCTA条件を絶対値判定に直す。** 現在は `toGpaBand` が返す `"3.0-3.5"` / `"3.5~"` との比較になっているが、これらのリテラルは `ValueBand` に存在しないため型エラーになる。ここで比率判定（`"75-87%"` など）に置き換えてはならない。満点は方式ごとに 4.0 / 4.3 / 4.5 と異なり、比率で判定すると満点4.3の大学（京大・一橋・北大・名大）で発火点が3.225に上がり、従来3.0で留学CTAが出ていた学生に出なくなる。以下に置き換える。
+
+```tsx
+  // 満点は方式ごとに異なる（4.0 / 4.3 / 4.5）。比率で判定すると満点4.3の大学で
+  // 発火点が3.225に上がり、従来3.0で表示されていた学生に出なくなる。
+  // 従来どおり絶対値3.0で判定する。
+  const showStudyAbroad = result.value >= 3.0;
+```
+
+`band` 変数が未使用になるなら削除する。`toValueBand` のインポートはGA4送信で使い続けるため残す。
 
 - [ ] **Step 8: テストが通ることを確認する**
 
