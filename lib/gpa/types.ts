@@ -6,13 +6,38 @@ export type GradeOption = {
   point: number;
 };
 
-/** GPA換算方式 */
+/** 指標の計算方式 */
+export type ScaleMethod =
+  /** 評語 → グレードポイント */
+  | "grade"
+  /** 素点 → グレードポイント */
+  | "score"
+  /** 評点をそのまま加重平均する（グレードポイントへの換算をしない） */
+  | "raw";
+
+/** 結果パネルでどのCTAを出すか */
+export type CtaPolicy =
+  /** 値が3.0以上なら留学、未満なら履修設計（従来のGPA向け挙動） */
+  | "gpa-threshold"
+  /** 値によらず留学ガイドへ */
+  | "always-study-abroad"
+  /** 値によらず履修ガイドへ */
+  | "always-credits";
+
+/** GA4送信に使う、満点に対する比率の帯 */
+export type ValueBand =
+  | "0-50%"
+  | "50-62%"
+  | "62-75%"
+  | "75-87%"
+  | "87-100%";
+
+/** 成績評価の換算方式 */
 export type GradeScale = {
   id: string;
   /** UIに表示する方式名 */
   label: string;
-  /** 'grade' = 評語から換算 / 'score' = 素点から換算 */
-  method: "grade" | "score";
+  method: ScaleMethod;
   /** method === 'grade' のとき必須。表示順は配列順 */
   grades?: GradeOption[];
   /**
@@ -21,8 +46,23 @@ export type GradeScale = {
    * （下位の区分に丸めて数値を捏造してはならない）。
    */
   scoreToPoint?: (score: number) => number | null;
-  /** この方式の満点GPA */
-  maxGpa: number;
+  /** この方式の満点。GPAなら4や4.3、成績評価係数なら3、基本平均点なら100 */
+  maxValue: number;
+  /** 画面に出す指標名。"GPA" / "基本平均点" / "成績評価係数" */
+  metricLabel: string;
+  /** 値に付ける単位。基本平均点なら "点"。省略時は付けない */
+  unitSuffix?: string;
+  /** 重率の入力欄を出すか。基本平均点のみ true */
+  usesWeight?: boolean;
+  /** 「不可を計算から除外する」の切替を出す場合の設定 */
+  failExclusionToggle?: {
+    /** 除外対象とする評語のラベル */
+    failLabels: string[];
+    /** チェックボックスの脇に表示する説明 */
+    note: string;
+  };
+  /** 結果パネルのCTA方針。省略時は "gpa-threshold" */
+  ctaPolicy?: CtaPolicy;
   /** 方式の補足説明。UIに表示する */
   note?: string;
 };
@@ -34,7 +74,7 @@ export type University = {
   name: string;
   /** 選択UI用の短縮名。例: "東大" */
   shortName: string;
-  /** 計測用の区分。'top' = 調査対象13校 / 'other' = それ以外 */
+  /** 計測用の区分。'top' = 調査対象の上位校 / 'other' = それ以外 */
   tier: "top" | "other";
   /** 参照する GradeScale の id */
   scaleId: string;
@@ -54,18 +94,18 @@ export type Course = {
   credits: number;
   /** method === 'grade' のとき使用。GradeOption.label と一致させる */
   grade?: string;
-  /** method === 'score' のとき使用。0-100 */
+  /** method === 'score' のとき使用。0-100。method === 'raw' では評点として使う */
   score?: number;
+  /** 重率。usesWeight の方式でのみ使う。省略時は 1 として扱う */
+  weight?: number;
 };
 
 /** 計算結果 */
-export type GpaResult = {
-  /** 小数第2位まで四捨五入 */
-  gpa: number;
+export type MetricResult = {
+  /** 小数第2位まで四捨五入した指標値 */
+  value: number;
+  /** 分母に実際に寄与した科目の素の単位数の合計（重率を掛ける前の値） */
   totalCredits: number;
-  /** GPAに算入された科目数 */
+  /** 分母に実際に寄与した科目数 */
   countedCourses: number;
 };
-
-/** GA4送信・出し分けに使うGPA帯 */
-export type GpaBand = "~2.0" | "2.0-2.5" | "2.5-3.0" | "3.0-3.5" | "3.5~";

@@ -9,6 +9,43 @@ import type { GradeScale, University } from "./types";
  */
 export const UNIVERSITY_SCALES: GradeScale[] = [
   {
+    // 出典：東京大学教養学部前期課程「進学選択に用いられる評点」
+    // https://www.c.u-tokyo.ac.jp/zenki/news/kyoumu/heikinten.pdf（2026-07-21）
+    // 計算例：https://zenkyomu.c.u-tokyo.ac.jp/sentaku/heikinten-sample.pdf（2026-07-21）
+    id: "u-tokyo-basic-average-scale",
+    label: "東京大学の基本平均点（評点をそのまま加重平均）",
+    method: "raw",
+    maxValue: 100,
+    metricLabel: "基本平均点",
+    unitSuffix: "点",
+    usesWeight: true,
+    ctaPolicy: "always-credits",
+    note: "教養学部前期課程の進学選択（2年次の学部振り分け）専用の指標で、2S2ターム・2Sセメスターまでに履修した単位数と成績から算出します。重率は科目ごとに1・0.1・0のいずれかを選びます。重率1は科類ごとに定められた必修・準必修科目群（外国語・情報・身体運動健康科学実習・初年次ゼミナール・社会科学（文科）または自然科学（理科）・人文科学（文科のみ）・総合科目の指定単位）に、重率0.1はそれ以外で単位取得した基礎科目や指定単位数を超えて追加履修した展開科目・総合科目に適用されます（科類ごとの指定単位数の詳細はこの方式では扱いません）。重率0は公式の計算例に存在しますが、本文中に明文の規定がなく適用条件は未確認です。進学選択の必修枠の単位を取得していない場合、その枠は評点0・重率1として計算に算入され、平均点を押し下げます。一部の進学単位で使われる「指定平均点」（本方式とは別の基準）には対応していません。満点は出典の算出式から数学的に導いた値で、満点を明示した文言は出典にありません。",
+  },
+  {
+    // 出典：東京大学「成績評価係数計算表」
+    // https://www.u-tokyo.ac.jp/content/400125968.xls（2026-07-21）
+    // 対象範囲の補足：https://www.u-tokyo.ac.jp/adm/go-global/ja/application-tips-USTEP_FAQ（2026-07-21）
+    id: "u-tokyo-grade-coefficient-scale",
+    label: "東京大学の成績評価係数（優上・優・良・可・不可の5段階）",
+    method: "grade",
+    grades: [
+      { label: "優上", point: 3 },
+      { label: "優", point: 3 },
+      { label: "良", point: 2 },
+      { label: "可", point: 1 },
+      { label: "不可", point: 0 },
+    ],
+    maxValue: 3,
+    metricLabel: "成績評価係数",
+    ctaPolicy: "always-study-abroad",
+    failExclusionToggle: {
+      failLabels: ["不可"],
+      note: "不可・Fの扱いは東京大学の公式資料内でも記載が矛盾しています（参考計算式は「総登録単位数」で除すとしており分母に含めて読めますが、記入例シートの手順説明は「不可やFは単位数に含めません」と明言しています）。提出先（奨学金・交換留学の申請窓口）にどちらの扱いか必ず確認してください。",
+    },
+    note: "大学学部1年次から応募時までの全学期の成績が対象で、大学院生は学部と大学院の成績を通算して算出します（学部／修士／博士それぞれと通算の4系統）。合格・不合格の2段階評価科目、成績証明書に記載のない単位、学位を取得しないプログラムの単位は計算に含めません。ここでは「優上・優・良・可・不可」の5段階評語（教養学部前期課程2017年度以降、医学部・工学部・文学部など2014年度以降で使用が公式に確認できる体系）を採用しています。優上・優はともに評価ポイント3で、上位2段が同じ扱いになります。ただし出典の成績評価係数計算表（400125968.xls）には「優上」という列自体が存在せず、優上＝評価ポイント3という対応は、東京大学の他の公式ページが定める優上の点数帯（90点以上）が計算表の100～90点帯（評価ポイント3）と一致することから導いた推論です（公式資料がこの対応を明言しているわけではありません）。成績証明書の評語が「優・良・可」（3段階）や「A＋・A・B・C」「A＋・A・B・C＋・C－」（英字）などこの一覧と異なる場合は選択せず、出典の対応表（https://www.u-tokyo.ac.jp/content/400125968.xls）で該当する列を確認し、評価ポイントを手動で当てはめてください。満点は出典の対応表・算出式から数学的に導いた値で、満点を明示した文言は出典にありません。",
+  },
+  {
     // 出典：京都大学「成績評価・GPA」https://www.kyoto-u.ac.jp/ja/education-campus/curriculum/grading-gpa（2026-07-21）
     id: "kyoto-university-scale",
     label: "京都大学の評語方式（A+〜F）",
@@ -21,7 +58,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "D", point: 1.0 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.3,
+    maxValue: 4.3,
+    metricLabel: "GPA",
     note: "不合格科目を含む全ての履修単位に係る成績がGPAに算入されます。",
   },
   {
@@ -36,7 +74,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C", point: 2.0 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.3,
+    maxValue: 4.3,
+    metricLabel: "GPA",
     note: "総履修登録単位数（分母）にF（不合格）取得単位数を含みます。同要項第3条第2項には、4.0を上限として換算する別表（A+とAをともに4.0とする）も存在します。",
   },
   {
@@ -46,7 +85,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
     label: "東京科学大学の素点換算方式（(素点－55)÷10）",
     method: "score",
     scoreToPoint: (score: number) => (score <= 59 ? 0 : (score - 55) / 10),
-    maxGpa: 4.5,
+    maxValue: 4.5,
+    metricLabel: "GPA",
     note: "GP＝(素点－55)÷10（59点以下は0）。再履修で合格した場合は不合格時の成績をGPAの算出から除外する規定がありますが、初回不合格時に分母へ算入するかを明記した条文は確認できていません。",
   },
   {
@@ -68,7 +108,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "D-", point: 0.7 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.3,
+    maxValue: 4.3,
+    metricLabel: "GPA",
   },
   {
     // 出典：東北大学におけるGPA制度に関する申し合わせ 第3条
@@ -83,7 +124,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       if (score >= 60) return 1.0;
       return 0.0;
     },
-    maxGpa: 4.0,
+    maxValue: 4.0,
+    metricLabel: "GPA",
     note: "AA(100-90)=4.0／A(89-80)=3.0／B(79-70)=2.0／C(69-60)=1.0／D(59-0)=0.0。",
   },
   {
@@ -100,7 +142,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C-", point: 1.0 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.3,
+    maxValue: 4.3,
+    metricLabel: "GPA",
     note: "GPは学士課程のみに適用されます（大学院には適用されません）。Fの評価を受けた科目を再履修して合格した場合、Fの評価は累積GPAに算入されません。",
   },
   {
@@ -120,7 +163,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       if (score >= 60) return 1.0; // C-
       return 0.0; // F
     },
-    maxGpa: 4.0,
+    maxValue: 4.0,
+    metricLabel: "GPA",
   },
   {
     // 出典：大阪大学「GPA制度」得点率と評価・GPの対応表（令和7年度以前入学）
@@ -141,7 +185,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       if (score >= 60) return null; // 未定義（60-64）
       return 0.0; // F（0-59）
     },
-    maxGpa: 4.0,
+    maxValue: 4.0,
+    metricLabel: "GPA",
     note: "出典の得点区分は90-100(S)/85-89(A)/75-79(B)/65-69(C)/0-59(F)のみで、80-84・70-74・60-64点は出典の対応表に定義がありません。これらの点数は本方式では計算できません（該当する場合はエラーになります）。",
   },
   {
@@ -156,7 +201,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C", point: 1 },
       { label: "F", point: 0 },
     ],
-    maxGpa: 4,
+    maxValue: 4,
+    metricLabel: "GPA",
   },
   {
     // 出典：早稲田大学発行「早稲田大学におけるGPA制度に関して」（waseda.jp、出典ドメイン例外・プロジェクトオーナー承認済み、2026-07-21）
@@ -170,7 +216,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C", point: 1 },
       { label: "不合格", point: 0 },
     ],
-    maxGpa: 4,
+    maxValue: 4,
+    metricLabel: "GPA",
     note: "2010年度以降入学者が対象。総登録単位数（分母）に不合格科目の単位を含みます。N・P・Qで評価される科目はGPA算出の対象外です。",
   },
   {
@@ -186,7 +233,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "D", point: 1.0 },
       { label: "F", point: 0.0 },
     ],
-    maxGpa: 4.0,
+    maxValue: 4.0,
+    metricLabel: "GPA",
     note: "QPI（Quality Point Index）と呼ばれる方式です。W・N・P・Xの科目は出典により分母（履修登録科目の総単位数）から除外されるため、この計算機では入力しないでください。F（不可）は算入されます。A評価の付与は2割以内が目安（最大3割）とされています。",
   },
   {
@@ -201,7 +249,8 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "D", point: 1 },
       { label: "E", point: 0 },
     ],
-    maxGpa: 4,
+    maxValue: 4,
+    metricLabel: "GPA",
     note: "満点GPAは公式ページに明示の記載がなく、A評価の値（4pt）から導いています。",
   },
 ];
@@ -214,12 +263,34 @@ export const ALL_SCALES: GradeScale[] = [...UNIVERSITY_SCALES, ...GENERIC_SCALES
  * sourceUrl / verifiedAt が空の大学をここに入れてはならない。
  *
  * 東京大学：全学統一のGPA（GP換算）制度を公式には持たないことが確認されたため、
- * マスタに登録しない（docs/seo/gpa-university-scales.md 参照）。
+ * 「東京大学」という単一エントリはマスタに登録しない（docs/seo/gpa-university-scales.md 参照）。
+ * 代わりに、公式に存在する2つの別指標（進学選択用の基本平均点、奨学金・交換留学選考用の
+ * 成績評価係数）を、大阪大学の年度分割と同様に別々のエントリとして登録している。
  *
  * 大阪大学：入学年度（令和7年度以前／令和8年度以降）でGP対応表が異なり、
  * 学生は自分の入学年度でどちらが適用されるか判別できるため、2エントリに分割している。
  */
 export const UNIVERSITIES: University[] = [
+  {
+    id: "u-tokyo-basic-average",
+    name: "東京大学（基本平均点・進学選択用）",
+    shortName: "東大（基本平均点）",
+    tier: "top",
+    scaleId: "u-tokyo-basic-average-scale",
+    sourceUrl: "https://www.c.u-tokyo.ac.jp/zenki/news/kyoumu/heikinten.pdf",
+    verifiedAt: "2026-07-21",
+    note: "進学選択（2年次の学部振り分け）の判定に使われる指標です。奨学金や交換留学の学内選考には使われません（それらには「成績評価係数」をご利用ください）。計算例の出典：https://zenkyomu.c.u-tokyo.ac.jp/sentaku/heikinten-sample.pdf",
+  },
+  {
+    id: "u-tokyo-grade-coefficient",
+    name: "東京大学（成績評価係数・奨学金／交換留学用）",
+    shortName: "東大（成績評価係数）",
+    tier: "top",
+    scaleId: "u-tokyo-grade-coefficient-scale",
+    sourceUrl: "https://www.u-tokyo.ac.jp/content/400125968.xls",
+    verifiedAt: "2026-07-21",
+    note: "奨学金や交換留学（USTEP等）の学内選考で使われる指標です。進学選択には使われません（それには「基本平均点」をご利用ください）。不可・F科目の扱いは出典資料内で記載が矛盾しているため、方式の注記を必ずご確認ください。対象範囲の補足出典：https://www.u-tokyo.ac.jp/adm/go-global/ja/application-tips-USTEP_FAQ",
+  },
   {
     id: "kyoto-university",
     name: "京都大学",

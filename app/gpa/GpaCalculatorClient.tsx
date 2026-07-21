@@ -1,16 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useId, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
-import { calculateGpa, toGpaBand } from "@/lib/gpa/calculate";
+import { calculateMetric, toValueBand } from "@/lib/gpa/calculate";
 import type { CalculateOutput } from "@/lib/gpa/calculate";
 import {
   UNIVERSITIES,
   findScaleById,
   getDefaultScale,
 } from "@/lib/gpa/universities";
-import type { Course, GpaResult, GradeScale } from "@/lib/gpa/types";
+import type { Course, MetricResult, GradeScale } from "@/lib/gpa/types";
+import { coursesFromGradeTotals, supportsBulkInput } from "@/lib/gpa/bulk";
+import { coursesFromFormRows, toNumber } from "@/lib/gpa/formCourses";
+import { excludeFailCourses } from "@/lib/gpa/failExclusion";
+import ScaleInfoPanel from "./ScaleInfoPanel";
+import MetricResultPanel from "./MetricResultPanel";
+import GradeTotalsInput from "./GradeTotalsInput";
 
 type GtagWindow = Window & { gtag?: (...args: unknown[]) => void };
 
@@ -22,6 +27,7 @@ type CourseField = {
   credits: string;
   grade: string;
   score: string;
+  weight: string;
 };
 
 type FormValues = {
@@ -29,19 +35,21 @@ type FormValues = {
   courses: CourseField[];
 };
 
-const EMPTY_COURSE: CourseField = { name: "", credits: "", grade: "", score: "" };
-
-/** 空文字を 0 ではなく NaN にする。Number("") === 0 のため、
- *  素点や単位数の入力漏れが「0点」「0単位」として黙って計算に入ってしまう。 */
-function toNumber(value: string): number {
-  return value.trim() === "" ? NaN : Number(value);
-}
+const EMPTY_COURSE: CourseField = {
+  name: "",
+  credits: "",
+  grade: "",
+  score: "",
+  weight: "1",
+};
 
 function trackCalculate(params: {
   university_id: string;
   university_tier: string;
-  gpa_band: string;
+  metric_id: string;
+  value_band: string;
   course_count: number;
+  input_mode: string;
 }) {
   if (typeof window === "undefined") return;
   const w = window as GtagWindow;
@@ -49,11 +57,16 @@ function trackCalculate(params: {
   w.gtag("event", "gpa_calculate", params);
 }
 
-/** calculateGpa のエラーを、画面に出す日本語メッセージへ変換する */
+/** calculateMetric のエラーを、画面に出す日本語メッセージへ変換する */
 function errorMessage(
   output: Extract<CalculateOutput, { ok: false }>,
-  courses: Course[]
+  courses: Course[],
+  scale: GradeScale
 ): string {
+  // raw方式（東大の基本平均点）は入力欄のラベルも「評点」なので、
+  // エラー文でも同じ語を使う。画面のラベルと違う語で叱ると、学生は
+  // どの欄を直せばよいのか分からなくなる。
+  const scoreTerm = scale.method === "raw" ? "評点" : "素点";
   switch (output.reason) {
     case "no_courses":
       return "科目を1つ以上入力してください。";
@@ -78,16 +91,23 @@ function errorMessage(
       ) {
         return "入力された点数は、選択した大学の公式資料にGPの定義がないため計算できません。上の換算方式の注記をご確認ください。";
       }
-      return "素点は0〜100の範囲で入力してください。";
+      return `${scoreTerm}は0〜100の範囲で入力してください。`;
     }
+    case "invalid_weight":
+      return "重率は 1・0.1・0 のいずれかを選んでください。";
     default:
       return "入力内容を確認してください。";
   }
 }
 
 export default function GpaCalculatorClient() {
-  const [result, setResult] = useState<GpaResult | null>(null);
+  const [result, setResult] = useState<MetricResult | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [excludeFail, setExcludeFail] = useState(false);
+  const [inputMode, setInputMode] = useState<"per-course" | "by-grade">(
+    "per-course"
+  );
+  const [gradeTotals, setGradeTotals] = useState<Record<string, string>>({});
 
   // ラベルと入力欄を紐付けるための id 接頭辞。
   // react-hook-form の `field.id` はランダムUUIDでサーバーとクライアントで
@@ -124,31 +144,53 @@ export default function GpaCalculatorClient() {
   useEffect(() => {
     setResult(null);
     setFormError(null);
+    setExcludeFail(false);
+    setGradeTotals({});
   }, [universityId]);
 
-  const onSubmit = (values: FormValues) => {
-    const courses: Course[] = values.courses
-      // 完全に空の行は無視する（入力途中の行でエラーを出さないため）
-      .filter(
-        (c) =>
-          c.name.trim() !== "" ||
-          c.credits.trim() !== "" ||
-          c.grade.trim() !== "" ||
-          c.score.trim() !== ""
-      )
-      .map((c, index) => ({
-        id: String(index),
-        name: c.name,
-        credits: toNumber(c.credits),
-        grade: scale.method === "grade" ? c.grade : undefined,
-        score: scale.method === "score" ? toNumber(c.score) : undefined,
-      }));
+  const bulkSupported = supportsBulkInput(scale);
 
-    const output = calculateGpa({ courses, scale });
+  // まとめ入力に非対応の方式へ切り替えたら自動で科目ごと入力へ戻す。
+  useEffect(() => {
+    if (!bulkSupported) setInputMode("per-course");
+  }, [bulkSupported]);
+
+  const onSubmit = (values: FormValues) => {
+    const courses: Course[] =
+      inputMode === "by-grade"
+        ? coursesFromGradeTotals(
+            scale,
+            Object.fromEntries(
+              Object.entries(gradeTotals).map(([k, v]) => [k, toNumber(v)])
+            )
+          )
+        : coursesFromFormRows(values.courses, scale);
+
+    const targetCourses = excludeFailCourses(courses, scale, excludeFail);
+
+    // 不可除外のチェックで全科目が消えた場合。calculateMetric は "no_courses" を返すが、
+    // 「科目を1つ以上入力してください」では、実際に入力した学生に原因が伝わらない。
+    if (excludeFail && courses.length > 0 && targetCourses.length === 0) {
+      setResult(null);
+      setFormError(
+        "不可の科目を除外した結果、計算対象の科目がなくなりました。チェックを外すか、他の科目を入力してください。"
+      );
+      return;
+    }
+
+    // まとめ入力モードでは「科目を1つ以上入力してください」が科目行を指す文言になり、
+    // 単位数欄を見ている学生に噛み合わない。
+    if (inputMode === "by-grade" && courses.length === 0) {
+      setResult(null);
+      setFormError("成績ごとの合計単位数を1つ以上入力してください。");
+      return;
+    }
+
+    const output = calculateMetric({ courses: targetCourses, scale });
 
     if (!output.ok) {
       setResult(null);
-      setFormError(errorMessage(output, courses));
+      setFormError(errorMessage(output, targetCourses, scale));
       return;
     }
 
@@ -158,8 +200,10 @@ export default function GpaCalculatorClient() {
     trackCalculate({
       university_id: university ? university.id : OTHER_UNIVERSITY,
       university_tier: university ? university.tier : "unset",
-      gpa_band: toGpaBand(output.result.gpa),
+      metric_id: scale.id,
+      value_band: toValueBand(output.result.value, scale.maxValue),
       course_count: output.result.countedCourses,
+      input_mode: inputMode,
     });
   };
 
@@ -167,7 +211,7 @@ export default function GpaCalculatorClient() {
     <div className="font-body">
       {/* noValidate：ブラウザ標準のバリデーションが submit を止めると、
           自前の日本語メッセージ（特に「素点は0〜100の範囲で」）が表示されなくなるため無効化する。
-          検証は calculateGpa 側で一元的に行う。 */}
+          検証は calculateMetric 側で一元的に行う。 */}
       <form
         noValidate
         onSubmit={handleSubmit(onSubmit)}
@@ -198,35 +242,55 @@ export default function GpaCalculatorClient() {
             <option value={OTHER_UNIVERSITY}>その他の大学（一般的な方式で計算）</option>
           </select>
 
-          {/* 換算方式と出典の表示。競合ツールにない差別化点 */}
-          <div className="mt-3 border-l-4 border-primary bg-neutral-light p-3 text-xs text-text-grey">
-            <p className="font-bold text-primary">換算方式：{scale.label}</p>
-            {scale.note ? <p className="mt-1">{scale.note}</p> : null}
-            {university ? (
-              <p className="mt-1">
-                出典：
-                <a
-                  href={university.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-accent underline"
-                >
-                  {university.name} 公式
-                </a>
-                （{university.verifiedAt} 確認）
-              </p>
-            ) : null}
-            {university?.note ? <p className="mt-1">{university.note}</p> : null}
-          </div>
+          <ScaleInfoPanel scale={scale} university={university} />
         </div>
 
         {/* ── 科目入力 ───────────────────────── */}
         <div>
           <p className="font-display text-sm font-bold text-primary">履修科目</p>
           <p className="mt-1 text-xs text-text-grey">
-            GPAに算入される科目のみ入力してください（認定単位・履修中の科目は除きます）。
+            {scale.metricLabel}に算入される科目のみ入力してください（認定単位・履修中の科目は除きます）。
           </p>
 
+          {bulkSupported ? (
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setInputMode("per-course");
+                  setResult(null);
+                  setFormError(null);
+                }}
+                aria-pressed={inputMode === "per-course"}
+                className={`border px-4 py-2 text-sm font-bold ${
+                  inputMode === "per-course"
+                    ? "border-primary bg-primary text-white"
+                    : "border-border-grey text-text-grey"
+                }`}
+              >
+                科目ごとに入力
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setInputMode("by-grade");
+                  setResult(null);
+                  setFormError(null);
+                }}
+                aria-pressed={inputMode === "by-grade"}
+                className={`border px-4 py-2 text-sm font-bold ${
+                  inputMode === "by-grade"
+                    ? "border-primary bg-primary text-white"
+                    : "border-border-grey text-text-grey"
+                }`}
+              >
+                成績ごとにまとめて入力
+              </button>
+            </div>
+          ) : null}
+
+          {inputMode === "per-course" ? (
+            <>
           <div className="mt-3 space-y-3">
             {fields.map((field, index) => (
               <div key={field.id} className="flex flex-wrap items-end gap-2">
@@ -273,7 +337,9 @@ export default function GpaCalculatorClient() {
                   </div>
                 ) : (
                   <div className="w-32">
-                    <label htmlFor={`${fieldIdPrefix}-course-${index}-score`} className="block text-xs text-text-grey">素点（0〜100）</label>
+                    <label htmlFor={`${fieldIdPrefix}-course-${index}-score`} className="block text-xs text-text-grey">
+                      {scale.method === "raw" ? "評点（0〜100）" : "素点（0〜100）"}
+                    </label>
                     <input
                       id={`${fieldIdPrefix}-course-${index}-score`}
                       type="number"
@@ -286,6 +352,26 @@ export default function GpaCalculatorClient() {
                     />
                   </div>
                 )}
+
+                {scale.usesWeight ? (
+                  <div className="w-28">
+                    <label
+                      htmlFor={`${fieldIdPrefix}-course-${index}-weight`}
+                      className="block text-xs text-text-grey"
+                    >
+                      重率
+                    </label>
+                    <select
+                      id={`${fieldIdPrefix}-course-${index}-weight`}
+                      {...register(`courses.${index}.weight`)}
+                      className="mt-1 w-full border border-border-grey bg-white p-2 text-primary"
+                    >
+                      <option value="1">1</option>
+                      <option value="0.1">0.1</option>
+                      <option value="0">0（対象外）</option>
+                    </select>
+                  </div>
+                ) : null}
 
                 <button
                   type="button"
@@ -307,6 +393,42 @@ export default function GpaCalculatorClient() {
           >
             ＋ 科目を追加
           </button>
+            </>
+          ) : (
+            <GradeTotalsInput
+              scale={scale}
+              totals={gradeTotals}
+              idPrefix={fieldIdPrefix}
+              onChange={(label, value) =>
+                setGradeTotals((prev) => ({ ...prev, [label]: value }))
+              }
+            />
+          )}
+
+          {scale.failExclusionToggle ? (
+            <div className="mt-4 border-l-4 border-primary bg-neutral-light p-3">
+              <label className="flex items-start gap-2 text-sm text-primary">
+                <input
+                  type="checkbox"
+                  checked={excludeFail}
+                  onChange={(e) => {
+                    setExcludeFail(e.target.checked);
+                    setResult(null);
+                    setFormError(null);
+                  }}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="font-bold">
+                    不可（{scale.failExclusionToggle.failLabels.join("・")}）の科目を計算から除外する
+                  </span>
+                  <span className="mt-1 block text-xs text-text-grey">
+                    {scale.failExclusionToggle.note}
+                  </span>
+                </span>
+              </label>
+            </div>
+          ) : null}
         </div>
 
         {formError ? (
@@ -319,7 +441,7 @@ export default function GpaCalculatorClient() {
           type="submit"
           className="mt-6 w-full bg-primary px-6 py-4 font-display text-base font-bold text-white"
         >
-          GPAを計算する
+          {scale.metricLabel}を計算する
         </button>
       </form>
 
@@ -327,80 +449,8 @@ export default function GpaCalculatorClient() {
       {/* aria-live は内容より先にDOMへ存在している必要があるため、
           パネルの有無にかかわらずラッパを常設し、中身だけ差し替える。 */}
       <div aria-live="polite">
-        {result ? <GpaResultPanel result={result} maxGpa={scale.maxGpa} /> : null}
+        {result ? <MetricResultPanel result={result} scale={scale} /> : null}
       </div>
     </div>
-  );
-}
-
-function GpaResultPanel({ result, maxGpa }: { result: GpaResult; maxGpa: number }) {
-  const band = toGpaBand(result.gpa);
-
-  return (
-    <section className="mt-8 border border-primary p-6">
-      <p className="font-display text-sm font-bold text-text-grey">あなたのGPA</p>
-      <p className="mt-2 font-display text-5xl font-bold text-primary">
-        {result.gpa.toFixed(2)}
-        <span className="ml-2 text-lg text-text-grey">/ {maxGpa.toFixed(1)}</span>
-      </p>
-      <p className="mt-2 text-sm text-text-grey">
-        算入科目：{result.countedCourses}科目／合計 {result.totalCredits} 単位
-      </p>
-
-      {/* GPA帯に応じた次アクション。就活系の導線は置かない */}
-      <div className="mt-6 border-t border-border-grey pt-6">
-        {band === "3.0-3.5" || band === "3.5~" ? (
-          <div>
-            <p className="font-display text-base font-bold text-primary">
-              交換留学の出願要件を満たしている可能性があります
-            </p>
-            <p className="mt-2 text-sm text-text-grey">
-              多くの大学の交換留学プログラムはGPAを出願要件に置いています。必要なGPAの目安と、
-              留学先の選び方を確認してみてください。
-            </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Link
-                href="/guide/study-abroad"
-                className="bg-primary px-5 py-3 text-sm font-bold text-white"
-              >
-                留学ガイドを読む
-              </Link>
-              <Link
-                href="/guide/study-abroad/recommend"
-                className="border border-primary px-5 py-3 text-sm font-bold text-primary"
-              >
-                留学先を診断する
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div>
-            <p className="font-display text-base font-bold text-primary">
-              GPAは履修設計で変えられます
-            </p>
-            <p className="mt-2 text-sm text-text-grey">
-              単位の取り方・必修と選択のバランス・成績評価の仕組みを理解すると、GPAは戦略的に上げられます。
-            </p>
-            <div className="mt-4">
-              <Link
-                href="/guide/credits"
-                className="bg-primary px-5 py-3 text-sm font-bold text-white"
-              >
-                履修・単位ガイドを読む
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="mt-6 border-t border-border-grey pt-6">
-        <p className="text-sm text-text-grey">
-          学外の活動（学生団体・インターン・プロジェクト）は成績には出ませんが、実績として蓄積できます。
-        </p>
-        <Link href="/signup" className="mt-3 inline-block text-sm font-bold text-accent underline">
-          ProofLoopで活動を記録する
-        </Link>
-      </div>
-    </section>
   );
 }

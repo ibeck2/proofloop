@@ -18,17 +18,77 @@ describe("換算方式マスタ", () => {
       if (scale.method === "grade") {
         expect(scale.grades, `${scale.id} に grades がありません`).toBeDefined();
         expect(scale.grades!.length).toBeGreaterThan(0);
-      } else {
+      } else if (scale.method === "score") {
         expect(
           typeof scale.scoreToPoint,
           `${scale.id} に scoreToPoint がありません`
         ).toBe("function");
       }
+      // raw方式は grades も scoreToPoint も持たない（別のテストで検証）
     }
   });
 
   it("既定の方式が取得できる", () => {
     expect(getDefaultScale()).toBeDefined();
+  });
+
+  it("すべての方式が maxValue と metricLabel を持つ", () => {
+    for (const scale of ALL_SCALES) {
+      expect(
+        typeof scale.maxValue === "number" && scale.maxValue > 0,
+        `${scale.id} の maxValue が不正です`
+      ).toBe(true);
+      expect(
+        typeof scale.metricLabel === "string" && scale.metricLabel.length > 0,
+        `${scale.id} の metricLabel が空です`
+      ).toBe(true);
+    }
+  });
+
+  it("重率を使う方式は raw 方式である", () => {
+    for (const scale of ALL_SCALES) {
+      if (scale.usesWeight) {
+        expect(scale.method, `${scale.id} は usesWeight だが raw ではありません`).toBe(
+          "raw"
+        );
+      }
+    }
+  });
+
+  it("raw 方式は grades も scoreToPoint も持たない", () => {
+    for (const scale of ALL_SCALES) {
+      if (scale.method === "raw") {
+        expect(scale.grades, `${scale.id} は raw なのに grades を持っています`).toBeUndefined();
+        expect(
+          scale.scoreToPoint,
+          `${scale.id} は raw なのに scoreToPoint を持っています`
+        ).toBeUndefined();
+      }
+    }
+  });
+
+  it("同じ方式の中で評語ラベルが重複していない", () => {
+    for (const scale of ALL_SCALES) {
+      const labels = scale.grades?.map((g) => g.label) ?? [];
+      expect(
+        new Set(labels).size,
+        `${scale.id} の grades に重複したラベルがあります`
+      ).toBe(labels.length);
+    }
+  });
+
+  it("failExclusionToggle の failLabels は実在する評語を指している", () => {
+    for (const scale of ALL_SCALES) {
+      const toggle = scale.failExclusionToggle;
+      if (!toggle) continue;
+      expect(toggle.failLabels.length).toBeGreaterThan(0);
+      for (const label of toggle.failLabels) {
+        const found = scale.grades?.some((g) => g.label === label);
+        expect(found, `${scale.id} の failLabels "${label}" が grades にありません`).toBe(
+          true
+        );
+      }
+    }
   });
 });
 

@@ -5,8 +5,6 @@ import { UNIVERSITIES } from "@/lib/gpa/universities";
 import GpaCalculatorClient from "./GpaCalculatorClient";
 
 export const metadata: Metadata = {
-  // 東大は全学でGPAを算出しておらず非対応のため、タイトルに含めない。
-  // 検索結果に「東大対応」と読める文言を出すのは、この施策の前提である正確性に反する。
   // 末尾に「| ProofLoop」を付けない。app/layout.tsx が
   // title.template = "%s | ProofLoop" を持っており自動で付与されるため、
   // ここに書くと「… | ProofLoop | ProofLoop」と二重になる。
@@ -22,6 +20,8 @@ export const metadata: Metadata = {
     "GPA 平均",
     "GPA 出し方",
     "交換留学 GPA",
+    "基本平均点",
+    "成績評価係数",
   ],
   openGraph: {
     title: "GPA計算機｜大学別の換算方式に対応 | ProofLoop",
@@ -57,9 +57,9 @@ const FAQ_ITEMS = [
       "多くの大学の交換留学プログラムがGPAを出願要件に置いています。必要な水準は大学・派遣先によって異なるため、所属大学の国際交流課の募集要項を確認してください。GPAが要件に届いているかどうかは、留学先選びの出発点になります。",
   },
   {
-    question: "東京大学が対応大学一覧にないのはなぜですか？",
+    question: "東京大学のGPAはどう計算しますか？",
     answer:
-      "東京大学は、全学の公式な案内で「東京大学ではGPAを算出していません」と明示しています。全学共通のGP換算表そのものが存在しないため、推測で計算方式を作らず、対応大学一覧から外しています。学部・研究科によっては独自に成績指標を用いる場合があるため、必要な場合は所属先の教務窓口にご確認ください。",
+      "東京大学は全学としてGPAを算出していないと公式に明示しています。代わりに、進学選択で用いる「基本平均点」と、奨学金・交換留学の選抜で用いる「成績評価係数」という2つの指標があります。基本平均点は評点（0〜100点）を単位数と重率で加重平均した0〜100点の値で、前期課程までの科目が対象です。成績評価係数は評語を0〜3の評価ポイントに換算して単位数で加重平均した値で、入学後の全学期が対象です。この計算機は両方に対応しています。",
   },
   {
     question: "この計算機の換算方式はどこから取っていますか？",
@@ -109,6 +109,7 @@ export default function GpaPage() {
           このGPA計算機は、各大学の公式資料を出典として換算方式を登録しており、
           単位数で加重した正確なGPAを計算できます。
           入力した成績はサーバーに保存されません。
+          東京大学については、GPAに代わる基本平均点と成績評価係数に対応しています。
         </p>
 
         <div className="mt-10">
@@ -184,9 +185,13 @@ export default function GpaPage() {
           )}
 
           <p className="mt-4 text-sm leading-relaxed text-text-grey">
-            なお <strong className="text-primary">東京大学</strong> は、全学の公式な案内で
-            「東京大学ではGPAを算出していません」と明示しており、全学共通のGP換算表そのものが存在しません。
-            推測で計算方式を作ることはしない方針のため、対応大学一覧には含めていません。
+            <strong className="text-primary">東京大学</strong>は、全学の公式な案内で
+            「東京大学ではGPAを算出していません」と明示しており、全学共通のGP換算表は存在しません。
+            ただし実際には、進学選択で用いる<strong className="text-primary">基本平均点</strong>と、
+            奨学金・交換留学の選抜で用いる<strong className="text-primary">成績評価係数</strong>という
+            2つの指標があり、この計算機は両方に対応しています。
+            2つは対象範囲も算出方法も異なるため、用途に応じて選んでください。
+            いずれもGPAそのものではないため、GPAの提出を求められている場合は提出先にご確認ください。
           </p>
 
           <p className="mt-4 text-xs text-text-grey">

@@ -16,7 +16,8 @@ export const GENERIC_SCALES: GradeScale[] = [
       { label: "可", point: 1 },
       { label: "不可", point: 0 },
     ],
-    maxGpa: 4,
+    maxValue: 4,
+    metricLabel: "GPA",
     note: "多くの大学で使われている一般的な方式です。お使いの大学の履修要項で評語とGPの対応をご確認ください。",
   },
   {
@@ -30,7 +31,8 @@ export const GENERIC_SCALES: GradeScale[] = [
       { label: "C", point: 1 },
       { label: "D", point: 0 },
     ],
-    maxGpa: 4,
+    maxValue: 4,
+    metricLabel: "GPA",
     note: "S/A/B/C/D 表記の一般的な方式です。お使いの大学の履修要項で評語とGPの対応をご確認ください。",
   },
 ];
