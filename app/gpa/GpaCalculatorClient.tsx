@@ -10,8 +10,10 @@ import {
   getDefaultScale,
 } from "@/lib/gpa/universities";
 import type { Course, MetricResult, GradeScale } from "@/lib/gpa/types";
+import { coursesFromGradeTotals, supportsBulkInput } from "@/lib/gpa/bulk";
 import ScaleInfoPanel from "./ScaleInfoPanel";
 import MetricResultPanel from "./MetricResultPanel";
+import GradeTotalsInput from "./GradeTotalsInput";
 
 type GtagWindow = Window & { gtag?: (...args: unknown[]) => void };
 
@@ -101,6 +103,10 @@ export default function GpaCalculatorClient() {
   const [result, setResult] = useState<MetricResult | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [excludeFail, setExcludeFail] = useState(false);
+  const [inputMode, setInputMode] = useState<"per-course" | "by-grade">(
+    "per-course"
+  );
+  const [gradeTotals, setGradeTotals] = useState<Record<string, string>>({});
 
   // ラベルと入力欄を紐付けるための id 接頭辞。
   // react-hook-form の `field.id` はランダムUUIDでサーバーとクライアントで
@@ -138,26 +144,42 @@ export default function GpaCalculatorClient() {
     setResult(null);
     setFormError(null);
     setExcludeFail(false);
+    setGradeTotals({});
   }, [universityId]);
 
+  const bulkSupported = supportsBulkInput(scale);
+
+  // まとめ入力に非対応の方式へ切り替えたら自動で科目ごと入力へ戻す。
+  useEffect(() => {
+    if (!bulkSupported) setInputMode("per-course");
+  }, [bulkSupported]);
+
   const onSubmit = (values: FormValues) => {
-    const courses: Course[] = values.courses
-      // 完全に空の行は無視する（入力途中の行でエラーを出さないため）
-      .filter(
-        (c) =>
-          c.name.trim() !== "" ||
-          c.credits.trim() !== "" ||
-          c.grade.trim() !== "" ||
-          c.score.trim() !== ""
-      )
-      .map((c, index) => ({
-        id: String(index),
-        name: c.name,
-        credits: toNumber(c.credits),
-        grade: scale.method === "grade" ? c.grade : undefined,
-        score: scale.method === "score" ? toNumber(c.score) : undefined,
-        weight: scale.usesWeight ? toNumber(c.weight) : undefined,
-      }));
+    const courses: Course[] =
+      inputMode === "by-grade"
+        ? coursesFromGradeTotals(
+            scale,
+            Object.fromEntries(
+              Object.entries(gradeTotals).map(([k, v]) => [k, toNumber(v)])
+            )
+          )
+        : values.courses
+            // 完全に空の行は無視する（入力途中の行でエラーを出さないため）
+            .filter(
+              (c) =>
+                c.name.trim() !== "" ||
+                c.credits.trim() !== "" ||
+                c.grade.trim() !== "" ||
+                c.score.trim() !== ""
+            )
+            .map((c, index) => ({
+              id: String(index),
+              name: c.name,
+              credits: toNumber(c.credits),
+              grade: scale.method === "grade" ? c.grade : undefined,
+              score: scale.method === "score" ? toNumber(c.score) : undefined,
+              weight: scale.usesWeight ? toNumber(c.weight) : undefined,
+            }));
 
     const failLabels = scale.failExclusionToggle?.failLabels ?? [];
     const targetCourses =
@@ -192,7 +214,7 @@ export default function GpaCalculatorClient() {
       metric_id: scale.id,
       value_band: toValueBand(output.result.value, scale.maxValue),
       course_count: output.result.countedCourses,
-      input_mode: "per-course",
+      input_mode: inputMode,
     });
   };
 
@@ -241,6 +263,43 @@ export default function GpaCalculatorClient() {
             GPAに算入される科目のみ入力してください（認定単位・履修中の科目は除きます）。
           </p>
 
+          {bulkSupported ? (
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setInputMode("per-course");
+                  setResult(null);
+                  setFormError(null);
+                }}
+                className={`border px-4 py-2 text-sm font-bold ${
+                  inputMode === "per-course"
+                    ? "border-primary bg-primary text-white"
+                    : "border-border-grey text-text-grey"
+                }`}
+              >
+                科目ごとに入力
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setInputMode("by-grade");
+                  setResult(null);
+                  setFormError(null);
+                }}
+                className={`border px-4 py-2 text-sm font-bold ${
+                  inputMode === "by-grade"
+                    ? "border-primary bg-primary text-white"
+                    : "border-border-grey text-text-grey"
+                }`}
+              >
+                成績ごとにまとめて入力
+              </button>
+            </div>
+          ) : null}
+
+          {inputMode === "per-course" ? (
+            <>
           <div className="mt-3 space-y-3">
             {fields.map((field, index) => (
               <div key={field.id} className="flex flex-wrap items-end gap-2">
@@ -341,6 +400,17 @@ export default function GpaCalculatorClient() {
           >
             ＋ 科目を追加
           </button>
+            </>
+          ) : (
+            <GradeTotalsInput
+              scale={scale}
+              totals={gradeTotals}
+              idPrefix={fieldIdPrefix}
+              onChange={(label, value) =>
+                setGradeTotals((prev) => ({ ...prev, [label]: value }))
+              }
+            />
+          )}
 
           {scale.failExclusionToggle ? (
             <div className="mt-4 border-l-4 border-primary bg-neutral-light p-3">
