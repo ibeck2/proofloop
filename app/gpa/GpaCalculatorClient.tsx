@@ -23,6 +23,7 @@ type CourseField = {
   credits: string;
   grade: string;
   score: string;
+  weight: string;
 };
 
 type FormValues = {
@@ -30,7 +31,13 @@ type FormValues = {
   courses: CourseField[];
 };
 
-const EMPTY_COURSE: CourseField = { name: "", credits: "", grade: "", score: "" };
+const EMPTY_COURSE: CourseField = {
+  name: "",
+  credits: "",
+  grade: "",
+  score: "",
+  weight: "1",
+};
 
 /** 空文字を 0 ではなく NaN にする。Number("") === 0 のため、
  *  素点や単位数の入力漏れが「0点」「0単位」として黙って計算に入ってしまう。 */
@@ -41,8 +48,10 @@ function toNumber(value: string): number {
 function trackCalculate(params: {
   university_id: string;
   university_tier: string;
-  gpa_band: string;
+  metric_id: string;
+  value_band: string;
   course_count: number;
+  input_mode: string;
 }) {
   if (typeof window === "undefined") return;
   const w = window as GtagWindow;
@@ -81,6 +90,8 @@ function errorMessage(
       }
       return "素点は0〜100の範囲で入力してください。";
     }
+    case "invalid_weight":
+      return "重率は 1・0.1・0 のいずれかを選んでください。";
     default:
       return "入力内容を確認してください。";
   }
@@ -89,6 +100,7 @@ function errorMessage(
 export default function GpaCalculatorClient() {
   const [result, setResult] = useState<MetricResult | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [excludeFail, setExcludeFail] = useState(false);
 
   // ラベルと入力欄を紐付けるための id 接頭辞。
   // react-hook-form の `field.id` はランダムUUIDでサーバーとクライアントで
@@ -125,6 +137,7 @@ export default function GpaCalculatorClient() {
   useEffect(() => {
     setResult(null);
     setFormError(null);
+    setExcludeFail(false);
   }, [universityId]);
 
   const onSubmit = (values: FormValues) => {
@@ -143,13 +156,20 @@ export default function GpaCalculatorClient() {
         credits: toNumber(c.credits),
         grade: scale.method === "grade" ? c.grade : undefined,
         score: scale.method === "score" ? toNumber(c.score) : undefined,
+        weight: scale.usesWeight ? toNumber(c.weight) : undefined,
       }));
 
-    const output = calculateMetric({ courses, scale });
+    const failLabels = scale.failExclusionToggle?.failLabels ?? [];
+    const targetCourses =
+      excludeFail && failLabels.length > 0
+        ? courses.filter((c) => !(c.grade && failLabels.includes(c.grade)))
+        : courses;
+
+    const output = calculateMetric({ courses: targetCourses, scale });
 
     if (!output.ok) {
       setResult(null);
-      setFormError(errorMessage(output, courses));
+      setFormError(errorMessage(output, targetCourses));
       return;
     }
 
@@ -159,8 +179,10 @@ export default function GpaCalculatorClient() {
     trackCalculate({
       university_id: university ? university.id : OTHER_UNIVERSITY,
       university_tier: university ? university.tier : "unset",
-      gpa_band: toValueBand(output.result.value, scale.maxValue),
+      metric_id: scale.id,
+      value_band: toValueBand(output.result.value, scale.maxValue),
       course_count: output.result.countedCourses,
+      input_mode: "per-course",
     });
   };
 
@@ -269,6 +291,26 @@ export default function GpaCalculatorClient() {
                   </div>
                 )}
 
+                {scale.usesWeight ? (
+                  <div className="w-28">
+                    <label
+                      htmlFor={`${fieldIdPrefix}-course-${index}-weight`}
+                      className="block text-xs text-text-grey"
+                    >
+                      重率
+                    </label>
+                    <select
+                      id={`${fieldIdPrefix}-course-${index}-weight`}
+                      {...register(`courses.${index}.weight`)}
+                      className="mt-1 w-full border border-border-grey bg-white p-2 text-primary"
+                    >
+                      <option value="1">1</option>
+                      <option value="0.1">0.1</option>
+                      <option value="0">0（対象外）</option>
+                    </select>
+                  </div>
+                ) : null}
+
                 <button
                   type="button"
                   onClick={() => remove(index)}
@@ -289,6 +331,27 @@ export default function GpaCalculatorClient() {
           >
             ＋ 科目を追加
           </button>
+
+          {scale.failExclusionToggle ? (
+            <div className="mt-4 border-l-4 border-primary bg-neutral-light p-3">
+              <label className="flex items-start gap-2 text-sm text-primary">
+                <input
+                  type="checkbox"
+                  checked={excludeFail}
+                  onChange={(e) => setExcludeFail(e.target.checked)}
+                  className="mt-1"
+                />
+                <span>
+                  <span className="font-bold">
+                    不可（{scale.failExclusionToggle.failLabels.join("・")}）の科目を計算から除外する
+                  </span>
+                  <span className="mt-1 block text-xs text-text-grey">
+                    {scale.failExclusionToggle.note}
+                  </span>
+                </span>
+              </label>
+            </div>
+          ) : null}
         </div>
 
         {formError ? (

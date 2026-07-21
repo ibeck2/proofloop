@@ -8,17 +8,26 @@ export default function MetricResultPanel({
   result: MetricResult;
   scale: GradeScale;
 }) {
-  // 満点は方式ごとに異なる（4.0 / 4.3 / 4.5）。比率で判定すると満点4.3の大学で
+  // 満点は方式ごとに異なる（4.0 / 4.3 / 4.5 / 3.0 / 100）。比率で判定すると満点4.3の大学で
   // 発火点が3.225に上がり、従来3.0で表示されていた学生に出なくなる。
-  // 従来どおり絶対値3.0で判定する。
-  const showStudyAbroad = result.value >= 3.0;
+  // 従来どおり絶対値3.0で判定する。方式によっては値によらずCTAを固定する。
+  const policy = scale.ctaPolicy ?? "gpa-threshold";
+  const showStudyAbroad =
+    policy === "always-study-abroad" ||
+    (policy === "gpa-threshold" && result.value >= 3.0);
 
   return (
     <section className="mt-8 border border-primary p-6">
-      <p className="font-display text-sm font-bold text-text-grey">あなたのGPA</p>
+      <p className="font-display text-sm font-bold text-text-grey">
+        あなたの{scale.metricLabel}
+      </p>
       <p className="mt-2 font-display text-5xl font-bold text-primary">
         {result.value.toFixed(2)}
-        <span className="ml-2 text-lg text-text-grey">/ {scale.maxValue.toFixed(1)}</span>
+        {scale.unitSuffix ?? ""}
+        <span className="ml-2 text-lg text-text-grey">
+          / {scale.maxValue.toFixed(scale.maxValue >= 100 ? 0 : 1)}
+          {scale.unitSuffix ?? ""}
+        </span>
       </p>
       <p className="mt-2 text-sm text-text-grey">
         算入科目：{result.countedCourses}科目／合計 {result.totalCredits} 単位
