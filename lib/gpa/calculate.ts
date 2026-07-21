@@ -11,9 +11,17 @@ export type CalculateOutput =
   | { ok: true; result: GpaResult }
   | { ok: false; reason: CalculateErrorReason; courseId?: string };
 
-/** 小数第2位まで四捨五入する */
+/**
+ * 小数第2位まで四捨五入する。
+ *
+ * 単純な `Math.round(value * 100) / 100` は使えない。GPと単位数はいずれも整数なので
+ * 商は 23/40 = 0.575 のような「ちょうど .xx5」の値になりうるが、この値は二進浮動小数点で
+ * 正確に表現できず、100倍した時点で 57.499... となって切り下がってしまう
+ * （0.575 が 0.58 ではなく 0.57 になる）。単位数40は1学期で普通に到達する値であり、
+ * 机上の極端な例ではない。EPSILON を加えてから丸めることでこのずれを打ち消す。
+ */
 function roundTo2(value: number): number {
-  return Math.round(value * 100) / 100;
+  return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
 /**

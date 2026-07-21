@@ -75,6 +75,25 @@ describe("calculateGpa", () => {
     expect(out.result.gpa).toBe(2.67);
   });
 
+  it("ちょうど .xx5 の値を切り上げる（浮動小数点誤差で切り下げない）", () => {
+    // GPと単位数はいずれも整数なので、商が 23/40 = 0.575 のような
+    // 「ちょうど .xx5」になる組み合わせは現実に発生する。
+    // 単純な Math.round(x * 100) / 100 だとここが 0.57 に落ちる。
+    // 優(3)×7単位 = 21、可(1)×2単位 = 2、不可(0)×31単位 = 0 → 合計23 / 40単位 = 0.575
+    const out = calculateGpa({
+      scale: gradeScale,
+      courses: [
+        { id: "1", name: "A", credits: 7, grade: "優" },
+        { id: "2", name: "B", credits: 2, grade: "可" },
+        { id: "3", name: "C", credits: 31, grade: "不可" },
+      ],
+    });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.result.totalCredits).toBe(40);
+    expect(out.result.gpa).toBe(0.58);
+  });
+
   it("素点換算方式では scoreToPoint の結果を使う", () => {
     // 85点 → floor(35/10) = 3 、65点 → floor(15/10) = 1
     // (3*2 + 1*2) / 4 = 2
@@ -135,6 +154,7 @@ describe("toGpaBand", () => {
     expect(toGpaBand(2.0)).toBe("2.0-2.5");
     expect(toGpaBand(2.49)).toBe("2.0-2.5");
     expect(toGpaBand(2.5)).toBe("2.5-3.0");
+    expect(toGpaBand(2.99)).toBe("2.5-3.0");
     expect(toGpaBand(3.0)).toBe("3.0-3.5");
     expect(toGpaBand(3.49)).toBe("3.0-3.5");
     expect(toGpaBand(3.5)).toBe("3.5~");
