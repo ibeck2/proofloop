@@ -334,7 +334,10 @@ export default function GpaCalculatorClient() {
 }
 
 function GpaResultPanel({ result, maxValue }: { result: MetricResult; maxValue: number }) {
-  const band = toValueBand(result.value, maxValue);
+  // 満点は方式ごとに異なる（4.0 / 4.3 / 4.5）。比率で判定すると満点4.3の大学で
+  // 発火点が3.225に上がり、従来3.0で表示されていた学生に出なくなる。
+  // 従来どおり絶対値3.0で判定する。
+  const showStudyAbroad = result.value >= 3.0;
 
   return (
     <section className="mt-8 border border-primary p-6">
@@ -349,7 +352,7 @@ function GpaResultPanel({ result, maxValue }: { result: MetricResult; maxValue: 
 
       {/* GPA帯に応じた次アクション。就活系の導線は置かない */}
       <div className="mt-6 border-t border-border-grey pt-6">
-        {band === "75-87%" || band === "87-100%" ? (
+        {showStudyAbroad ? (
           <div>
             <p className="font-display text-base font-bold text-primary">
               交換留学の出願要件を満たしている可能性があります
