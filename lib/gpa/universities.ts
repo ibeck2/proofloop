@@ -9,6 +9,47 @@ import type { GradeScale, University } from "./types";
  */
 export const UNIVERSITY_SCALES: GradeScale[] = [
   {
+    // 出典：東京大学教養学部前期課程「進学選択に用いられる評点」
+    // https://www.c.u-tokyo.ac.jp/zenki/news/kyoumu/heikinten.pdf（2026-07-21）
+    // 計算例：https://zenkyomu.c.u-tokyo.ac.jp/sentaku/heikinten-sample.pdf（2026-07-21）
+    id: "u-tokyo-basic-average-scale",
+    label: "東京大学の基本平均点（評点をそのまま加重平均）",
+    method: "raw",
+    maxValue: 100,
+    metricLabel: "基本平均点",
+    unitSuffix: "点",
+    usesWeight: true,
+    ctaPolicy: "always-credits",
+    note: "教養学部前期課程の進学選択（2年次の学部振り分け）専用の指標で、2S2ターム・2Sセメスターまでに履修した単位数と成績から算出します。重率は科目ごとに1・0.1・0のいずれかを選びます。重率1は科類ごとに定められた必修・準必修科目群（外国語・情報・身体運動健康科学実習・初年次ゼミナール・社会科学（文科）または自然科学（理科）・人文科学（文科のみ）・総合科目の指定単位）に、重率0.1はそれ以外で単位取得した基礎科目や指定単位数を超えて追加履修した展開科目・総合科目に適用されます（科類ごとの指定単位数の詳細はこの方式では扱いません）。重率0は公式の計算例に存在しますが、本文中に明文の規定がなく適用条件は未確認です。進学選択の必修枠の単位を取得していない場合、その枠は評点0・重率1として計算に算入され、平均点を押し下げます。一部の進学単位で使われる「指定平均点」（本方式とは別の基準）には対応していません。満点は出典の算出式から数学的に導いた値で、満点を明示した文言は出典にありません。",
+  },
+  {
+    // 出典：東京大学「成績評価係数計算表」
+    // https://www.u-tokyo.ac.jp/content/400125968.xls（2026-07-21）
+    // 対象範囲の補足：https://www.u-tokyo.ac.jp/adm/go-global/ja/application-tips-USTEP_FAQ（2026-07-21）
+    id: "u-tokyo-grade-coefficient-scale",
+    label: "東京大学の成績評価係数（4段階）",
+    method: "grade",
+    grades: [
+      { label: "優", point: 3 },
+      { label: "良", point: 2 },
+      { label: "可", point: 1 },
+      { label: "不可", point: 0 },
+      { label: "A", point: 3 },
+      { label: "B", point: 3 },
+      { label: "C", point: 2 },
+      { label: "D", point: 1 },
+      { label: "F", point: 0 },
+    ],
+    maxValue: 3,
+    metricLabel: "成績評価係数",
+    ctaPolicy: "always-study-abroad",
+    failExclusionToggle: {
+      failLabels: ["不可", "F"],
+      note: "不可・Fの扱いは東京大学の公式資料内でも記載が矛盾しています（参考計算式は「総登録単位数」で除すとしており分母に含めて読めますが、記入例シートの手順説明は「不可やFは単位数に含めません」と明言しています）。提出先（奨学金・交換留学の申請窓口）にどちらの扱いか必ず確認してください。",
+    },
+    note: "大学学部1年次から応募時までの全学期の成績が対象で、大学院生は学部と大学院の成績を通算して算出します（学部／修士／博士それぞれと通算の4系統）。合格・不合格の2段階評価科目、成績証明書に記載のない単位、学位を取得しないプログラムの単位は計算に含めません。5段階評価（A・B・C・D・F）ではA・Bがともに評価ポイント3となり、上位2段が同じ扱いになります。満点は出典の対応表・算出式から数学的に導いた値で、満点を明示した文言は出典にありません。",
+  },
+  {
     // 出典：京都大学「成績評価・GPA」https://www.kyoto-u.ac.jp/ja/education-campus/curriculum/grading-gpa（2026-07-21）
     id: "kyoto-university-scale",
     label: "京都大学の評語方式（A+〜F）",
@@ -226,12 +267,34 @@ export const ALL_SCALES: GradeScale[] = [...UNIVERSITY_SCALES, ...GENERIC_SCALES
  * sourceUrl / verifiedAt が空の大学をここに入れてはならない。
  *
  * 東京大学：全学統一のGPA（GP換算）制度を公式には持たないことが確認されたため、
- * マスタに登録しない（docs/seo/gpa-university-scales.md 参照）。
+ * 「東京大学」という単一エントリはマスタに登録しない（docs/seo/gpa-university-scales.md 参照）。
+ * 代わりに、公式に存在する2つの別指標（進学選択用の基本平均点、奨学金・交換留学選考用の
+ * 成績評価係数）を、大阪大学の年度分割と同様に別々のエントリとして登録している。
  *
  * 大阪大学：入学年度（令和7年度以前／令和8年度以降）でGP対応表が異なり、
  * 学生は自分の入学年度でどちらが適用されるか判別できるため、2エントリに分割している。
  */
 export const UNIVERSITIES: University[] = [
+  {
+    id: "u-tokyo-basic-average",
+    name: "東京大学（基本平均点・進学選択用）",
+    shortName: "東大（基本平均点）",
+    tier: "top",
+    scaleId: "u-tokyo-basic-average-scale",
+    sourceUrl: "https://www.c.u-tokyo.ac.jp/zenki/news/kyoumu/heikinten.pdf",
+    verifiedAt: "2026-07-21",
+    note: "進学選択（2年次の学部振り分け）の判定に使われる指標です。奨学金や交換留学の学内選考には使われません（それらには「成績評価係数」をご利用ください）。計算例の出典：https://zenkyomu.c.u-tokyo.ac.jp/sentaku/heikinten-sample.pdf",
+  },
+  {
+    id: "u-tokyo-grade-coefficient",
+    name: "東京大学（成績評価係数・奨学金／交換留学用）",
+    shortName: "東大（成績評価係数）",
+    tier: "top",
+    scaleId: "u-tokyo-grade-coefficient-scale",
+    sourceUrl: "https://www.u-tokyo.ac.jp/content/400125968.xls",
+    verifiedAt: "2026-07-21",
+    note: "奨学金や交換留学（USTEP等）の学内選考で使われる指標です。進学選択には使われません（それには「基本平均点」をご利用ください）。不可・F科目の扱いは出典資料内で記載が矛盾しているため、方式の注記を必ずご確認ください。対象範囲の補足出典：https://www.u-tokyo.ac.jp/adm/go-global/ja/application-tips-USTEP_FAQ",
+  },
   {
     id: "kyoto-university",
     name: "京都大学",
