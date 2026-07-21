@@ -165,6 +165,16 @@ export default function GpaCalculatorClient() {
         ? courses.filter((c) => !(c.grade && failLabels.includes(c.grade)))
         : courses;
 
+    // 不可除外のチェックで全科目が消えた場合。calculateMetric は "no_courses" を返すが、
+    // 「科目を1つ以上入力してください」では、実際に入力した学生に原因が伝わらない。
+    if (excludeFail && courses.length > 0 && targetCourses.length === 0) {
+      setResult(null);
+      setFormError(
+        "不可の科目を除外した結果、計算対象の科目がなくなりました。チェックを外すか、他の科目を入力してください。"
+      );
+      return;
+    }
+
     const output = calculateMetric({ courses: targetCourses, scale });
 
     if (!output.ok) {

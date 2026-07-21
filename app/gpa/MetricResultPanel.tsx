@@ -33,7 +33,7 @@ export default function MetricResultPanel({
         算入科目：{result.countedCourses}科目／合計 {result.totalCredits} 単位
       </p>
 
-      {/* GPA帯に応じた次アクション。就活系の導線は置かない */}
+      {/* 方式の ctaPolicy に応じた次アクション。就活系の導線は置かない */}
       <div className="mt-6 border-t border-border-grey pt-6">
         {showStudyAbroad ? (
           <div>
