@@ -15,6 +15,21 @@ const testScoreScale: GradeScale = {
   maxGpa: 4,
 };
 
+/** 小数GPを持つテスト専用スケール（実在の大学の方式ではない） */
+const testDecimalScale: GradeScale = {
+  id: "test-decimal",
+  label: "テスト用（小数GP）",
+  method: "grade",
+  grades: [
+    { label: "A+", point: 4.3 },
+    { label: "A", point: 4.0 },
+    { label: "B-", point: 2.7 },
+    { label: "D", point: 1.0 },
+    { label: "D-", point: 0.7 },
+  ],
+  maxGpa: 4.3,
+};
+
 describe("calculateGpa", () => {
   it("単位数が同じ複数科目の平均を返す", () => {
     const out = calculateGpa({
@@ -145,6 +160,54 @@ describe("calculateGpa", () => {
       courses: [{ id: "c2", name: "A", credits: 2, score: 120 }],
     });
     expect(out).toEqual({ ok: false, reason: "invalid_score", courseId: "c2" });
+  });
+
+  it("1.0以上の .xx5 ちょうどのタイも正しく切り上げる（EPSILONは2以上で無効化されるため）", () => {
+    // A+(4.3) + B-(2.7) + D(1.0) + D-(0.7) = 8.7 / 4単位 = 2.175 → 2.18
+    const out = calculateGpa({
+      scale: testDecimalScale,
+      courses: [
+        { id: "1", name: "A", credits: 1, grade: "A+" },
+        { id: "2", name: "B", credits: 1, grade: "B-" },
+        { id: "3", name: "C", credits: 1, grade: "D" },
+        { id: "4", name: "D", credits: 1, grade: "D-" },
+      ],
+    });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.result.gpa).toBe(2.18);
+  });
+
+  it("4点台の .xx5 ちょうどのタイも正しく切り上げる", () => {
+    // A+(4.3) + A+(4.3) + A+(4.3) + A(4.0) = 16.9 / 4単位 = 4.225 → 4.23
+    const out = calculateGpa({
+      scale: testDecimalScale,
+      courses: [
+        { id: "1", name: "A", credits: 1, grade: "A+" },
+        { id: "2", name: "B", credits: 1, grade: "A+" },
+        { id: "3", name: "C", credits: 1, grade: "A+" },
+        { id: "4", name: "D", credits: 1, grade: "A" },
+      ],
+    });
+    expect(out.ok).toBe(true);
+    if (!out.ok) return;
+    expect(out.result.gpa).toBe(4.23);
+  });
+
+  it("単位数がNaNならinvalid_creditsを返す（空欄入力が0単位として黙って計算されるのを防ぐ）", () => {
+    const out = calculateGpa({
+      scale: gradeScale,
+      courses: [{ id: "c10", name: "A", credits: NaN, grade: "優" }],
+    });
+    expect(out).toEqual({ ok: false, reason: "invalid_credits", courseId: "c10" });
+  });
+
+  it("素点がNaNならinvalid_scoreを返す（空欄入力が0点として黙って計算されるのを防ぐ）", () => {
+    const out = calculateGpa({
+      scale: testScoreScale,
+      courses: [{ id: "c11", name: "A", credits: 2, score: NaN }],
+    });
+    expect(out).toEqual({ ok: false, reason: "invalid_score", courseId: "c11" });
   });
 
   it("出典の対応表が定義していない素点帯（大阪大学・令和7年度以前）はinvalid_scoreを返し、値を捏造しない", () => {

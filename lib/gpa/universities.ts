@@ -185,10 +185,9 @@ export const UNIVERSITY_SCALES: GradeScale[] = [
       { label: "C", point: 2.0 },
       { label: "D", point: 1.0 },
       { label: "F", point: 0.0 },
-      { label: "X", point: 0.0 },
     ],
     maxGpa: 4.0,
-    note: "QPI（Quality Point Index）と呼ばれる方式です。出典の対応表はF・XをともにQPI0としています。分母（履修登録科目の総単位数）から除外されるのはW・N・P・Xのみで、F（不可）は算入されます。A評価の付与は2割以内が目安（最大3割）とされています。",
+    note: "QPI（Quality Point Index）と呼ばれる方式です。W・N・P・Xの科目は出典により分母（履修登録科目の総単位数）から除外されるため、この計算機では入力しないでください。F（不可）は算入されます。A評価の付与は2割以内が目安（最大3割）とされています。",
   },
   {
     // 出典：ICU公式サイト「成績評価」https://www.icu.ac.jp/academics/undergraduate/evaluation/（2026-07-21）

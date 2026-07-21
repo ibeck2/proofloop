@@ -90,7 +90,7 @@ export default function GpaPage() {
   };
 
   return (
-    <div className="bg-white text-primary min-h-screen font-body pb-20 md:pb-0">
+    <div className="bg-white text-primary min-h-screen font-body">
       <main className="mx-auto w-full max-w-3xl px-6 py-12 md:py-20">
         <script
           type="application/ld+json"

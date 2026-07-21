@@ -31,6 +31,12 @@ type FormValues = {
 
 const EMPTY_COURSE: CourseField = { name: "", credits: "", grade: "", score: "" };
 
+/** 空文字を 0 ではなく NaN にする。Number("") === 0 のため、
+ *  素点や単位数の入力漏れが「0点」「0単位」として黙って計算に入ってしまう。 */
+function toNumber(value: string): number {
+  return value.trim() === "" ? NaN : Number(value);
+}
+
 function trackCalculate(params: {
   university_id: string;
   university_tier: string;
@@ -133,9 +139,9 @@ export default function GpaCalculatorClient() {
       .map((c, index) => ({
         id: String(index),
         name: c.name,
-        credits: Number(c.credits),
+        credits: toNumber(c.credits),
         grade: scale.method === "grade" ? c.grade : undefined,
-        score: scale.method === "score" ? Number(c.score) : undefined,
+        score: scale.method === "score" ? toNumber(c.score) : undefined,
       }));
 
     const output = calculateGpa({ courses, scale });
@@ -318,7 +324,11 @@ export default function GpaCalculatorClient() {
       </form>
 
       {/* ── 結果 ───────────────────────── */}
-      {result ? <GpaResultPanel result={result} maxGpa={scale.maxGpa} /> : null}
+      {/* aria-live は内容より先にDOMへ存在している必要があるため、
+          パネルの有無にかかわらずラッパを常設し、中身だけ差し替える。 */}
+      <div aria-live="polite">
+        {result ? <GpaResultPanel result={result} maxGpa={scale.maxGpa} /> : null}
+      </div>
     </div>
   );
 }
@@ -327,7 +337,7 @@ function GpaResultPanel({ result, maxGpa }: { result: GpaResult; maxGpa: number 
   const band = toGpaBand(result.gpa);
 
   return (
-    <section aria-live="polite" className="mt-8 border border-primary p-6">
+    <section className="mt-8 border border-primary p-6">
       <p className="font-display text-sm font-bold text-text-grey">あなたのGPA</p>
       <p className="mt-2 font-display text-5xl font-bold text-primary">
         {result.gpa.toFixed(2)}
