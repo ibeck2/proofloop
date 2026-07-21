@@ -443,6 +443,18 @@ export default function CreditsGuidePage() {
               </ul>
             </div>
           </div>
+
+          <div className="mt-6 border-l-4 border-primary bg-neutral-light p-4">
+            <p className="font-display text-base font-bold text-primary">
+              自分のGPAを計算してみる
+            </p>
+            <p className="mt-2 text-sm text-text-grey">
+              大学ごとに異なる換算方式に対応したGPA計算機を用意しています。出典つきで正確に計算できます。
+            </p>
+            <Link href="/gpa" className="mt-3 inline-block text-sm font-bold text-accent underline">
+              GPA計算機を使う
+            </Link>
+          </div>
         </section>
 
         {/* §4 落としたら */}
