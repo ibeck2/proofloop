@@ -60,8 +60,13 @@ function trackCalculate(params: {
 /** calculateMetric のエラーを、画面に出す日本語メッセージへ変換する */
 function errorMessage(
   output: Extract<CalculateOutput, { ok: false }>,
-  courses: Course[]
+  courses: Course[],
+  scale: GradeScale
 ): string {
+  // raw方式（東大の基本平均点）は入力欄のラベルも「評点」なので、
+  // エラー文でも同じ語を使う。画面のラベルと違う語で叱ると、学生は
+  // どの欄を直せばよいのか分からなくなる。
+  const scoreTerm = scale.method === "raw" ? "評点" : "素点";
   switch (output.reason) {
     case "no_courses":
       return "科目を1つ以上入力してください。";
@@ -86,7 +91,7 @@ function errorMessage(
       ) {
         return "入力された点数は、選択した大学の公式資料にGPの定義がないため計算できません。上の換算方式の注記をご確認ください。";
       }
-      return "素点は0〜100の範囲で入力してください。";
+      return `${scoreTerm}は0〜100の範囲で入力してください。`;
     }
     case "invalid_weight":
       return "重率は 1・0.1・0 のいずれかを選んでください。";
@@ -185,7 +190,7 @@ export default function GpaCalculatorClient() {
 
     if (!output.ok) {
       setResult(null);
-      setFormError(errorMessage(output, targetCourses));
+      setFormError(errorMessage(output, targetCourses, scale));
       return;
     }
 
