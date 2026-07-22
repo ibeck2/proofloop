@@ -60,11 +60,15 @@
 
 詳細と確認手順は **`docs/accounts-inventory.md`** を参照。
 
-- [ ] **各サービスの所有アカウントを確定させる**
-  - GA4（測定ID `G-6DW8LF5H7Q`）／Search Console／Vercel／Resend／さくらインターネット／バリューコマース
-  - `docs/accounts-inventory.md` の §3 に、サービスごとの確認手順（各5分程度）を書いてあります。
-  - 判明したら同ファイル §4 の表を埋めてください。次回以降 Claude も参照できます。
-  - 候補の優先順：`ibeckzoom@gmail.com`（git/GitHubの識別子）→ `contact@ibeck.co.jp` → `takenaka01@ibeck.co.jp`
+- [x] **各サービスの所有アカウントを確定させる**（部分完了 2026-07-22）
+  - 判明：**GA4 = `contact@proofloop.jp`** ／ **Resend = `ibeckzoom@gmail.com`** ／ **バリューコマース = `ibeckzoom@gmail.com`**
+  - 残り未確認：**Search Console**（GA4と同じ `contact@proofloop.jp` の可能性が高い）／**Vercel**／**さくらインターネット**
+  - 確認手順は `docs/accounts-inventory.md` §3。
+
+- [ ] **バリューコマースのURL変更の審査結果を確認する**
+  - 旧URL（`*.vercel.app`）で登録されていたため、`proofloop.jp` へのURL変更を申請中。**後日審査結果が出ます。**
+  - **承認が下りたら Claude に伝えてください。** アルバイトEX／クラウドワークスの広告リンク実装に着手します（承認前に実装すると計測されない、または規約違反の恐れがあるため待ちます）。
+  - 実装時に必要なもの：管理画面から取得したトラッキングパラメータ付きの広告リンク
 
 - [ ] **Resend の独自ドメイン認証をする**
   - 現在、承認メール・招待メールの送信元が **`onboarding@resend.dev`**（Resendのテスト用共有アドレス）のままです。
