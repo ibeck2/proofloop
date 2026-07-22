@@ -12,15 +12,18 @@
 
 ## 0. まず結論
 
-コードとgit履歴から見えるアカウント識別子は **3つ**あり、混在しています。
+アカウント識別子は **4つ**あり、混在しています。
 
-| 識別子 | 何に使われているか | 根拠 |
+| 識別子 | 担当しているサービス | 状態 |
 | --- | --- | --- |
-| **ibeck2 / ibeckzoom@gmail.com** | GitHub、Supabase、おそらく Google 系（GA4・GSC）と Vercel | git の全78コミットがこの author。GitHubリポジトリ名も `ibeck2/proofloop`。Supabase の組織名が `ibeck2's Org` |
-| **contact@ibeck.co.jp** | Claude Code（このセッション）。Supabase MCP もこの接続経由で到達 | セッションのユーザーアカウント |
-| **takenaka01@ibeck.co.jp**（CEO） | Ahrefs のワークスペース所有者 | `docs`/過去の会議メモ。2026-07-16時点の記録 |
+| **ibeckzoom@gmail.com**（ibeck2） | GitHub、**Resend**、**バリューコマース**、Supabase（推定） | オーナー確認済み |
+| **contact@proofloop.jp** | **GA4**（Search Console も同一の可能性が非常に高い） | オーナー確認済み |
+| **contact@ibeck.co.jp** | Claude Code（このセッション）。Supabase MCP もこの接続経由 | — |
+| **takenaka01@ibeck.co.jp**（CEO） | Ahrefs のワークスペース所有者 | 2026-07-16 時点の記録 |
 
-**Google系（GA4・GSC）は `ibeckzoom@gmail.com` の可能性が最も高い**ですが、**確証はありません**（後述の確認方法で5分で確定できます）。
+**未確認：Vercel／さくらインターネット（ドメイン）／Search Console**（GSCはGA4と同じ `contact@proofloop.jp` の可能性が高い。§4参照）
+
+> **注記**：当初 Claude は git 履歴から「Google系も `ibeckzoom@gmail.com` だろう」と推定しましたが、**実際は GA4 が `contact@proofloop.jp` で外れていました。** git の author や GitHub のユーザー名は、SaaS の所有アカウントの根拠にはなりません。以降も同じ推定はしないでください。
 
 ---
 
@@ -41,7 +44,7 @@
 - **Claude の Supabase MCP から参照できる**＝現在 Claude に接続済みのアカウントで管理できる状態です。
 - 同じ組織配下に ProofLoop 以外のプロジェクトが7つあります（`ibeck-mentor-prod` / `aimentordirect` / `glow` / `alternative-study-school-db` / `aio-engine` / `native-shift` / `assessos`）。**課金は組織単位なので、ProofLoop の Supabase 費用は他プロジェクトと合算されています。**
 
-### GA4 ✅ IDは確定・アカウントは未確定
+### GA4 ✅ 確定（contact@proofloop.jp）
 
 | 項目 | 値 |
 | --- | --- |
@@ -52,7 +55,7 @@
 - 本番 `https://proofloop.jp` のHTMLから取得（`googletagmanager.com/gtag/js?id=G-6DW8LF5H7Q`）。
 - **ローカル開発では GA4 が動きません**（`.env.local` に `NEXT_PUBLIC_GA_ID` がないため）。これは意図した挙動として妥当です（開発時のアクセスが計測に混ざらない）。
 
-### Google Search Console ✅ 認証済み・アカウントは未確定
+### Google Search Console ⚠️ 認証済み・アカウントは未確定（contact@proofloop.jp の可能性が高い）
 
 | 項目 | 値 |
 | --- | --- |
@@ -140,7 +143,7 @@ CLAUDE.md には以下の記載があります。
 3. 見つかったら、そのアカウントがアクセス権を持っています
 4. **所有者を確定するには**：管理 → プロパティ → 「プロパティのアクセス管理」を開く。**「管理者」権限のユーザー一覧＝実質の所有者**です
 
-> 候補の優先順：`ibeckzoom@gmail.com` → `contact@ibeck.co.jp` → `takenaka01@ibeck.co.jp`
+> 確認済み：**`contact@proofloop.jp`**（2026-07-22、Claudeが実際にログインして測定IDを照合）。
 
 ### Google Search Console
 
