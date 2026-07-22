@@ -179,7 +179,7 @@ CLAUDE.md には以下の記載があります。
 | GitHub | **ibeck2 / ibeckzoom@gmail.com** | 2026-07-22 | git履歴から確定 |
 | Supabase | （ibeck2's Org） | 2026-07-22 | 組織名から推定。ログイン用メールは要確認 |
 | **GA4** | **contact@proofloop.jp** | **2026-07-22** | 測定ID `G-6DW8LF5H7Q`。オーナー本人が確認 |
-| Search Console | 未確認 | | メタタグ認証、2026-03-31追加。**GA4がcontact@proofloop.jpだったため、GSCも同アカウントの可能性が高い** |
+| Search Console | 未確認（`contact@proofloop.jp` の可能性が非常に高い） | | メタタグ認証、2026-03-31追加。**GA4プロパティに Search Console 連携が設定済み**であることを確認（GA4左メニューに「Search Console」セクションが存在）。連携には両方の管理権限が必要なため、同一アカウントの可能性が高い |
 | Vercel | 未確認 | | プロジェクト2つ（要整理） |
 | **Resend** | **ibeckzoom@gmail.com** | **2026-07-22** | 送信元が resend.dev のまま（要対応） |
 | さくらインターネット | 未確認 | | proofloop.jp のDNS。更新期限も要確認 |
@@ -209,3 +209,39 @@ CLAUDE.md には以下の記載があります。
 2. **アフィリエイトが未実装** … CLAUDE.md の記述と実態が乖離。収益導線がゼロの状態。
 3. **Vercel プロジェクトが2つ** … 片方は全ビルド失敗中。命名も逆転しており整理が必要。
 4. **ドメインの更新期限が未把握** … 失効するとサイトが落ちます。
+
+---
+
+## 6. GA4 の設定内容（2026-07-22 時点）
+
+| 項目 | 値 |
+| --- | --- |
+| アカウントID | `398322026` |
+| プロパティID | `542031657`（プロパティ名：ProofLoop） |
+| ウェブストリーム | `ProofLoop Web` / `https://proofloop.jp` |
+| ストリームID | `15100820953` |
+| 測定ID | `G-6DW8LF5H7Q` |
+| ログインアカウント | `contact@proofloop.jp`（表示名：loop Proof） |
+| Search Console 連携 | **設定済み**（GA4左メニューに Search Console セクションあり） |
+
+### 登録済みカスタムディメンション
+
+| ディメンション名 | スコープ | イベントパラメータ | 登録日 |
+| --- | --- | --- | --- |
+| `metric_id` | イベント | `metric_id` | 2026-07-22 |
+| `input_mode` | イベント | `input_mode` | 2026-07-22 |
+
+未登録：`value_band`（必要になったら追加。上限50個に対し現在2個）
+
+### `gpa_calculate` イベントが送る値
+
+`app/gpa/GpaCalculatorClient.tsx` の `trackCalculate` から送信。**成績・評点・素点・科目名は一切送りません。**
+
+| パラメータ | 内容 |
+| --- | --- |
+| `university_id` | 選択された大学のID（`u-tokyo-basic-average` など） |
+| `university_tier` | `top`（調査対象の上位校）/ `other` / `unset` |
+| `metric_id` | 換算方式のID（指標の種類を識別） |
+| `value_band` | 満点に対する比率の帯（`0-50%` 〜 `87-100%`） |
+| `course_count` | 分母に寄与した科目数 |
+| `input_mode` | `per-course` / `by-grade` |
