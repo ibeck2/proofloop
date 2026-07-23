@@ -3,6 +3,22 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import {
+  LayoutDashboard,
+  Bookmark,
+  CalendarDays,
+  CalendarCheck,
+  Clock,
+  MapPin,
+  Video,
+  ChevronRight,
+  Plus,
+  Mail,
+  Users,
+  ClipboardList,
+  MessageCircle,
+  X,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Input, Button } from "@/components/ui";
 import SearchOrgCard from "@/components/SearchOrgCard";
@@ -726,19 +742,19 @@ export default function MypagePage() {
   };
 
   return (
-    <div className="bg-[#f5f5f7] text-slate-900 font-display min-h-screen pb-20 md:pb-8">
+    <div className="bg-mist text-graphite font-body min-h-screen pb-20 md:pb-8">
       <main className="max-w-[640px] mx-auto px-4 py-8 md:py-12">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <h1 className="text-primary text-2xl font-bold">マイページ</h1>
+          <h1 className="text-ink text-2xl font-bold font-mincho">マイページ</h1>
           {managedMemberships.length > 0 ? (
             <div className="flex flex-col gap-2 items-stretch sm:items-end shrink-0">
               {managedMemberships.map((m) => (
                 <Link
                   key={m.membershipId}
                   href={`/clubdashboard?orgId=${encodeURIComponent(m.organizationId)}`}
-                  className="inline-flex items-center justify-center gap-2 bg-primary text-white px-5 py-2.5 font-bold text-sm hover:bg-[#001f45] transition-colors rounded-none border-0"
+                  className="inline-flex items-center justify-center gap-2 bg-ink text-paper px-5 py-2.5 font-bold text-sm hover:bg-ink/90 transition-colors rounded-none border-0"
                 >
-                  <span className="material-symbols-outlined text-lg">dashboard</span>
+                  <LayoutDashboard className="w-[18px] h-[18px]" aria-hidden="true" />
                   {m.organization?.name?.trim() || "団体"}の管理ダッシュボードへ
                 </Link>
               ))}
@@ -747,14 +763,14 @@ export default function MypagePage() {
         </div>
 
         {isLoading ? (
-          <p className="text-text-sub text-sm">読み込み中...</p>
+          <p className="text-graphite/70 text-sm">読み込み中...</p>
         ) : authChecked && !userId ? (
           <div className="min-h-[60vh] flex items-center justify-center">
-            <div className="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-8 text-center">
-              <h2 className="text-primary text-lg font-bold mb-3">
+            <div className="w-full max-w-md bg-paper border border-rule rounded-xl shadow-sm p-8 text-center">
+              <h2 className="text-ink text-lg font-bold font-mincho mb-3">
                 ログインが必要です
               </h2>
-              <p className="text-slate-600 text-sm leading-relaxed">
+              <p className="text-graphite text-sm leading-relaxed">
                 あなたはまだログインしていません。マイページを利用するにはログインまたは新規登録を行ってください。
               </p>
               <div className="mt-6 flex flex-col gap-3">
@@ -773,18 +789,18 @@ export default function MypagePage() {
           </div>
         ) : (
           <>
-            <p className="text-slate-700 text-base mb-8">
-              <span className="font-bold text-primary">{displayNameLabel}</span>
-              <span className="text-slate-600"> さん、こんにちは</span>
+            <p className="text-graphite text-base mb-8">
+              <span className="font-bold text-ink">{displayNameLabel}</span>
+              <span className="text-graphite"> さん、こんにちは</span>
             </p>
 
             {/* プロフィール情報 */}
             <section className="mb-10">
-              <h2 className="text-primary text-lg font-bold mb-4">プロフィール情報</h2>
-              <form onSubmit={handleProfileSave} className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+              <h2 className="text-ink text-lg font-bold font-mincho mb-4">プロフィール情報</h2>
+              <form onSubmit={handleProfileSave} className="bg-paper border border-rule rounded-lg p-6 shadow-sm">
                 <div className="space-y-5">
                   <div>
-                    <label htmlFor="profile-email" className="block text-slate-700 font-bold text-sm mb-2">
+                    <label htmlFor="profile-email" className="block text-graphite font-bold text-sm mb-2">
                       メールアドレス
                     </label>
                     <Input
@@ -793,12 +809,12 @@ export default function MypagePage() {
                       value={userEmail}
                       readOnly
                       disabled
-                      className="w-full bg-slate-50 text-slate-600 cursor-not-allowed"
+                      className="w-full bg-mist text-graphite cursor-not-allowed"
                     />
-                    <p className="text-slate-500 text-xs mt-1">Supabase Authで登録したメールアドレスです</p>
+                    <p className="text-graphite/70 text-xs mt-1">Supabase Authで登録したメールアドレスです</p>
                   </div>
                   <div>
-                    <label htmlFor="profile-full-name" className="block text-slate-700 font-bold text-sm mb-2">
+                    <label htmlFor="profile-full-name" className="block text-graphite font-bold text-sm mb-2">
                       氏名
                     </label>
                     <Input
@@ -811,7 +827,7 @@ export default function MypagePage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="profile-contact-email" className="block text-slate-700 font-bold text-sm mb-2">
+                    <label htmlFor="profile-contact-email" className="block text-graphite font-bold text-sm mb-2">
                       連絡用メールアドレス
                     </label>
                     <Input
@@ -824,7 +840,7 @@ export default function MypagePage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="profile-university" className="block text-slate-700 font-bold text-sm mb-2">
+                    <label htmlFor="profile-university" className="block text-graphite font-bold text-sm mb-2">
                       大学名
                     </label>
                     <select
@@ -835,7 +851,7 @@ export default function MypagePage() {
                         setUniversity(v);
                         if (v !== UNIVERSITY_OTHER) setUniversityOther("");
                       }}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
+                      className="w-full border border-rule rounded px-3 py-2 text-graphite focus:ring-1 focus:ring-ink focus:border-ink"
                     >
                       <option value="">選択してください</option>
                       {UNIVERSITY_OPTIONS.map((u) => (
@@ -856,7 +872,7 @@ export default function MypagePage() {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="profile-faculty" className="block text-slate-700 font-bold text-sm mb-2">
+                    <label htmlFor="profile-faculty" className="block text-graphite font-bold text-sm mb-2">
                       学部・学科
                     </label>
                     <Input
@@ -869,14 +885,14 @@ export default function MypagePage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="profile-enrollment-year" className="block text-slate-700 font-bold text-sm mb-2">
+                    <label htmlFor="profile-enrollment-year" className="block text-graphite font-bold text-sm mb-2">
                       入学年度
                     </label>
                     <select
                       id="profile-enrollment-year"
                       value={admissionYear}
                       onChange={(e) => setAdmissionYear(e.target.value)}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
+                      className="w-full border border-rule rounded px-3 py-2 text-graphite focus:ring-1 focus:ring-ink focus:border-ink"
                     >
                       {ADMISSION_YEAR_OPTIONS.map((opt) => (
                         <option key={opt.value || "blank"} value={opt.value}>
@@ -886,14 +902,14 @@ export default function MypagePage() {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="profile-graduation-year" className="block text-slate-700 font-bold text-sm mb-2">
+                    <label htmlFor="profile-graduation-year" className="block text-graphite font-bold text-sm mb-2">
                       卒業予定年度
                     </label>
                     <select
                       id="profile-graduation-year"
                       value={graduationYear}
                       onChange={(e) => setGraduationYear(e.target.value)}
-                      className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
+                      className="w-full border border-rule rounded px-3 py-2 text-graphite focus:ring-1 focus:ring-ink focus:border-ink"
                     >
                       {GRADUATION_YEAR_OPTIONS.map((opt) => (
                         <option key={opt.value || "blank"} value={opt.value}>
@@ -916,22 +932,22 @@ export default function MypagePage() {
 
             {/* お気に入り・保存リスト */}
             <section className="mb-10">
-              <h2 className="text-primary text-lg font-bold mb-4">保存した情報</h2>
+              <h2 className="text-ink text-lg font-bold font-mincho mb-4">保存した情報</h2>
               <div className="grid gap-6 sm:grid-cols-1">
-                <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-slate-800 font-bold text-base mb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-[22px]">bookmark</span>
+                <div className="bg-paper border border-rule rounded-lg p-6 shadow-sm">
+                  <h3 className="text-graphite font-bold text-base mb-3 flex items-center gap-2">
+                    <Bookmark className="w-[22px] h-[22px] text-ink" aria-hidden="true" />
                     お気に入り団体
                   </h3>
                   {savedOrgsLoading ? (
-                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
-                      <p className="text-text-sub text-sm">読み込み中...</p>
+                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-mist/80 border border-dashed border-rule">
+                      <p className="text-graphite/70 text-sm">読み込み中...</p>
                     </div>
                   ) : savedOrgs.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
-                      <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">bookmark_border</span>
-                      <p className="text-text-sub text-sm text-center">※お気に入り登録した団体はまだありません</p>
-                      <p className="text-slate-400 text-xs mt-1">団体詳細ページからお気に入り登録できます</p>
+                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-mist/80 border border-dashed border-rule">
+                      <Bookmark className="w-9 h-9 text-graphite/40 mb-2" aria-hidden="true" />
+                      <p className="text-graphite/70 text-sm text-center">※お気に入り登録した団体はまだありません</p>
+                      <p className="text-graphite/70 text-xs mt-1">団体詳細ページからお気に入り登録できます</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -959,20 +975,20 @@ export default function MypagePage() {
                     </div>
                   )}
                 </div>
-                <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
-                  <h3 className="text-slate-800 font-bold text-base mb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-[22px]">event</span>
+                <div className="bg-paper border border-rule rounded-lg p-6 shadow-sm">
+                  <h3 className="text-graphite font-bold text-base mb-3 flex items-center gap-2">
+                    <CalendarDays className="w-[22px] h-[22px] text-ink" aria-hidden="true" />
                     保存したイベント
                   </h3>
                   {savedEventsLoading ? (
-                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
-                      <p className="text-text-sub text-sm">読み込み中...</p>
+                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-mist/80 border border-dashed border-rule">
+                      <p className="text-graphite/70 text-sm">読み込み中...</p>
                     </div>
                   ) : savedEvents.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
-                      <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">event_available</span>
-                      <p className="text-text-sub text-sm text-center">※保存したイベントはまだありません</p>
-                      <p className="text-slate-400 text-xs mt-1">イベント一覧から保存できます</p>
+                    <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-mist/80 border border-dashed border-rule">
+                      <CalendarCheck className="w-9 h-9 text-graphite/40 mb-2" aria-hidden="true" />
+                      <p className="text-graphite/70 text-sm text-center">※保存したイベントはまだありません</p>
+                      <p className="text-graphite/70 text-xs mt-1">イベント一覧から保存できます</p>
                     </div>
                   ) : (
                     <ul className="space-y-4">
@@ -980,32 +996,34 @@ export default function MypagePage() {
                         <li key={ev.id}>
                           <Link
                             href={`/events/${ev.id}`}
-                            className="block bg-slate-50/50 border border-slate-200 rounded-lg p-5 hover:border-primary/30 hover:bg-primary/5 transition-colors"
+                            className="block bg-mist/50 border border-rule rounded-lg p-5 hover:border-ink/30 hover:bg-mist transition-colors"
                           >
-                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <span className="text-xs font-bold text-graphite/70 uppercase tracking-wider">
                               {ev.organizations?.name ?? "団体"}
                             </span>
-                            <h4 className="text-primary font-bold text-base mt-1">{ev.title ?? "（タイトルなし）"}</h4>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600 mt-2">
+                            <h4 className="text-ink font-bold text-base mt-1">{ev.title ?? "（タイトルなし）"}</h4>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-graphite mt-2">
                               <span className="flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[18px]">schedule</span>
+                                <Clock className="w-[18px] h-[18px]" aria-hidden="true" />
                                 {formatEventDate(ev.event_date)}
                               </span>
                               {ev.location && (
                                 <span className="flex items-center gap-1">
-                                  <span className="material-symbols-outlined text-[18px]">
-                                    {ev.location.startsWith("http") ? "videocam" : "location_on"}
-                                  </span>
+                                  {ev.location.startsWith("http") ? (
+                                    <Video className="w-[18px] h-[18px]" aria-hidden="true" />
+                                  ) : (
+                                    <MapPin className="w-[18px] h-[18px]" aria-hidden="true" />
+                                  )}
                                   {ev.location.length > 50 ? ev.location.slice(0, 50) + "…" : ev.location}
                                 </span>
                               )}
                             </div>
                             {ev.description && (
-                              <p className="text-slate-600 text-sm line-clamp-2 mt-2">{ev.description}</p>
+                              <p className="text-graphite text-sm line-clamp-2 mt-2">{ev.description}</p>
                             )}
-                            <span className="mt-2 inline-flex items-center gap-1 text-accent text-sm font-bold">
+                            <span className="mt-2 inline-flex items-center gap-1 text-ink text-sm font-bold">
                               団体詳細を見る
-                              <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                              <ChevronRight className="w-4 h-4" aria-hidden="true" />
                             </span>
                           </Link>
                         </li>
@@ -1018,7 +1036,7 @@ export default function MypagePage() {
 
             {/* 自分の所属団体を探す */}
             <section className="mb-10">
-              <h2 className="text-primary text-lg font-bold mb-4">自分の所属団体を探す（団体名で検索）</h2>
+              <h2 className="text-ink text-lg font-bold font-mincho mb-4">自分の所属団体を探す（団体名で検索）</h2>
               <div className="flex gap-2 mb-4">
                 <Input
                   type="text"
@@ -1033,17 +1051,17 @@ export default function MypagePage() {
                 </Button>
               </div>
               {isSearching ? (
-                <p className="text-text-sub text-sm py-6 text-center">検索中...</p>
+                <p className="text-graphite/70 text-sm py-6 text-center">検索中...</p>
               ) : hasSearched ? (
                 searchResults.length === 0 ? (
-                  <div className="text-text-sub text-sm py-6 text-center bg-white border border-slate-200 rounded p-6">
+                  <div className="text-graphite/70 text-sm py-6 text-center bg-paper border border-rule rounded p-6">
                     <p>該当する団体が見つかりませんでした</p>
                     <button
                       type="button"
                       onClick={openAdminRequestNew}
-                      className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-[#001f45] transition-colors font-medium text-sm"
+                      className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-ink text-paper hover:bg-ink/90 transition-colors font-medium text-sm"
                     >
-                      <span className="material-symbols-outlined text-[18px]">add</span>
+                      <Plus className="w-[18px] h-[18px]" aria-hidden="true" />
                       新規団体として登録申請する
                     </button>
                   </div>
@@ -1052,14 +1070,14 @@ export default function MypagePage() {
                     {searchResults.map((org) => (
                       <li
                         key={org.id}
-                        className="bg-white border border-slate-200 rounded p-5 shadow-sm hover:border-primary/30 transition-colors"
+                        className="bg-paper border border-rule rounded p-5 shadow-sm hover:border-ink/30 transition-colors"
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                           <div className="min-w-0">
-                            <p className="text-primary font-bold text-base truncate">{org.name || "（団体名なし）"}</p>
-                            <p className="text-text-sub text-sm mt-1">{org.university || "—"}</p>
+                            <p className="text-ink font-bold text-base truncate">{org.name || "（団体名なし）"}</p>
+                            <p className="text-graphite/70 text-sm mt-1">{org.university || "—"}</p>
                             {org.category && (
-                              <span className="inline-block mt-2 text-xs font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                              <span className="inline-block mt-2 text-xs font-medium text-graphite bg-mist px-2 py-0.5 rounded">
                                 {org.category}
                               </span>
                             )}
@@ -1084,41 +1102,41 @@ export default function MypagePage() {
             {/* 現在エントリー中の団体 */}
             <section className="mb-10">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-                <h2 className="text-primary text-lg font-bold">現在エントリー中の団体</h2>
+                <h2 className="text-ink text-lg font-bold font-mincho">現在エントリー中の団体</h2>
                 {entryApplications.length > 0 && (
                   <Link
                     href="/mypage/messages"
-                    className="inline-flex items-center gap-1.5 text-primary hover:underline font-medium text-sm"
+                    className="inline-flex items-center gap-1.5 text-ink hover:underline font-medium text-sm"
                   >
-                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                    <Mail className="w-5 h-5" aria-hidden="true" />
                     すべてのメッセージを見る
                   </Link>
                 )}
               </div>
-              <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+              <div className="bg-paper border border-rule rounded-lg p-6 shadow-sm">
                 {entryApplicationsLoading ? (
-                  <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
-                    <p className="text-text-sub text-sm">読み込み中...</p>
+                  <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-mist/80 border border-dashed border-rule">
+                    <p className="text-graphite/70 text-sm">読み込み中...</p>
                   </div>
                 ) : entryApplications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-slate-50/80 border border-dashed border-slate-200">
-                    <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">assignment</span>
-                    <p className="text-text-sub text-sm text-center">エントリー中の団体はまだありません</p>
-                    <p className="text-slate-400 text-xs mt-1">団体詳細ページからエントリーできます</p>
+                  <div className="flex flex-col items-center justify-center py-10 px-4 rounded-lg bg-mist/80 border border-dashed border-rule">
+                    <ClipboardList className="w-9 h-9 text-graphite/40 mb-2" aria-hidden="true" />
+                    <p className="text-graphite/70 text-sm text-center">エントリー中の団体はまだありません</p>
+                    <p className="text-graphite/70 text-xs mt-1">団体詳細ページからエントリーできます</p>
                   </div>
                 ) : (
                   <ul className="space-y-4">
                     {entryApplications.map((app) => (
                       <li key={app.id}>
-                        <div className="bg-slate-50/50 border border-slate-200 rounded-lg p-5 hover:border-primary/30 transition-colors">
+                        <div className="bg-mist/50 border border-rule rounded-lg p-5 hover:border-ink/30 transition-colors">
                           <Link
                             href={`/organizations/${app.organization_id}`}
-                            className="block hover:bg-primary/5 -m-5 p-5 rounded-lg transition-colors relative"
+                            className="block hover:bg-mist -m-5 p-5 rounded-lg transition-colors relative"
                           >
                             {unreadApplicationIds.has(app.id) && (
                               <span className="absolute top-4 right-4 flex h-2.5 w-2.5 shrink-0" title="未読メッセージあり">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ink opacity-75" />
+                                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ink" />
                               </span>
                             )}
                             <div className="flex gap-4">
@@ -1126,31 +1144,31 @@ export default function MypagePage() {
                                 <img
                                   src={app.organizations.logo_url}
                                   alt=""
-                                  className="w-14 h-14 rounded-full object-cover border border-slate-200 flex-shrink-0"
+                                  className="w-14 h-14 rounded-full object-cover border border-rule flex-shrink-0"
                                 />
                               ) : (
-                                <div className="w-14 h-14 rounded-full bg-slate-200 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400">
-                                  <span className="material-symbols-outlined text-2xl">groups</span>
+                                <div className="w-14 h-14 rounded-full bg-rule border border-rule flex items-center justify-center flex-shrink-0 text-graphite/70">
+                                  <Users className="w-6 h-6" aria-hidden="true" />
                                 </div>
                               )}
                               <div className="min-w-0 flex-1">
-                                <h4 className="text-primary font-bold text-base">
+                                <h4 className="text-ink font-bold text-base">
                                   {app.organizations?.name ?? "（団体名なし）"}
                                 </h4>
                                 {(app.organizations?.university ?? app.organizations?.category) && (
-                                  <p className="text-text-sub text-sm mt-1">
+                                  <p className="text-graphite/70 text-sm mt-1">
                                     {[app.organizations?.university, app.organizations?.category].filter(Boolean).join(" · ")}
                                   </p>
                                 )}
-                                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary/10 border border-primary/20">
-                                  <span className="text-xs font-medium text-primary">現在の選考ステータス：</span>
-                                  <span className="text-sm font-bold text-primary">{app.current_step || "—"}</span>
+                                <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-mist border border-rule">
+                                  <span className="text-xs font-medium text-ink">現在の選考ステータス：</span>
+                                  <span className="text-sm font-bold text-ink">{app.current_step || "—"}</span>
                                 </div>
                               </div>
-                              <span className="self-center material-symbols-outlined text-slate-400">chevron_right</span>
+                              <ChevronRight className="self-center w-5 h-5 text-graphite/70 shrink-0" aria-hidden="true" />
                             </div>
                           </Link>
-                          <div className="mt-3 pt-3 border-t border-slate-200 flex justify-end">
+                          <div className="mt-3 pt-3 border-t border-rule flex justify-end">
                             <Button
                               type="button"
                               variant="outline"
@@ -1158,7 +1176,7 @@ export default function MypagePage() {
                               onClick={() => openMessageModal(app)}
                               className="inline-flex items-center gap-1.5"
                             >
-                              <span className="material-symbols-outlined text-[18px]">chat</span>
+                              <MessageCircle className="w-[18px] h-[18px]" aria-hidden="true" />
                               メッセージを確認する
                             </Button>
                           </div>
@@ -1183,19 +1201,19 @@ export default function MypagePage() {
                   role="dialog"
                   aria-modal="true"
                   aria-labelledby="message-modal-title"
-                  className="fixed left-1/2 top-1/2 z-[210] w-[min(480px,92vw)] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl overflow-hidden flex flex-col"
+                  className="fixed left-1/2 top-1/2 z-[210] w-[min(480px,92vw)] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 bg-paper border border-rule rounded-xl shadow-xl overflow-hidden flex flex-col"
                 >
-                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-600">
-                    <h3 id="message-modal-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-rule">
+                    <h3 id="message-modal-title" className="text-lg font-bold text-graphite">
                       {messageModalApp.organizations?.name ?? "団体"} とのメッセージ
                     </h3>
                     <button
                       type="button"
                       aria-label="閉じる"
                       onClick={closeMessageModal}
-                      className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      className="p-2 rounded-lg text-graphite/70 hover:bg-mist transition-colors"
                     >
-                      <span className="material-symbols-outlined">close</span>
+                      <X className="w-5 h-5" aria-hidden="true" />
                     </button>
                   </div>
                   <div className="px-6 py-4 flex-1 min-h-0 flex flex-col min-h-[320px]">
@@ -1227,10 +1245,10 @@ export default function MypagePage() {
                   role="dialog"
                   aria-modal="true"
                   aria-labelledby="admin-request-title"
-                  className="fixed left-1/2 top-1/2 z-[210] w-[min(520px,92vw)] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl overflow-hidden flex flex-col"
+                  className="fixed left-1/2 top-1/2 z-[210] w-[min(520px,92vw)] max-h-[85vh] -translate-x-1/2 -translate-y-1/2 bg-paper border border-rule rounded-xl shadow-xl overflow-hidden flex flex-col"
                 >
-                  <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-600">
-                    <h3 id="admin-request-title" className="text-lg font-bold text-slate-900 dark:text-white">
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-rule">
+                    <h3 id="admin-request-title" className="text-lg font-bold text-graphite">
                       管理者権限の申請
                     </h3>
                     <button
@@ -1238,9 +1256,9 @@ export default function MypagePage() {
                       aria-label="閉じる"
                       onClick={closeAdminRequestModal}
                       disabled={adminSubmitting}
-                      className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                      className="p-2 rounded-lg text-graphite/70 hover:bg-mist transition-colors disabled:opacity-50"
                     >
-                      <span className="material-symbols-outlined">close</span>
+                      <X className="w-5 h-5" aria-hidden="true" />
                     </button>
                   </div>
 
@@ -1248,19 +1266,19 @@ export default function MypagePage() {
                     <div className="space-y-4">
                       {adminRequestMode === "existing" ? (
                         <div>
-                          <label className="block text-slate-700 font-bold text-sm mb-2">対象団体名</label>
+                          <label className="block text-graphite font-bold text-sm mb-2">対象団体名</label>
                           <Input
                             value={adminTargetOrg?.name ?? ""}
                             readOnly
                             disabled
-                            className="w-full bg-slate-50 cursor-not-allowed"
+                            className="w-full bg-mist cursor-not-allowed"
                           />
                         </div>
                       ) : (
                         <>
                           <div>
-                            <label className="block text-slate-700 font-bold text-sm mb-2">
-                              団体名 <span className="text-red-500">*</span>
+                            <label className="block text-graphite font-bold text-sm mb-2">
+                              団体名 <span className="text-ink">*</span>
                             </label>
                             <Input
                               value={newOrgName}
@@ -1271,8 +1289,8 @@ export default function MypagePage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-slate-700 font-bold text-sm mb-2">
-                              主な活動大学 <span className="text-red-500">*</span>
+                            <label className="block text-graphite font-bold text-sm mb-2">
+                              主な活動大学 <span className="text-ink">*</span>
                             </label>
                             <Input
                               value={newOrgUniversity}
@@ -1286,15 +1304,15 @@ export default function MypagePage() {
                       )}
 
                       <div>
-                        <label className="block text-slate-700 font-bold text-sm mb-2">
+                        <label className="block text-graphite font-bold text-sm mb-2">
                           SNS・リンクの種類
-                          <span className="text-red-500"> *</span>
+                          <span className="text-ink"> *</span>
                         </label>
                         <select
                           value={adminSnsType}
                           onChange={(e) => setAdminSnsType(e.target.value)}
                           disabled={adminSubmitting}
-                          className="w-full border border-slate-300 rounded px-3 py-2 text-slate-900 focus:ring-1 focus:ring-primary focus:border-primary"
+                          className="w-full border border-rule rounded px-3 py-2 text-graphite focus:ring-1 focus:ring-ink focus:border-ink"
                         >
                           <option value="X (旧Twitter)">X (旧Twitter)</option>
                           <option value="Instagram">Instagram</option>
@@ -1304,8 +1322,8 @@ export default function MypagePage() {
                       </div>
 
                       <div>
-                        <label className="block text-slate-700 font-bold text-sm mb-2">
-                          本人確認リンク <span className="text-red-500">*</span>
+                        <label className="block text-graphite font-bold text-sm mb-2">
+                          本人確認リンク <span className="text-ink">*</span>
                         </label>
                         <Input
                           value={adminProofLink}
@@ -1314,20 +1332,20 @@ export default function MypagePage() {
                           disabled={adminSubmitting}
                           className="w-full"
                         />
-                        <p className="text-slate-500 text-xs mt-2">
+                        <p className="text-graphite/70 text-xs mt-2">
                           ※審査のため、ご入力いただいたSNSアカウントのDMやメールアドレス宛に、運営から本人確認のご連絡を差し上げる場合がございます。必ず団体公式、もしくは代表者様のアカウントURLをご指定ください。
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-slate-700 font-bold text-sm mb-2">運営へのメッセージ</label>
+                        <label className="block text-graphite font-bold text-sm mb-2">運営へのメッセージ</label>
                         <textarea
                           value={adminMessage}
                           onChange={(e) => setAdminMessage(e.target.value)}
                           placeholder="私が代表の〇〇です"
                           rows={4}
                           disabled={adminSubmitting}
-                          className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary resize-y"
+                          className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-graphite focus:ring-1 focus:ring-ink resize-y"
                         />
                       </div>
                     </div>

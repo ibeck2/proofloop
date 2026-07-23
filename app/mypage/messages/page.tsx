@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft, MessageCircle, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import type { ApplicationWithOrg } from "@/lib/types/application";
 import ChatRoom from "@/components/ChatRoom";
@@ -113,7 +114,7 @@ export default function MypageMessagesPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <p className="text-slate-500">読み込み中...</p>
+        <p className="text-graphite/70">読み込み中...</p>
       </div>
     );
   }
@@ -121,43 +122,43 @@ export default function MypageMessagesPage() {
   if (!userId) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <p className="text-slate-500">ログインしてください。</p>
+        <p className="text-graphite/70">ログインしてください。</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#f5f5f7]">
-      <header className="shrink-0 flex items-center justify-start gap-4 px-4 py-3 border-b border-slate-200 bg-white">
+    <div className="flex flex-col min-h-screen bg-mist">
+      <header className="shrink-0 flex items-center justify-start gap-4 px-4 py-3 border-b border-rule bg-paper">
         <div className="flex items-center gap-3 min-w-0">
           {selectedId && (
             <button
               type="button"
               onClick={() => setSelectedId(null)}
-              className="md:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100"
+              className="md:hidden p-2 -ml-2 rounded-lg text-graphite hover:bg-mist"
               aria-label="一覧に戻る"
             >
-              <span className="material-symbols-outlined">arrow_back</span>
+              <ArrowLeft className="w-5 h-5" aria-hidden="true" />
             </button>
           )}
-          <h1 className="text-lg font-bold text-primary truncate">メッセージ</h1>
+          <h1 className="text-lg font-bold text-ink truncate">メッセージ</h1>
         </div>
       </header>
 
       <div className="flex-1 flex min-h-0">
         {/* 左ペイン: 会話リスト */}
         <aside
-          className={`shrink-0 w-full md:w-80 lg:w-96 flex flex-col border-r border-slate-200 bg-white ${
+          className={`shrink-0 w-full md:w-80 lg:w-96 flex flex-col border-r border-rule bg-paper ${
             selectedId ? "hidden md:flex" : "flex"
           }`}
         >
           <div className="flex-1 overflow-y-auto hide-scrollbar">
             {applications.length === 0 ? (
-              <div className="p-6 text-center text-slate-500 text-sm">
+              <div className="p-6 text-center text-graphite/70 text-sm">
                 エントリーした団体とのメッセージがここに表示されます
               </div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-rule">
                 {applications.map((app) => {
                   const org = app.organizations;
                   const name = org?.name?.trim() || "（団体名なし）";
@@ -169,8 +170,8 @@ export default function MypageMessagesPage() {
                       <button
                         type="button"
                         onClick={() => setSelectedId(app.id)}
-                        className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-50 transition-colors ${
-                          isSelected ? "bg-primary/10" : ""
+                        className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-mist transition-colors ${
+                          isSelected ? "bg-mist" : ""
                         }`}
                       >
                         <div className="relative shrink-0">
@@ -178,27 +179,27 @@ export default function MypageMessagesPage() {
                             <img
                               src={org.logo_url}
                               alt=""
-                              className="w-10 h-10 rounded-full object-cover border border-slate-200"
+                              className="w-10 h-10 rounded-full object-cover border border-rule"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
-                              <span className="material-symbols-outlined text-xl">groups</span>
+                            <div className="w-10 h-10 rounded-full bg-mist flex items-center justify-center text-graphite/70">
+                              <Users className="w-5 h-5" aria-hidden="true" />
                             </div>
                           )}
                           {hasUnread && (
                             <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3" title="未読あり">
-                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                              <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ink/60 opacity-75" />
+                              <span className="relative inline-flex h-3 w-3 rounded-full bg-ink" />
                             </span>
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium text-slate-900 truncate">{name}</p>
+                          <p className="font-medium text-ink truncate">{name}</p>
                           {sub && (
-                            <p className="text-xs text-slate-500 truncate">{sub}</p>
+                            <p className="text-xs text-graphite/70 truncate">{sub}</p>
                           )}
                         </div>
-                        <span className="shrink-0 text-xs text-slate-400">
+                        <span className="shrink-0 text-xs text-graphite/70">
                           {formatRelativeTime(app.last_message_at ?? app.created_at)}
                         </span>
                       </button>
@@ -212,14 +213,14 @@ export default function MypageMessagesPage() {
 
         {/* 右ペイン: チャット */}
         <section
-          className={`flex-1 flex flex-col min-w-0 bg-slate-50 ${
+          className={`flex-1 flex flex-col min-w-0 bg-mist ${
             selectedId ? "flex" : "hidden md:flex"
           }`}
         >
           {selectedId && userId ? (
             <div className="flex-1 flex flex-col min-h-0 p-4">
               <div className="mb-2">
-                <p className="font-medium text-slate-900">
+                <p className="font-medium text-ink">
                   {selectedApp?.organizations?.name?.trim() || "（団体名なし）"}
                 </p>
               </div>
@@ -237,9 +238,9 @@ export default function MypageMessagesPage() {
           ) : (
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center max-w-sm">
-                <span className="material-symbols-outlined text-5xl text-slate-300 mb-4 block">chat_bubble_outline</span>
-                <p className="text-slate-500 font-medium">メッセージを選択してください</p>
-                <p className="text-slate-400 text-sm mt-1">左のリストから団体を選ぶと、ここにチャットが表示されます</p>
+                <MessageCircle className="w-12 h-12 text-graphite/70 mb-4 mx-auto" aria-hidden="true" />
+                <p className="text-graphite/70 font-medium">メッセージを選択してください</p>
+                <p className="text-graphite/70 text-sm mt-1">左のリストから団体を選ぶと、ここにチャットが表示されます</p>
               </div>
             </div>
           )}

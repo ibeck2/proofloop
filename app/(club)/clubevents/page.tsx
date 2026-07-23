@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { CalendarDays, MapPin, Pencil, Trash2 } from "lucide-react";
 import { Input, Textarea, Button } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
@@ -161,7 +162,7 @@ export default function ClubEventsPage() {
   if (ctxLoading) {
     return (
       <div className="p-6 lg:p-10">
-        <p className="text-text-sub">読み込み中...</p>
+        <p className="text-graphite/70">読み込み中...</p>
       </div>
     );
   }
@@ -169,7 +170,7 @@ export default function ClubEventsPage() {
   if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="p-6 lg:p-10">
-        <p className="text-text-sub">
+        <p className="text-graphite/70">
           管理できる団体がありません。プロフィール編集から団体情報を作成すると、イベントを管理できるようになります。
         </p>
       </div>
@@ -178,8 +179,8 @@ export default function ClubEventsPage() {
 
   return (
     <div className="p-6 lg:p-10 max-w-4xl">
-      <h2 className="text-2xl font-bold text-navy dark:text-white mb-2">イベント管理</h2>
-      <p className="text-text-sub text-sm mb-6">団体のイベントを作成・管理できます。</p>
+      <h2 className="text-2xl font-bold text-ink font-mincho mb-2">イベント管理</h2>
+      <p className="text-graphite/70 text-sm mb-6">団体のイベントを作成・管理できます。</p>
 
       {!showForm ? (
         <Button
@@ -199,17 +200,17 @@ export default function ClubEventsPage() {
           新規イベントを作成
         </Button>
       ) : (
-        <div className="mb-8 p-6 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <h3 className="text-lg font-bold text-navy dark:text-white mb-4">
+        <div className="mb-8 p-6 rounded-lg border border-rule bg-paper">
+          <h3 className="text-lg font-bold text-ink mb-4">
             {editingEventId ? "イベントを編集" : "イベントを作成"}
           </h3>
           {editingEventId && (
-            <p className="text-sm text-text-sub dark:text-slate-400 mb-4">登録済みイベントの内容を変更しています。</p>
+            <p className="text-sm text-graphite/70 mb-4">登録済みイベントの内容を変更しています。</p>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="event-title" className="block text-sm font-bold text-navy dark:text-slate-200 mb-2">
-                タイトル <span className="text-red-500">*</span>
+              <label htmlFor="event-title" className="block text-sm font-bold text-ink mb-2">
+                タイトル <span className="text-ink">*</span>
               </label>
               <Input
                 id="event-title"
@@ -222,8 +223,8 @@ export default function ClubEventsPage() {
               />
             </div>
             <div>
-              <label htmlFor="event-date" className="block text-sm font-bold text-navy dark:text-slate-200 mb-2">
-                開催日時 <span className="text-red-500">*</span>
+              <label htmlFor="event-date" className="block text-sm font-bold text-ink mb-2">
+                開催日時 <span className="text-ink">*</span>
               </label>
               <input
                 id="event-date"
@@ -231,11 +232,11 @@ export default function ClubEventsPage() {
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
                 required
-                className="w-full border border-slate-300 dark:border-slate-600 rounded px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-primary focus:border-primary"
+                className="w-full border border-rule rounded px-3 py-2 text-ink bg-paper focus:ring-1 focus:ring-ink focus:border-ink"
               />
             </div>
             <div>
-              <label htmlFor="event-location" className="block text-sm font-bold text-navy dark:text-slate-200 mb-2">
+              <label htmlFor="event-location" className="block text-sm font-bold text-ink mb-2">
                 開催場所 / Zoomリンク
               </label>
               <Input
@@ -248,7 +249,7 @@ export default function ClubEventsPage() {
               />
             </div>
             <div>
-              <label htmlFor="event-description" className="block text-sm font-bold text-navy dark:text-slate-200 mb-2">
+              <label htmlFor="event-description" className="block text-sm font-bold text-ink mb-2">
                 イベント詳細
               </label>
               <Textarea
@@ -261,9 +262,9 @@ export default function ClubEventsPage() {
               />
             </div>
             {errorMessage && (
-              <p className="text-sm text-red-600 dark:text-red-400" role="alert">
-                {errorMessage}
-              </p>
+              <div className="border border-rule border-l-4 border-l-seal bg-mist px-3 py-2" role="alert">
+                <p className="text-sm text-graphite">{errorMessage}</p>
+              </div>
             )}
             <div className="flex gap-3">
               <Button type="submit" variant="primary" disabled={submitting}>
@@ -284,9 +285,9 @@ export default function ClubEventsPage() {
       )}
 
       <div>
-        <h3 className="text-lg font-bold text-navy dark:text-white mb-4">登録済みイベント</h3>
+        <h3 className="text-lg font-bold text-ink mb-4">登録済みイベント</h3>
         {events.length === 0 ? (
-          <p className="text-text-sub py-8 text-center border border-dashed border-slate-300 dark:border-slate-600 rounded-lg">
+          <p className="text-graphite/70 py-8 text-center border border-dashed border-rule rounded-lg">
             イベントはまだ登録されていません。上のボタンから作成してください。
           </p>
         ) : (
@@ -294,40 +295,44 @@ export default function ClubEventsPage() {
             {events.map((ev) => (
               <article
                 key={ev.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-accent/30 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center gap-4 p-5 rounded-lg border border-rule bg-paper hover:border-ink/30 transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-navy dark:text-white font-bold text-lg mb-2">{ev.title ?? "（タイトルなし）"}</h4>
-                  <div className="flex flex-wrap gap-3 text-sm text-text-sub">
+                  <h4 className="text-ink font-bold text-lg mb-2">{ev.title ?? "（タイトルなし）"}</h4>
+                  <div className="flex flex-wrap gap-3 text-sm text-graphite/70">
                     <span className="flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                      <CalendarDays className="w-[18px] h-[18px]" aria-hidden="true" />
                       {formatEventDate(ev.event_date)}
                     </span>
                     {ev.location && (
                       <span className="flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[18px]">location_on</span>
+                        <MapPin className="w-[18px] h-[18px]" aria-hidden="true" />
                         {ev.location}
                       </span>
                     )}
                   </div>
                   {ev.description && (
-                    <p className="text-text-sub text-sm mt-2 line-clamp-2">{ev.description}</p>
+                    <p className="text-graphite/70 text-sm mt-2 line-clamp-2">{ev.description}</p>
                   )}
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-2">
                   <button
                     type="button"
                     onClick={() => startEdit(ev)}
-                    className="px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded transition-colors"
+                    aria-label="このイベントを編集"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-ink hover:bg-mist rounded transition-colors"
                   >
+                    <Pencil className="w-4 h-4" aria-hidden="true" />
                     編集
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDelete(ev.id)}
                     disabled={deletingId === ev.id}
-                    className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
+                    aria-label="このイベントを削除"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-graphite border border-rule hover:bg-mist rounded transition-colors disabled:opacity-50"
                   >
+                    <Trash2 className="w-4 h-4" aria-hidden="true" />
                     {deletingId === ev.id ? "削除中..." : "削除"}
                   </button>
                 </div>

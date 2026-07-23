@@ -63,9 +63,9 @@ export default function UpcomingEvents() {
   if (loading) {
     return (
       <section className="w-full flex flex-col gap-8">
-        <div className="flex flex-end justify-between border-b border-[#f0f2f5] pb-4">
-          <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
-          <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
+        <div className="flex flex-end justify-between border-b border-rule pb-4">
+          <h3 className="text-ink text-2xl font-black">直近のイベント</h3>
+          <Link className="text-graphite text-sm font-bold hover:text-ink flex items-center gap-1" href="/schedule">
             全て見る
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
@@ -74,7 +74,7 @@ export default function UpcomingEvents() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="flex-none snap-start w-[320px] h-48 bg-slate-100 animate-pulse rounded"
+              className="flex-none snap-start w-[320px] h-48 bg-mist animate-pulse rounded"
             />
           ))}
         </div>
@@ -85,14 +85,14 @@ export default function UpcomingEvents() {
   if (events.length === 0) {
     return (
       <section className="w-full flex flex-col gap-8">
-        <div className="flex flex-end justify-between border-b border-[#f0f2f5] pb-4">
-          <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
-          <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
+        <div className="flex flex-end justify-between border-b border-rule pb-4">
+          <h3 className="text-ink text-2xl font-black">直近のイベント</h3>
+          <Link className="text-graphite text-sm font-bold hover:text-ink flex items-center gap-1" href="/schedule">
             全て見る
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
         </div>
-        <p className="text-text-grey py-8 text-center border border-dashed border-slate-200 rounded-lg">
+        <p className="text-graphite py-8 text-center border border-dashed border-rule rounded-lg">
           現在予定されているイベントはありません
         </p>
       </section>
@@ -101,9 +101,9 @@ export default function UpcomingEvents() {
 
   return (
     <section className="w-full flex flex-col gap-8">
-      <div className="flex flex-end justify-between border-b border-[#f0f2f5] pb-4">
-        <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
-        <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
+      <div className="flex flex-end justify-between border-b border-rule pb-4">
+        <h3 className="text-ink text-2xl font-black">直近のイベント</h3>
+        <Link className="text-graphite text-sm font-bold hover:text-ink flex items-center gap-1" href="/schedule">
           全て見る
           <ArrowRight className="w-4 h-4" aria-hidden="true" />
         </Link>
@@ -113,19 +113,19 @@ export default function UpcomingEvents() {
           <Link
             key={ev.id}
             href={`/events/${ev.id}`}
-            className="flex-none snap-start w-[320px] bg-white border border-[#f0f2f5] hover:border-text-grey/30 transition-colors rounded-lg overflow-hidden group"
+            className="flex-none snap-start w-[320px] bg-paper border border-rule hover:border-graphite/30 transition-colors rounded-lg overflow-hidden group"
           >
-            <div className="h-32 bg-primary/5 flex items-center justify-center">
-              <CalendarDays className="w-12 h-12 text-primary/30 group-hover:text-primary/50 transition-colors" aria-hidden="true" />
+            <div className="h-32 bg-mist flex items-center justify-center">
+              <CalendarDays className="w-12 h-12 text-ink/30 group-hover:text-ink/50 transition-colors" aria-hidden="true" />
             </div>
             <div className="p-6 flex flex-col gap-3">
-              <span className="text-xs font-bold text-text-grey uppercase tracking-wider">
+              <span className="text-xs font-bold text-graphite uppercase tracking-wider">
                 {ev.organizations?.name ?? "団体"}
               </span>
-              <h4 className="text-primary text-lg font-bold line-clamp-2 group-hover:text-accent transition-colors">
+              <h4 className="text-ink text-lg font-bold line-clamp-2 group-hover:text-ink transition-colors">
                 {ev.title ?? "（タイトルなし）"}
               </h4>
-              <div className="flex flex-col gap-1 text-sm text-text-grey">
+              <div className="flex flex-col gap-1 text-sm text-graphite">
                 <span className="flex items-center gap-2">
                   <CalendarDays className="w-[18px] h-[18px] shrink-0" aria-hidden="true" />
                   {formatEventDate(ev.event_date)}

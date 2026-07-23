@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { ImagePlus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Input, Textarea, Button } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
@@ -105,10 +106,10 @@ const CATEGORY_OPTIONS = [
 ];
 
 const BadgeRequired = () => (
-  <span className="ml-2 text-xs font-normal text-white bg-red-500 px-2 py-0.5 rounded">必須</span>
+  <span className="ml-2 text-xs font-normal text-paper bg-ink px-2 py-0.5 rounded">必須</span>
 );
 const BadgeOptional = () => (
-  <span className="ml-2 text-xs font-normal text-slate-600 bg-slate-200 px-2 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+  <span className="ml-2 text-xs font-normal text-graphite bg-mist px-2 py-0.5 rounded">任意</span>
 );
 
 function resetFormToEmpty(
@@ -499,24 +500,24 @@ export default function OrganizationProfileForm() {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-slate-800 p-8 rounded shadow-sm border border-slate-100 dark:border-slate-700">
-        <p className="text-text-sub dark:text-slate-400">読み込み中...</p>
+      <div className="bg-paper p-8 rounded shadow-sm border border-rule">
+        <p className="text-graphite/70 font-body">読み込み中...</p>
       </div>
     );
   }
 
   const inputDisabled = isSaving || !userId;
-  const inputClass = "w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 dark:text-slate-100 dark:bg-slate-700 dark:border-slate-600 rounded-none px-3 py-2";
+  const inputClass = "w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper rounded-none px-3 py-2";
 
   const displayLogoUrl = logoPreview || logoUrl;
 
   return (
-    <div className="bg-white dark:bg-slate-800 p-8 rounded shadow-sm border border-slate-100 dark:border-slate-700">
-      <h3 className="text-primary dark:text-white text-lg font-bold mb-6">団体プロフィール（登録・編集）</h3>
+    <div className="bg-paper p-8 rounded shadow-sm border border-rule">
+      <h3 className="font-mincho text-ink text-lg font-bold mb-6">団体プロフィール（登録・編集）</h3>
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* 団体ロゴ */}
         <section className="space-y-4">
-          <h4 className="text-primary dark:text-white font-bold text-base border-b border-slate-200 dark:border-slate-600 pb-2">
+          <h4 className="text-ink font-bold text-base border-b border-rule pb-2 font-body">
             団体ロゴ
             <BadgeOptional />
           </h4>
@@ -524,7 +525,7 @@ export default function OrganizationProfileForm() {
             <div className="flex-shrink-0">
               <label
                 htmlFor="org-logo"
-                className="block w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 hover:border-primary hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2"
+                className="block w-24 h-24 rounded-full overflow-hidden border-2 border-dashed border-rule bg-mist hover:border-ink hover:bg-rule/40 transition-colors cursor-pointer focus-within:ring-2 focus-within:ring-ink focus-within:ring-offset-2"
               >
                 {displayLogoUrl ? (
                   <img
@@ -533,8 +534,8 @@ export default function OrganizationProfileForm() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="w-full h-full flex items-center justify-center text-slate-400 dark:text-slate-500">
-                    <span className="material-symbols-outlined text-4xl">add_photo_alternate</span>
+                  <span className="w-full h-full flex items-center justify-center text-graphite/70">
+                    <ImagePlus className="w-9 h-9" aria-hidden="true" />
                   </span>
                 )}
                 <input
@@ -548,10 +549,10 @@ export default function OrganizationProfileForm() {
               </label>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-text-sub dark:text-slate-400 text-sm mb-1">
+              <p className="text-graphite/70 text-sm mb-1 font-body">
                 団体ロゴ画像をアップロードできます。クリックまたはタップして画像を選択してください。
               </p>
-              <p className="text-text-sub dark:text-slate-400 text-xs">
+              <p className="text-graphite/70 text-xs font-body">
                 JPEG / PNG / GIF / WebP（保存時にアップロードされます）
               </p>
             </div>
@@ -560,11 +561,11 @@ export default function OrganizationProfileForm() {
 
         {/* 基本情報セクション */}
         <section className="space-y-6">
-          <h4 className="text-primary dark:text-white font-bold text-base border-b border-slate-200 dark:border-slate-600 pb-2">
+          <h4 className="text-ink font-bold text-base border-b border-rule pb-2 font-body">
             基本情報
           </h4>
           <div>
-            <label htmlFor="org-name" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-name" className="block text-ink font-bold text-sm mb-2 font-body">
               団体名
               <BadgeRequired />
             </label>
@@ -579,7 +580,7 @@ export default function OrganizationProfileForm() {
             />
           </div>
           <div>
-            <label htmlFor="org-university" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-university" className="block text-ink font-bold text-sm mb-2 font-body">
               大学名
               <BadgeOptional />
             </label>
@@ -614,7 +615,7 @@ export default function OrganizationProfileForm() {
             )}
           </div>
           <div>
-            <label htmlFor="org-category" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-category" className="block text-ink font-bold text-sm mb-2 font-body">
               カテゴリ
               <BadgeRequired />
             </label>
@@ -634,7 +635,7 @@ export default function OrganizationProfileForm() {
             </select>
           </div>
           <div>
-            <label htmlFor="org-description" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-description" className="block text-ink font-bold text-sm mb-2 font-body">
               理念・活動内容
               <BadgeRequired />
             </label>
@@ -650,7 +651,7 @@ export default function OrganizationProfileForm() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="org-member-count" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              <label htmlFor="org-member-count" className="block text-ink font-bold text-sm mb-2 font-body">
                 所属人数
                 <BadgeOptional />
               </label>
@@ -665,7 +666,7 @@ export default function OrganizationProfileForm() {
               />
             </div>
             <div>
-              <label htmlFor="org-activity-frequency" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              <label htmlFor="org-activity-frequency" className="block text-ink font-bold text-sm mb-2 font-body">
                 活動頻度
                 <BadgeOptional />
               </label>
@@ -684,7 +685,7 @@ export default function OrganizationProfileForm() {
 
         {/* 属性・選考セクション */}
         <section className="space-y-6">
-          <h4 className="text-primary dark:text-white font-bold text-base border-b border-slate-200 dark:border-slate-600 pb-2">
+          <h4 className="text-ink font-bold text-base border-b border-rule pb-2 font-body">
             属性・選考
           </h4>
           <div>
@@ -694,22 +695,22 @@ export default function OrganizationProfileForm() {
                 checked={isIntercollege}
                 onChange={(e) => setIsIntercollege(e.target.checked)}
                 disabled={inputDisabled}
-                className="w-5 h-5 border-slate-300 text-accent focus:ring-accent rounded"
+                className="w-5 h-5 border-rule text-ink focus:ring-ink rounded"
               />
-              <span className="text-primary dark:text-slate-200 font-bold text-sm">
+              <span className="text-ink font-bold text-sm font-body">
                 インカレ（他大学の参加可）
               </span>
             </label>
-            <p className="text-text-sub dark:text-slate-400 text-xs mt-1 ml-8">
+            <p className="text-graphite/70 font-body text-xs mt-1 ml-8">
               チェックを付けると「インカレ」として表示されます
             </p>
           </div>
           <div>
-            <span className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <span className="block text-ink font-bold text-sm mb-2 font-body">
               対象学年
               <BadgeRequired />
             </span>
-            <p className="text-text-sub dark:text-slate-400 text-xs mb-2">複数選択可</p>
+            <p className="text-graphite/70 font-body text-xs mb-2">複数選択可</p>
             <div className="flex flex-wrap gap-4">
               {TARGET_GRADES_CHECKBOX_OPTIONS.map((opt) => (
                 <label key={opt} className="flex items-center gap-2 cursor-pointer">
@@ -721,15 +722,15 @@ export default function OrganizationProfileForm() {
                       else setTargetGrades((prev) => prev.filter((g) => g !== opt));
                     }}
                     disabled={inputDisabled}
-                    className="w-5 h-5 border-slate-300 text-accent focus:ring-accent rounded"
+                    className="w-5 h-5 border-rule text-ink focus:ring-ink rounded"
                   />
-                  <span className="text-sm text-primary dark:text-slate-200">{opt}</span>
+                  <span className="text-sm text-ink font-body">{opt}</span>
                 </label>
               ))}
             </div>
           </div>
           <div>
-            <span className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <span className="block text-ink font-bold text-sm mb-2 font-body">
               選考の有無
               <BadgeRequired />
             </span>
@@ -747,36 +748,37 @@ export default function OrganizationProfileForm() {
                         setSelectionFlow([...DEFAULT_SELECTION_FLOW]);
                     }}
                     disabled={inputDisabled}
-                    className="w-4 h-4 border-slate-300 text-accent focus:ring-accent"
+                    className="w-4 h-4 border-rule text-ink focus:ring-ink"
                   />
-                  <span className="text-sm text-primary dark:text-slate-200">{opt.label}</span>
+                  <span className="text-sm text-ink font-body">{opt.label}</span>
                 </label>
               ))}
             </div>
           </div>
           {selectionProcess === "選考あり" && (
-            <div className="border border-slate-200 dark:border-slate-600 rounded-lg p-4 space-y-4 bg-slate-50/50 dark:bg-slate-800/30">
-              <h5 className="text-primary dark:text-white font-bold text-sm">選考フロー</h5>
-              <p className="text-text-sub dark:text-slate-400 text-xs">ステップを追加・編集・削除できます</p>
+            <div className="border border-rule rounded-lg p-4 space-y-4 bg-mist">
+              <h5 className="text-ink font-bold text-sm font-body">選考フロー</h5>
+              <p className="text-graphite/70 font-body text-xs">ステップを追加・編集・削除できます</p>
               {(selectionFlow.length === 0 ? DEFAULT_SELECTION_FLOW : selectionFlow).map((step, index) => (
-                <div key={index} className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-lg p-4 space-y-3">
+                <div key={index} className="bg-paper border border-rule rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-500">ステップ {index + 1}</span>
+                    <span className="text-xs font-bold text-graphite/70 font-body">ステップ {index + 1}</span>
                     {selectionFlow.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setSelectionFlow((prev) => prev.filter((_, i) => i !== index))}
                         disabled={inputDisabled || selectionFlow.length <= 1}
-                        className="text-red-600 hover:text-red-700 text-sm disabled:opacity-40"
+                        className="inline-flex items-center gap-1 text-ink hover:text-ink/70 text-sm disabled:opacity-40 font-body"
                       >
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
                         削除
                       </button>
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-graphite mb-1 font-body">
                       ステップ名
-                      <span className="ml-1 text-[10px] font-normal text-white bg-red-500 px-1.5 py-0.5 rounded">必須</span>
+                      <span className="ml-1 text-[10px] font-normal text-paper bg-ink px-1.5 py-0.5 rounded">必須</span>
                     </label>
                     <Input
                       value={step.name}
@@ -794,9 +796,9 @@ export default function OrganizationProfileForm() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-graphite mb-1 font-body">
                       日時タイプ
-                      <span className="ml-1 text-[10px] font-normal text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+                      <span className="ml-1 text-[10px] font-normal text-graphite bg-mist px-1.5 py-0.5 rounded">任意</span>
                     </label>
                     <select
                       value={step.date_type}
@@ -809,7 +811,7 @@ export default function OrganizationProfileForm() {
                         });
                       }}
                       disabled={inputDisabled}
-                      className="w-full border border-slate-300 dark:border-slate-500 rounded px-3 py-2 text-sm bg-white dark:bg-slate-700"
+                      className="w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink rounded px-3 py-2 text-sm bg-paper text-graphite"
                     >
                       {DATE_TYPE_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>{o.label}</option>
@@ -817,9 +819,9 @@ export default function OrganizationProfileForm() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-graphite mb-1 font-body">
                       {step.date_type === "pin" ? "開催日時" : step.date_type === "deadline" ? "締切日時" : step.date_type === "period" ? "大体の時期" : "備考"}
-                      <span className="ml-1 text-[10px] font-normal text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+                      <span className="ml-1 text-[10px] font-normal text-graphite bg-mist px-1.5 py-0.5 rounded">任意</span>
                     </label>
                     {step.date_type === "pin" || step.date_type === "deadline" ? (
                       <Input
@@ -855,9 +857,9 @@ export default function OrganizationProfileForm() {
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-graphite mb-1 font-body">
                       詳細説明
-                      <span className="ml-1 text-[10px] font-normal text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+                      <span className="ml-1 text-[10px] font-normal text-graphite bg-mist px-1.5 py-0.5 rounded">任意</span>
                     </label>
                     <Textarea
                       value={step.description}
@@ -876,9 +878,9 @@ export default function OrganizationProfileForm() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-graphite mb-1 font-body">
                       関連URL
-                      <span className="ml-1 text-[10px] font-normal text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded dark:text-slate-300 dark:bg-slate-600">任意</span>
+                      <span className="ml-1 text-[10px] font-normal text-graphite bg-mist px-1.5 py-0.5 rounded">任意</span>
                     </label>
                     <Input
                       type="text"
@@ -902,7 +904,7 @@ export default function OrganizationProfileForm() {
                 type="button"
                 onClick={() => setSelectionFlow((prev) => [...(prev.length ? prev : DEFAULT_SELECTION_FLOW), { name: "", date_type: "none", date_value: "", description: "", url: "" }])}
                 disabled={inputDisabled}
-                className="text-sm text-accent hover:underline font-bold"
+                className="text-sm text-ink hover:underline font-bold font-body"
               >
                 + ステップを追加
               </button>
@@ -912,12 +914,12 @@ export default function OrganizationProfileForm() {
 
         {/* 構成・費用セクション */}
         <section className="space-y-6">
-          <h4 className="text-primary dark:text-white font-bold text-base border-b border-slate-200 dark:border-slate-600 pb-2">
+          <h4 className="text-ink font-bold text-base border-b border-rule pb-2 font-body">
             構成・費用
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="org-gender-ratio" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              <label htmlFor="org-gender-ratio" className="block text-ink font-bold text-sm mb-2 font-body">
                 男女比
                 <BadgeOptional />
               </label>
@@ -932,7 +934,7 @@ export default function OrganizationProfileForm() {
               />
             </div>
             <div>
-              <label htmlFor="org-grade-composition" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              <label htmlFor="org-grade-composition" className="block text-ink font-bold text-sm mb-2 font-body">
                 学年構成
                 <BadgeOptional />
               </label>
@@ -948,7 +950,7 @@ export default function OrganizationProfileForm() {
             </div>
           </div>
           <div>
-            <label htmlFor="org-location-detail" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-location-detail" className="block text-ink font-bold text-sm mb-2 font-body">
               主な活動場所
               <BadgeOptional />
             </label>
@@ -964,7 +966,7 @@ export default function OrganizationProfileForm() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="org-fee-entry" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              <label htmlFor="org-fee-entry" className="block text-ink font-bold text-sm mb-2 font-body">
                 初期費用
                 <BadgeOptional />
               </label>
@@ -979,7 +981,7 @@ export default function OrganizationProfileForm() {
               />
             </div>
             <div>
-              <label htmlFor="org-fee-annual" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+              <label htmlFor="org-fee-annual" className="block text-ink font-bold text-sm mb-2 font-body">
                 年会費
                 <BadgeOptional />
               </label>
@@ -998,11 +1000,11 @@ export default function OrganizationProfileForm() {
 
         {/* SNS・連絡先セクション */}
         <section className="space-y-6">
-          <h4 className="text-primary dark:text-white font-bold text-base border-b border-slate-200 dark:border-slate-600 pb-2">
+          <h4 className="text-ink font-bold text-base border-b border-rule pb-2 font-body">
             SNS・連絡先
           </h4>
           <div>
-            <label htmlFor="org-x-id" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-x-id" className="block text-ink font-bold text-sm mb-2 font-body">
               公式X (Twitter) ID
               <BadgeOptional />
             </label>
@@ -1017,7 +1019,7 @@ export default function OrganizationProfileForm() {
             />
           </div>
           <div>
-            <label htmlFor="org-instagram-id" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-instagram-id" className="block text-ink font-bold text-sm mb-2 font-body">
               公式Instagram ID
               <BadgeOptional />
             </label>
@@ -1032,7 +1034,7 @@ export default function OrganizationProfileForm() {
             />
           </div>
           <div>
-            <label htmlFor="org-line-url" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-line-url" className="block text-ink font-bold text-sm mb-2 font-body">
               公式LINE URL
               <BadgeOptional />
             </label>
@@ -1047,7 +1049,7 @@ export default function OrganizationProfileForm() {
             />
           </div>
           <div>
-            <label htmlFor="org-website-url" className="block text-primary dark:text-slate-200 font-bold text-sm mb-2">
+            <label htmlFor="org-website-url" className="block text-ink font-bold text-sm mb-2 font-body">
               公式WebサイトURL
               <BadgeOptional />
             </label>
@@ -1064,12 +1066,12 @@ export default function OrganizationProfileForm() {
         </section>
 
         {errorMessage && (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          <p className="text-sm text-seal font-body" role="alert">
             {errorMessage}
           </p>
         )}
         {saveMessage === "success" && (
-          <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium" role="status">
+          <p className="text-sm text-ink font-medium font-body" role="status">
             保存しました
           </p>
         )}

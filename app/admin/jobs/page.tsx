@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Plus, Loader2, Briefcase } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 // ─────────────────────────────────────────────
@@ -91,17 +92,17 @@ function ScoreInput({
 }: { label: string; value: number | null; onChange: (v: number) => void }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm text-slate-600 w-28 shrink-0">{label}</span>
+      <span className="text-sm text-graphite/70 w-28 shrink-0">{label}</span>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((i) => (
           <button
             key={i}
             type="button"
             onClick={() => onChange(i)}
-            className={`w-8 h-8 text-sm font-bold border transition-colors ${
+            className={`w-8 h-8 text-sm font-bold font-numeric border transition-colors ${
               value === i
-                ? "bg-accent text-white border-accent"
-                : "bg-white text-slate-400 border-slate-200 hover:border-accent hover:text-accent"
+                ? "bg-ink text-paper border-ink"
+                : "bg-paper text-graphite/70 border-rule hover:border-ink hover:text-ink"
             }`}
           >
             {i}
@@ -142,15 +143,15 @@ function JobForm({
     onSave(form);
   };
 
-  const inputCls = "w-full border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-primary";
-  const labelCls = "block text-sm font-bold text-slate-700 mb-1";
+  const inputCls = "w-full border border-rule px-3 py-2 text-sm focus:outline-none focus:border-ink";
+  const labelCls = "block text-sm font-bold text-graphite mb-1";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       {/* 基本情報 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className={labelCls}>職種名 <span className="text-accent">*</span></label>
+          <label className={labelCls}>職種名 <span className="text-seal">*</span></label>
           <input className={inputCls} value={form.title}
             onChange={(e) => set("title", e.target.value)} placeholder="例: カフェスタッフ" />
         </div>
@@ -211,7 +212,7 @@ function JobForm({
         <input className={inputCls} value={form.affiliate_url ?? ""}
           onChange={(e) => set("affiliate_url", e.target.value)}
           placeholder="https://..." />
-        <p className="text-xs text-slate-400 mt-1">承認後に差し込む場合は空欄でOKです</p>
+        <p className="text-xs text-graphite/70 mt-1">承認後に差し込む場合は空欄でOKです</p>
       </div>
 
       {/* タグ */}
@@ -222,8 +223,8 @@ function JobForm({
             <button key={tag} type="button" onClick={() => toggleTag(tag)}
               className={`px-3 py-1.5 text-xs font-bold border transition-colors ${
                 form.tags.includes(tag)
-                  ? "bg-primary text-white border-primary"
-                  : "bg-white text-slate-500 border-slate-200 hover:border-primary"
+                  ? "bg-ink text-paper border-ink"
+                  : "bg-paper text-graphite/70 border-rule hover:border-ink"
               }`}>
               {tag}
             </button>
@@ -246,8 +247,8 @@ function JobForm({
       <div className="flex items-center gap-3">
         <input type="checkbox" id="is_active" checked={form.is_active}
           onChange={(e) => set("is_active", e.target.checked)}
-          className="w-4 h-4 accent-primary" />
-        <label htmlFor="is_active" className="text-sm font-bold text-slate-700">
+          className="w-4 h-4 accent-ink" />
+        <label htmlFor="is_active" className="text-sm font-bold text-graphite">
           公開する（チェックを外すと非表示）
         </label>
       </div>
@@ -255,11 +256,11 @@ function JobForm({
       {/* ボタン */}
       <div className="flex gap-3 pt-2">
         <button type="submit" disabled={saving}
-          className="px-8 py-2.5 bg-primary text-white font-bold text-sm hover:bg-primary-hover transition-colors disabled:opacity-50">
+          className="px-8 py-2.5 bg-ink text-paper font-bold text-sm hover:bg-ink/90 transition-colors disabled:opacity-50">
           {saving ? "保存中..." : "保存する"}
         </button>
         <button type="button" onClick={onCancel}
-          className="px-8 py-2.5 border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors">
+          className="px-8 py-2.5 border border-rule text-graphite font-bold text-sm hover:bg-mist transition-colors">
           キャンセル
         </button>
       </div>
@@ -286,40 +287,40 @@ function JobRow({
     : "—";
 
   return (
-    <tr className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+    <tr className="border-b border-rule hover:bg-mist transition-colors">
       <td className="px-4 py-3">
         <div className="flex flex-col gap-0.5">
-          <span className="font-bold text-sm text-primary">{job.title}</span>
+          <span className="font-bold text-sm text-ink">{job.title}</span>
           {job.company_name && (
-            <span className="text-xs text-slate-400">{job.company_name}</span>
+            <span className="text-xs text-graphite/70">{job.company_name}</span>
           )}
         </div>
       </td>
       <td className="px-4 py-3">
         <span className={`text-xs font-bold px-2 py-0.5 ${
-          job.type === "baito" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent"
+          job.type === "baito" ? "bg-ink text-paper" : "border border-ink text-ink bg-paper"
         }`}>
           {job.type === "baito" ? "バイト" : "インターン"}
         </span>
       </td>
-      <td className="px-4 py-3 text-sm text-slate-600">{wage}</td>
+      <td className="px-4 py-3 text-sm text-graphite/70 font-numeric tabular-nums">{wage}</td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-1">
           {job.tags.slice(0, 3).map((t) => (
-            <span key={t} className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500">{t}</span>
+            <span key={t} className="text-[10px] px-1.5 py-0.5 bg-mist text-graphite/70">{t}</span>
           ))}
           {job.tags.length > 3 && (
-            <span className="text-[10px] text-slate-400">+{job.tags.length - 3}</span>
+            <span className="text-[10px] text-graphite/70 font-numeric">+{job.tags.length - 3}</span>
           )}
         </div>
       </td>
-      <td className="px-4 py-3 text-sm text-slate-500">{job.display_order}</td>
+      <td className="px-4 py-3 text-sm text-graphite/70 font-numeric tabular-nums">{job.display_order}</td>
       <td className="px-4 py-3">
         <button onClick={onToggleActive}
           className={`text-xs font-bold px-2 py-1 transition-colors ${
             job.is_active
-              ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-              : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+              ? "bg-ink text-paper hover:bg-ink/90"
+              : "bg-mist text-graphite/70 hover:bg-rule"
           }`}>
           {job.is_active ? "公開中" : "非公開"}
         </button>
@@ -327,11 +328,11 @@ function JobRow({
       <td className="px-4 py-3">
         <div className="flex gap-2">
           <button onClick={onEdit}
-            className="text-xs px-3 py-1.5 border border-slate-200 text-slate-600 font-bold hover:border-primary hover:text-primary transition-colors">
+            className="text-xs px-3 py-1.5 border border-rule text-graphite font-bold hover:border-ink hover:text-ink transition-colors">
             編集
           </button>
           <button onClick={onDelete}
-            className="text-xs px-3 py-1.5 border border-rose-200 text-rose-500 font-bold hover:bg-rose-50 transition-colors">
+            className="text-xs px-3 py-1.5 border border-seal text-seal font-bold hover:bg-seal/10 transition-colors">
             削除
           </button>
         </div>
@@ -408,38 +409,38 @@ export default function AdminJobsPage() {
   // ─── ローディング・権限チェック ───
   if (!ready) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-400">確認中...</p>
+      <div className="min-h-screen bg-mist flex items-center justify-center">
+        <p className="text-graphite/70">確認中...</p>
       </div>
     );
   }
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 font-body">
+    <div className="min-h-screen bg-mist font-body">
       <main className="max-w-6xl mx-auto p-6 flex flex-col gap-6">
 
         {/* ヘッダー */}
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <a href="/admin" className="text-slate-400 text-sm hover:text-primary transition-colors">
+              <a href="/admin" className="text-graphite/70 text-sm hover:text-ink transition-colors">
                 管理者ダッシュボード
               </a>
-              <span className="text-slate-300">/</span>
-              <span className="text-sm text-primary font-bold">求人管理</span>
+              <span className="text-graphite/40">/</span>
+              <span className="text-sm text-ink font-bold">求人管理</span>
             </div>
-            <h1 className="text-2xl font-black text-primary">求人管理</h1>
-            <p className="text-slate-500 text-sm mt-0.5">
+            <h1 className="text-2xl font-black text-ink font-mincho">求人管理</h1>
+            <p className="text-graphite/70 text-sm mt-0.5">
               バイト・インターン案件の追加・編集・削除ができます
             </p>
           </div>
           {mode === "list" && (
             <button
               onClick={() => setMode("new")}
-              className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 font-bold text-sm hover:bg-primary-hover transition-colors shrink-0"
+              className="flex items-center gap-2 bg-ink text-paper px-5 py-2.5 font-bold text-sm hover:bg-ink/90 transition-colors shrink-0"
             >
-              <span className="material-symbols-outlined text-sm">add</span>
+              <Plus className="w-4 h-4" aria-hidden="true" />
               新規追加
             </button>
           )}
@@ -447,8 +448,8 @@ export default function AdminJobsPage() {
 
         {/* フォーム（新規・編集） */}
         {(mode === "new" || mode === "edit") && (
-          <div className="bg-white border border-slate-200 p-6">
-            <h2 className="text-base font-black text-primary mb-5">
+          <div className="bg-paper border border-rule p-6">
+            <h2 className="text-base font-black text-ink mb-5">
               {mode === "new" ? "新規求人を追加" : `「${editTarget?.title}」を編集`}
             </h2>
             <JobForm
@@ -464,28 +465,28 @@ export default function AdminJobsPage() {
 
         {/* 一覧 */}
         {mode === "list" && (
-          <div className="bg-white border border-slate-200">
+          <div className="bg-paper border border-rule">
             {loading ? (
-              <div className="flex items-center justify-center py-16 gap-2 text-slate-400">
-                <span className="material-symbols-outlined animate-spin">progress_activity</span>
+              <div className="flex items-center justify-center py-16 gap-2 text-graphite/70">
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                 読み込み中...
               </div>
             ) : jobs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
-                <span className="material-symbols-outlined text-4xl">work_off</span>
+              <div className="flex flex-col items-center justify-center py-16 gap-3 text-graphite/70">
+                <Briefcase className="w-9 h-9" aria-hidden="true" />
                 <p className="text-sm">案件がまだ登録されていません</p>
                 <button onClick={() => setMode("new")}
-                  className="text-accent text-sm font-bold underline">
+                  className="text-ink text-sm font-bold underline">
                   最初の案件を追加する
                 </button>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                  <thead className="bg-mist border-b border-rule">
                     <tr>
                       {["職種名", "種別", "時給", "タグ", "表示順", "公開状態", "操作"].map((h) => (
-                        <th key={h} className="px-4 py-3 text-xs font-bold text-slate-500 whitespace-nowrap">
+                        <th key={h} className="px-4 py-3 text-xs font-bold text-graphite/70 whitespace-nowrap">
                           {h}
                         </th>
                       ))}
@@ -501,8 +502,8 @@ export default function AdminJobsPage() {
                     ))}
                   </tbody>
                 </table>
-                <div className="px-4 py-3 border-t border-slate-100 text-xs text-slate-400">
-                  全 {jobs.length} 件
+                <div className="px-4 py-3 border-t border-rule text-xs text-graphite/70">
+                  全 <span className="font-numeric tabular-nums">{jobs.length}</span> 件
                 </div>
               </div>
             )}
@@ -513,21 +514,21 @@ export default function AdminJobsPage() {
       {/* 削除確認モーダル */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md p-6 flex flex-col gap-4">
-            <h3 className="font-black text-primary text-lg">削除の確認</h3>
-            <p className="text-slate-600 text-sm">
+          <div className="bg-paper w-full max-w-md p-6 flex flex-col gap-4">
+            <h3 className="font-black text-ink text-lg">削除の確認</h3>
+            <p className="text-graphite/70 text-sm">
               「<strong>{deleteTarget.title}</strong>」を削除します。この操作は取り消せません。
             </p>
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-6 py-2.5 bg-rose-600 text-white font-bold text-sm hover:bg-rose-700 transition-colors"
+                className="px-6 py-2.5 bg-seal text-paper font-bold text-sm hover:bg-seal/90 transition-colors"
               >
                 削除する
               </button>
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="px-6 py-2.5 border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors"
+                className="px-6 py-2.5 border border-rule text-graphite font-bold text-sm hover:bg-mist transition-colors"
               >
                 キャンセル
               </button>

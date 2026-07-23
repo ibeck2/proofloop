@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { Plus } from "lucide-react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -13,8 +14,12 @@ import {
 } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
+import { COLORS } from "@/lib/design/tokens";
 
-const BRAND_STROKE = "#002b5c";
+// recharts は className ではなく実際の色値を要求するため、トークンの値をそのまま使う。
+const BRAND_STROKE = COLORS.ink;
+const GRID_STROKE = COLORS.rule;
+const TICK_FILL = COLORS.graphite;
 
 function startOfMonthISO(): string {
   const d = new Date();
@@ -61,10 +66,10 @@ function DashboardTooltip({ active, payload }: DashboardTooltipProps) {
   const p = payload[0]?.payload;
   if (!p) return null;
   return (
-    <div className="rounded-md border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 shadow-lg text-sm">
-      <p className="font-bold text-slate-900 dark:text-white">{p.label}</p>
-      <p className="text-primary dark:text-blue-300 mt-1">
-        閲覧 <span className="font-bold tabular-nums">{p.views}</span> 回
+    <div className="rounded-md border border-rule bg-paper px-3 py-2 shadow-lg text-sm font-body">
+      <p className="font-bold text-graphite">{p.label}</p>
+      <p className="text-ink mt-1">
+        閲覧 <span className="font-bold font-numeric tabular-nums">{p.views}</span> 回
       </p>
     </div>
   );
@@ -179,7 +184,7 @@ export default function ClubDashboardContent() {
   if (ctxLoading) {
     return (
       <div className="max-w-7xl mx-auto w-full px-6 py-8 lg:px-12 lg:py-10 flex items-center justify-center min-h-[40vh]">
-        <p className="text-slate-500">読み込み中...</p>
+        <p className="text-graphite/70">読み込み中...</p>
       </div>
     );
   }
@@ -187,8 +192,8 @@ export default function ClubDashboardContent() {
   if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="max-w-7xl mx-auto w-full px-6 py-8 lg:px-12 lg:py-10">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 p-6 text-center">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">
+        <div className="border border-rule border-l-4 border-l-seal bg-mist p-6 text-center">
+          <p className="text-ink font-bold font-body">
             管理できる団体がありません
           </p>
         </div>
@@ -206,67 +211,65 @@ export default function ClubDashboardContent() {
     <div className="max-w-7xl mx-auto w-full px-6 py-8 lg:px-12 lg:py-10">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
         <div className="flex flex-col gap-2">
-          <h2 className="text-primary dark:text-white text-2xl md:text-3xl font-bold tracking-tight">
+          <h2 className="font-mincho text-ink text-2xl md:text-3xl font-bold tracking-tight">
             {welcomeTitle}
           </h2>
         </div>
         <Link
-          className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded shadow-sm transition-all hover:shadow-md whitespace-nowrap font-bold text-sm"
+          className="inline-flex items-center justify-center gap-2 bg-ink hover:bg-ink/90 text-paper px-6 py-3 rounded shadow-sm transition-all hover:shadow-md whitespace-nowrap font-bold text-sm font-body"
           href="/schedule"
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
-            add
-          </span>
+          <Plus className="w-5 h-5" aria-hidden="true" />
           新しい新歓イベントを登録する
         </Link>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="bg-white dark:bg-slate-800 p-8 rounded shadow-sm border border-slate-100 dark:border-slate-700">
-          <h3 className="text-text-sub dark:text-slate-400 font-medium text-sm mb-2">
+        <div className="bg-paper p-8 rounded shadow-sm border border-rule">
+          <h3 className="text-graphite/70 font-medium text-sm mb-2 font-body">
             今月の閲覧数
           </h3>
-          <p className="text-3xl font-bold tabular-nums text-primary dark:text-blue-200">
+          <p className="text-3xl font-bold font-numeric tabular-nums text-ink">
             {formatKpi(monthlyViews)}
           </p>
-          <p className="text-text-sub dark:text-slate-500 text-xs mt-2">
+          <p className="text-graphite/70 text-xs mt-2 font-body">
             団体詳細ページの閲覧ログ（当月）
           </p>
         </div>
-        <div className="bg-white dark:bg-slate-800 p-8 rounded shadow-sm border border-slate-100 dark:border-slate-700">
-          <h3 className="text-text-sub dark:text-slate-400 font-medium text-sm mb-2">
+        <div className="bg-paper p-8 rounded shadow-sm border border-rule">
+          <h3 className="text-graphite/70 font-medium text-sm mb-2 font-body">
             今月の新規エントリー数
           </h3>
-          <p className="text-3xl font-bold tabular-nums text-primary dark:text-blue-200">
+          <p className="text-3xl font-bold font-numeric tabular-nums text-ink">
             {formatKpi(monthlyEntries)}
           </p>
-          <p className="text-text-sub dark:text-slate-500 text-xs mt-2">
+          <p className="text-graphite/70 text-xs mt-2 font-body">
             当月に作成された応募
           </p>
         </div>
-        <div className="bg-white dark:bg-slate-800 p-8 rounded shadow-sm border border-slate-100 dark:border-slate-700">
-          <h3 className="text-text-sub dark:text-slate-400 font-medium text-sm mb-2">
+        <div className="bg-paper p-8 rounded shadow-sm border border-rule">
+          <h3 className="text-graphite/70 font-medium text-sm mb-2 font-body">
             未読メッセージ
           </h3>
-          <p className="text-3xl font-bold tabular-nums text-primary dark:text-blue-200">
+          <p className="text-3xl font-bold font-numeric tabular-nums text-ink">
             {formatKpi(unreadMessages)}
           </p>
-          <p className="text-text-sub dark:text-slate-500 text-xs mt-2">
+          <p className="text-graphite/70 text-xs mt-2 font-body">
             応募者からの未読チャット件数
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white dark:bg-slate-800 p-6 md:p-8 rounded shadow-sm border border-slate-100 dark:border-slate-700">
-          <h3 className="text-primary dark:text-white text-lg font-bold mb-1">
+        <div className="lg:col-span-2 bg-paper p-6 md:p-8 rounded shadow-sm border border-rule">
+          <h3 className="text-ink text-lg font-bold mb-1 font-body">
             ページ閲覧数の推移
           </h3>
-          <p className="text-text-sub dark:text-slate-400 text-sm mb-6">
+          <p className="text-graphite/70 text-sm mb-6 font-body">
             過去30日間（団体詳細ページ）
           </p>
           {statsLoading ? (
-            <div className="h-[300px] flex items-center justify-center text-slate-500 text-sm">
+            <div className="h-[300px] flex items-center justify-center text-graphite/70 text-sm">
               読み込み中...
             </div>
           ) : (
@@ -276,23 +279,19 @@ export default function ClubDashboardContent() {
                   data={chartSeries}
                   margin={{ top: 8, right: 16, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#e2e8f0"
-                    className="dark:stroke-slate-600"
-                  />
+                  <CartesianGrid strokeDasharray="3 3" stroke={GRID_STROKE} />
                   <XAxis
                     dataKey="label"
-                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    tick={{ fontSize: 11, fill: TICK_FILL }}
                     tickLine={false}
-                    axisLine={{ stroke: "#cbd5e1" }}
+                    axisLine={{ stroke: GRID_STROKE }}
                     interval="preserveStartEnd"
                   />
                   <YAxis
                     allowDecimals={false}
-                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    tick={{ fontSize: 11, fill: TICK_FILL }}
                     tickLine={false}
-                    axisLine={{ stroke: "#cbd5e1" }}
+                    axisLine={{ stroke: GRID_STROKE }}
                     width={36}
                   />
                   <Tooltip content={<DashboardTooltip />} />
@@ -310,22 +309,22 @@ export default function ClubDashboardContent() {
             </div>
           )}
         </div>
-        <div className="lg:col-span-1 bg-white dark:bg-slate-800 p-8 rounded shadow-sm border border-slate-100 dark:border-slate-700">
-          <h3 className="text-primary dark:text-white text-lg font-bold mb-4">
+        <div className="lg:col-span-1 bg-paper p-8 rounded shadow-sm border border-rule">
+          <h3 className="text-ink text-lg font-bold mb-4 font-body">
             直近の実績・イベント
           </h3>
-          <p className="text-text-sub dark:text-slate-400 text-sm mb-4">
+          <p className="text-graphite/70 text-sm mb-4 font-body">
             口コミ・レビュー管理から承認済みの声を確認できます。
           </p>
           <Link
             href={withOrgQuery("/clubdashboard/reviews")}
-            className="block w-full py-2 text-center text-sm font-bold text-primary dark:text-blue-300 border border-slate-200 dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            className="block w-full py-2 text-center text-sm font-bold text-ink border border-rule rounded hover:bg-mist transition-colors font-body"
           >
             口コミ・レビュー管理へ
           </Link>
           <Link
             href={withOrgQuery("/clubmessages")}
-            className="block w-full py-2 mt-2 text-center text-sm font-bold text-primary dark:text-blue-300 border border-slate-200 dark:border-slate-600 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            className="block w-full py-2 mt-2 text-center text-sm font-bold text-ink border border-rule rounded hover:bg-mist transition-colors font-body"
           >
             メッセージへ
           </Link>

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Button, Input } from "@/components/ui";
+import { UserPlus } from "lucide-react";
+import { Button, Input, Badge } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 import type {
   OrganizationMemberPermissions,
@@ -55,6 +56,30 @@ function permissionLabel(
 ): string {
   const base = PERMISSION_LABELS.find((p) => p.key === key)?.label ?? key;
   return `${enabled ? "ON" : "OFF"}: ${base}`;
+}
+
+/**
+ * 役職の色分け：新しい色相は足さず、components/home/OrganizationField.tsx と同じ
+ * 「紺の階調」を再利用する（owner=最も濃い、admin=一段階薄い）。ドット＋テキストで表し、
+ * 背景色は塗らない（seal/ink の6色制約はUIの塗り面のみが対象のため、この階調はデータ表現として許容）。
+ */
+const ROLE_TONES: Record<string, string> = {
+  owner: "#002B5C",
+  admin: "#33587F",
+};
+
+function RoleTag({ role }: { role: string }) {
+  const tone = ROLE_TONES[role.toLowerCase()] ?? "#7391AF";
+  return (
+    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-graphite">
+      <span
+        aria-hidden="true"
+        className="inline-block h-2 w-2 shrink-0 rounded-full"
+        style={{ backgroundColor: tone }}
+      />
+      {roleLabel(role)}
+    </span>
+  );
 }
 
 export default function ClubMembersSettingsPage() {
@@ -323,7 +348,7 @@ export default function ClubMembersSettingsPage() {
   if (ctxLoading) {
     return (
       <div className="p-6 lg:p-10 flex items-center justify-center min-h-[200px]">
-        <p className="text-slate-500">読み込み中...</p>
+        <p className="text-graphite/70">読み込み中...</p>
       </div>
     );
   }
@@ -331,8 +356,8 @@ export default function ClubMembersSettingsPage() {
   if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="p-6 lg:p-10">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 p-6 text-center">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">
+        <div className="rounded-lg border border-rule border-l-4 border-l-ink bg-mist p-6 text-center">
+          <p className="text-ink font-bold">
             管理できる団体がありません
           </p>
         </div>
@@ -343,10 +368,10 @@ export default function ClubMembersSettingsPage() {
   if (!canManage) {
     return (
       <div className="p-6 lg:p-10 max-w-3xl mx-auto w-full">
-        <h1 className="text-primary text-2xl font-bold tracking-tight">
+        <h1 className="font-mincho text-ink text-2xl font-bold tracking-tight">
           メンバー管理
         </h1>
-        <p className="mt-4 text-slate-600 dark:text-slate-400">
+        <p className="mt-4 text-graphite">
           メンバー管理は代表者（Owner）または一般管理者（Admin）のみが利用できます。
         </p>
       </div>
@@ -357,18 +382,19 @@ export default function ClubMembersSettingsPage() {
     <div className="p-6 lg:p-10 max-w-3xl mx-auto w-full">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-primary text-2xl font-bold tracking-tight">
+          <h1 className="font-mincho text-ink text-2xl font-bold tracking-tight">
             メンバー管理
           </h1>
           {orgName && (
-            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+            <p className="text-graphite text-sm mt-1">
               {orgName}
             </p>
           )}
         </div>
         <Button
           type="button"
-          className="bg-primary text-white shrink-0"
+          variant="primary"
+          className="shrink-0 inline-flex items-center gap-2"
           onClick={() => {
             if (activeRole !== "owner" && inviteRole === "owner") {
               setInviteRole("admin");
@@ -377,33 +403,32 @@ export default function ClubMembersSettingsPage() {
             setModalOpen(true);
           }}
         >
+          <UserPlus className="w-4 h-4" aria-hidden="true" />
           メンバーを招待
         </Button>
       </div>
 
       <section className="mb-10">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+        <h2 className="text-lg font-bold text-ink mb-3">
           現在のメンバー
         </h2>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+        <div className="bg-paper border border-rule rounded-lg overflow-hidden">
           {listLoading ? (
-            <p className="p-4 text-slate-500 text-sm">読み込み中...</p>
+            <p className="p-4 text-graphite/70 text-sm">読み込み中...</p>
           ) : members.length === 0 ? (
-            <p className="p-4 text-slate-500 text-sm">メンバーがいません</p>
+            <p className="p-4 text-graphite/70 text-sm">メンバーがいません</p>
           ) : (
-            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="divide-y divide-rule">
               {members.map((m) => (
                 <li
                   key={m.id}
                   className="px-4 py-3 flex flex-col gap-2"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <span className="font-medium text-slate-900 dark:text-white">
+                    <span className="font-medium text-ink">
                       {displayNameForUser(m.user_id)}
                     </span>
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      {roleLabel(m.role)}
-                    </span>
+                    <RoleTag role={m.role} />
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {(
@@ -411,22 +436,18 @@ export default function ClubMembersSettingsPage() {
                         keyof OrganizationMemberPermissions
                       >
                     ).map((key) => (
-                      <span
+                      <Badge
                         key={`${m.id}-${key}`}
-                        className={`text-xs px-2 py-0.5 rounded-full border ${
-                          m[key]
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-slate-50 text-slate-500 border-slate-200"
-                        }`}
+                        variant={m[key] ? "primary" : "default"}
                       >
                         {permissionLabel(key, m[key])}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
                   <div className="flex justify-end">
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="outlineMuted"
                       size="sm"
                       onClick={() => openEditModal(m)}
                     >
@@ -441,33 +462,31 @@ export default function ClubMembersSettingsPage() {
       </section>
 
       <section className="mb-10">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
+        <h2 className="text-lg font-bold text-ink mb-3">
           招待中
         </h2>
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+        <div className="bg-paper border border-rule rounded-lg overflow-hidden">
           {listLoading ? (
-            <p className="p-4 text-slate-500 text-sm">読み込み中...</p>
+            <p className="p-4 text-graphite/70 text-sm">読み込み中...</p>
           ) : invitations.length === 0 ? (
-            <p className="p-4 text-slate-500 text-sm">招待中のメンバーはいません</p>
+            <p className="p-4 text-graphite/70 text-sm">招待中のメンバーはいません</p>
           ) : (
-            <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+            <ul className="divide-y divide-rule">
               {invitations.map((inv) => (
                 <li
                   key={inv.id}
                   className="px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                 >
                   <div>
-                    <p className="font-medium text-slate-900 dark:text-white">
+                    <p className="font-medium text-ink">
                       {inv.email}
                     </p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {roleLabel(inv.role)}
-                    </p>
+                    <RoleTag role={inv.role} />
                   </div>
                   <Button
                     type="button"
-                    variant="outline"
-                    className="border-red-200 text-red-700 hover:bg-red-50 shrink-0"
+                    variant="outlineMuted"
+                    className="shrink-0"
                     disabled={cancelingId === inv.id}
                     onClick={() => handleCancelInvite(inv.id)}
                   >
@@ -487,7 +506,7 @@ export default function ClubMembersSettingsPage() {
           onClick={() => !inviteSubmitting && setModalOpen(false)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800"
+            className="bg-paper rounded-lg shadow-xl max-w-md w-full p-6 border border-rule"
             role="dialog"
             aria-modal="true"
             aria-labelledby="invite-modal-title"
@@ -495,20 +514,20 @@ export default function ClubMembersSettingsPage() {
           >
             <h2
               id="invite-modal-title"
-              className="text-lg font-bold text-slate-900 dark:text-white mb-4"
+              className="text-lg font-bold text-ink mb-4"
             >
               メンバーを招待
             </h2>
             <form onSubmit={handleSendInvite} className="space-y-4">
-              <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              <p className="rounded-md border border-rule border-l-4 border-l-ink bg-mist px-3 py-2 text-sm text-ink">
                 ※招待する相手が、すでにProofLoopにアカウント登録（サインアップ）していることを確認してください。
               </p>
               <div>
                 <label
                   htmlFor="invite-email"
-                  className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1"
+                  className="block text-sm font-bold text-ink mb-1"
                 >
-                  メールアドレス <span className="text-red-600">*</span>
+                  メールアドレス <span className="text-seal">*</span>
                 </label>
                 <Input
                   id="invite-email"
@@ -523,7 +542,7 @@ export default function ClubMembersSettingsPage() {
               <div>
                 <label
                   htmlFor="invite-role"
-                  className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1"
+                  className="block text-sm font-bold text-ink mb-1"
                 >
                   権限
                 </label>
@@ -533,14 +552,14 @@ export default function ClubMembersSettingsPage() {
                   onChange={(e) =>
                     setInviteRole(e.target.value as OrganizationMemberRole)
                   }
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-md px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full border border-rule rounded-md px-3 py-2 bg-paper text-graphite"
                 >
                   <option value="admin">Admin（一般管理者）</option>
                   <option value="owner" disabled={activeRole !== "owner"}>
                     Owner（代表者）— 代表者のみ
                   </option>
                 </select>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                <p className="text-xs text-graphite/70 mt-2 leading-relaxed">
                   <strong>Owner</strong>
                   ：団体の代表として、全ての管理機能と他の代表者の招待が可能です。
                   <br />
@@ -548,21 +567,21 @@ export default function ClubMembersSettingsPage() {
                   ：採用・メッセージ・イベント等の日常運用が可能です。代表者の招待は代表者のみが行えます。
                 </p>
                 {activeRole !== "owner" && (
-                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                  <p className="text-xs text-ink font-bold mt-2">
                     あなたは Admin のため、Owner
                     の招待は送信できません（代表者のみ）。
                   </p>
                 )}
               </div>
               <div>
-                <p className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <p className="block text-sm font-bold text-ink mb-1">
                   付与する詳細権限
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {PERMISSION_LABELS.map((perm) => (
                     <label
                       key={perm.key}
-                      className="inline-flex items-center gap-2 rounded border border-slate-200 px-3 py-2 text-sm"
+                      className="inline-flex items-center gap-2 rounded border border-rule px-3 py-2 text-sm text-graphite"
                     >
                       <input
                         type="checkbox"
@@ -582,7 +601,7 @@ export default function ClubMembersSettingsPage() {
               <div className="flex gap-2 justify-end pt-2">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="outlineMuted"
                   disabled={inviteSubmitting}
                   onClick={() => setModalOpen(false)}
                 >
@@ -590,7 +609,7 @@ export default function ClubMembersSettingsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-primary text-white"
+                  variant="primary"
                   disabled={inviteSubmitting}
                 >
                   {inviteSubmitting ? "送信中..." : "招待を送信"}
@@ -608,7 +627,7 @@ export default function ClubMembersSettingsPage() {
           onClick={() => !editSubmitting && setEditingMember(null)}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800"
+            className="bg-paper rounded-lg shadow-xl max-w-md w-full p-6 border border-rule"
             role="dialog"
             aria-modal="true"
             aria-labelledby="member-edit-modal-title"
@@ -616,16 +635,16 @@ export default function ClubMembersSettingsPage() {
           >
             <h2
               id="member-edit-modal-title"
-              className="text-lg font-bold text-slate-900 dark:text-white mb-4"
+              className="text-lg font-bold text-ink mb-4"
             >
               権限を編集
             </h2>
-            <p className="text-sm text-slate-600 mb-3">
+            <p className="text-sm text-graphite mb-3">
               {displayNameForUser(editingMember.user_id)}
             </p>
             <form onSubmit={handleSaveMemberPermissions} className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">
+                <label className="block text-sm font-bold text-ink mb-1">
                   役職
                 </label>
                 <select
@@ -633,7 +652,7 @@ export default function ClubMembersSettingsPage() {
                   onChange={(e) =>
                     setEditRole(e.target.value as OrganizationMemberRole)
                   }
-                  className="w-full border border-slate-300 rounded-md px-3 py-2 bg-white text-slate-900"
+                  className="w-full border border-rule rounded-md px-3 py-2 bg-paper text-graphite"
                 >
                   <option value="admin">Admin（一般管理者）</option>
                   <option value="owner" disabled={activeRole !== "owner"}>
@@ -642,14 +661,14 @@ export default function ClubMembersSettingsPage() {
                 </select>
               </div>
               <div>
-                <p className="block text-sm font-bold text-slate-700 mb-1">
+                <p className="block text-sm font-bold text-ink mb-1">
                   詳細権限
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {PERMISSION_LABELS.map((perm) => (
                     <label
                       key={`edit-${perm.key}`}
-                      className="inline-flex items-center gap-2 rounded border border-slate-200 px-3 py-2 text-sm"
+                      className="inline-flex items-center gap-2 rounded border border-rule px-3 py-2 text-sm text-graphite"
                     >
                       <input
                         type="checkbox"
@@ -669,7 +688,7 @@ export default function ClubMembersSettingsPage() {
               <div className="flex gap-2 justify-end pt-2">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="outlineMuted"
                   disabled={editSubmitting}
                   onClick={() => setEditingMember(null)}
                 >
@@ -677,7 +696,7 @@ export default function ClubMembersSettingsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-primary text-white"
+                  variant="primary"
                   disabled={editSubmitting}
                 >
                   {editSubmitting ? "保存中..." : "保存"}

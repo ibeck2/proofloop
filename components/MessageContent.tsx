@@ -24,7 +24,7 @@ export default function MessageContent({
             href={part}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-primary underline hover:opacity-80"
+            className="text-ink underline hover:opacity-80"
           >
             {part}
           </a>

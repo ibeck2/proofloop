@@ -83,36 +83,36 @@ export default function AdminDashboardPage() {
 
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-500">確認中...</p>
+      <div className="min-h-screen bg-mist flex items-center justify-center">
+        <p className="text-graphite/70">確認中...</p>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-500">アクセスできません</p>
+      <div className="min-h-screen bg-mist flex items-center justify-center">
+        <p className="text-graphite/70">アクセスできません</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-display">
+    <div className="min-h-screen bg-mist text-graphite font-body">
       <main className="max-w-4xl mx-auto p-6">
         <div className="flex items-start justify-between gap-4 mb-8">
           <div className="min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold text-navy">
+            <h1 className="text-2xl md:text-3xl font-bold text-ink font-mincho">
               管理者ダッシュボード（Admin Dashboard）
             </h1>
-            <p className="text-slate-600 text-sm mt-2">
+            <p className="text-graphite/70 text-sm mt-2">
               運営・管理機能の入口です。必要なメニューを選択してください。
             </p>
           </div>
 
           <Link
             href="/"
-            className="shrink-0 text-accent text-sm font-bold hover:underline inline-flex items-center gap-1 mt-1"
+            className="shrink-0 text-ink text-sm font-bold hover:underline inline-flex items-center gap-1 mt-1"
           >
             ← トップに戻る
           </Link>
@@ -123,28 +123,28 @@ export default function AdminDashboardPage() {
             <Link
               key={href}
               href={href}
-              className="group rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+              className="group rounded-xl border border-rule bg-paper shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
             >
               <div className="p-5">
                 <div className="flex items-start gap-3">
-                  <span className="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-slate-100 text-slate-700 group-hover:bg-accent/10 group-hover:text-accent transition-colors">
+                  <span className="inline-flex items-center justify-center w-11 h-11 rounded-lg bg-mist text-graphite group-hover:bg-ink/10 group-hover:text-ink transition-colors">
                     <Icon className="w-5 h-5" aria-hidden="true" />
                   </span>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-3">
-                      <h2 className="text-base font-bold text-slate-900">
+                      <h2 className="text-base font-bold text-ink">
                         {title}
                       </h2>
                       <MessageSquare
-                        className="w-4 h-4 text-slate-300 group-hover:text-slate-400 transition-colors"
+                        className="w-4 h-4 text-graphite/40 group-hover:text-graphite/70 transition-colors"
                         aria-hidden="true"
                       />
                     </div>
-                    <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+                    <p className="text-sm text-graphite/70 mt-1 line-clamp-2">
                       {description}
                     </p>
-                    <div className="mt-4 text-accent text-sm font-bold inline-flex items-center gap-1 group-hover:underline decoration-2 underline-offset-4">
+                    <div className="mt-4 text-ink text-sm font-bold inline-flex items-center gap-1 group-hover:underline decoration-2 underline-offset-4">
                       開く
                       <Users className="w-4 h-4" aria-hidden="true" />
                     </div>

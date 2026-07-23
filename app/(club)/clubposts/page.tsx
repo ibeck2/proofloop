@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Plus, Trash2, EyeOff } from "lucide-react";
 import { Button, Input, Textarea, Badge } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 import {
@@ -27,22 +28,6 @@ type OrgPostRow = {
   is_hidden: boolean | null;
   created_at: string;
 };
-
-function categoryBadgeClass(category: string | null): string {
-  const c = category ?? "";
-  switch (c) {
-    case "recruitment":
-      return "bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200 border-emerald-200 dark:border-emerald-800";
-    case "campus_life":
-      return "bg-blue-100 text-blue-900 dark:bg-blue-900/40 dark:text-blue-200 border-blue-200 dark:border-blue-800";
-    case "event":
-      return "bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200 border-violet-200 dark:border-violet-800";
-    case "report":
-      return "bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200 border-sky-200 dark:border-sky-800";
-    default:
-      return "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-600";
-  }
-}
 
 function formatPostDate(iso: string): string {
   const d = new Date(iso);
@@ -180,7 +165,7 @@ export default function ClubPostsPage() {
   if (ctxLoading) {
     return (
       <div className="p-6 lg:p-10 flex items-center justify-center min-h-[40vh]">
-        <p className="text-slate-500">読み込み中...</p>
+        <p className="text-graphite/70">読み込み中...</p>
       </div>
     );
   }
@@ -188,8 +173,8 @@ export default function ClubPostsPage() {
   if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="p-6 lg:p-10">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 p-6 text-center max-w-xl">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">
+        <div className="rounded-lg border border-rule border-l-4 border-l-ink bg-mist p-6 text-center max-w-xl">
+          <p className="text-ink font-bold">
             管理できる団体がありません
           </p>
         </div>
@@ -201,29 +186,30 @@ export default function ClubPostsPage() {
     <div className="max-w-3xl mx-auto w-full px-6 py-8 lg:px-12 lg:py-10">
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-primary dark:text-white text-2xl font-bold tracking-tight">
+          <h1 className="font-mincho text-ink text-2xl font-bold tracking-tight">
             タイムライン投稿
           </h1>
           {orgName && (
-            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+            <p className="text-graphite text-sm mt-1">
               {orgName}
             </p>
           )}
         </div>
         <Button
           type="button"
-          className="bg-primary text-white shrink-0 inline-flex items-center gap-2"
+          variant="primary"
+          className="shrink-0 inline-flex items-center gap-2"
           onClick={openModal}
         >
-          <span className="material-symbols-outlined text-lg">add</span>
+          <Plus className="w-4 h-4" aria-hidden="true" />
           新規投稿
         </Button>
       </header>
 
       {listLoading ? (
-        <p className="text-slate-500 text-sm">読み込み中...</p>
+        <p className="text-graphite/70 text-sm">読み込み中...</p>
       ) : posts.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-200 dark:border-slate-700 p-10 text-center text-slate-500 text-sm">
+        <div className="rounded-lg border border-dashed border-rule p-10 text-center text-graphite/70 text-sm">
           まだ投稿がありません。「＋ 新規投稿」から最初の投稿を作成できます。
         </div>
       ) : (
@@ -231,45 +217,45 @@ export default function ClubPostsPage() {
           {posts.map((post) => (
             <li
               key={post.id}
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-5 shadow-sm"
+              className="bg-paper border border-rule rounded-lg p-5 shadow-sm"
             >
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <time
-                  className="text-xs text-slate-500 dark:text-slate-400"
+                  className="text-xs font-numeric tabular-nums text-graphite/70"
                   dateTime={post.created_at}
                 >
                   {formatPostDate(post.created_at)}
                 </time>
-                <Badge
-                  className={`text-xs font-bold border ${categoryBadgeClass(post.category)}`}
-                >
+                <Badge className="font-bold">
                   {(() => {
                     const meta = getTimelineCategoryMeta(post.category);
                     return meta ? `${meta.icon} ${meta.label}` : "（未分類）";
                   })()}
                 </Badge>
                 {post.is_hidden ? (
-                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300">
+                  <Badge className="inline-flex items-center gap-1">
+                    <EyeOff className="w-3 h-3" aria-hidden="true" />
                     非表示
-                  </span>
+                  </Badge>
                 ) : null}
               </div>
-              <p className="text-slate-800 dark:text-slate-200 text-sm whitespace-pre-wrap break-words leading-relaxed">
+              <p className="text-graphite text-sm whitespace-pre-wrap break-words leading-relaxed">
                 {post.content}
               </p>
               {post.target_university?.trim() ? (
-                <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
+                <p className="mt-3 text-xs text-graphite/70">
                   ターゲット大学: {post.target_university.trim()}
                 </p>
               ) : null}
               <div className="mt-4 flex justify-end">
                 <Button
                   type="button"
-                  variant="outline"
-                  className="border-red-200 text-red-700 hover:bg-red-50 text-sm"
+                  variant="outlineMuted"
+                  className="text-sm inline-flex items-center gap-1.5"
                   disabled={deletingId === post.id}
                   onClick={() => handleDelete(post.id)}
                 >
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
                   {deletingId === post.id ? "削除中..." : "削除"}
                 </Button>
               </div>
@@ -285,7 +271,7 @@ export default function ClubPostsPage() {
           onClick={closeModal}
         >
           <div
-            className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto"
+            className="bg-paper rounded-lg shadow-xl max-w-lg w-full p-6 border border-rule max-h-[90vh] overflow-y-auto"
             role="dialog"
             aria-modal="true"
             aria-labelledby="post-modal-title"
@@ -293,7 +279,7 @@ export default function ClubPostsPage() {
           >
             <h2
               id="post-modal-title"
-              className="text-lg font-bold text-slate-900 dark:text-white mb-4"
+              className="text-lg font-bold text-ink mb-4"
             >
               新規投稿
             </h2>
@@ -301,7 +287,7 @@ export default function ClubPostsPage() {
               <div>
                 <label
                   htmlFor="post-category"
-                  className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1"
+                  className="block text-sm font-bold text-ink mb-1"
                 >
                   カテゴリー
                 </label>
@@ -311,7 +297,7 @@ export default function ClubPostsPage() {
                   onChange={(e) =>
                     setCategory(e.target.value as TimelineCategoryValue)
                   }
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-none px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full border border-rule rounded-none px-3 py-2 bg-paper text-graphite"
                 >
                   {TIMELINE_CATEGORIES.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -323,7 +309,7 @@ export default function ClubPostsPage() {
               <div>
                 <label
                   htmlFor="post-target-uni"
-                  className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1"
+                  className="block text-sm font-bold text-ink mb-1"
                 >
                   ターゲット大学（任意）
                 </label>
@@ -335,7 +321,7 @@ export default function ClubPostsPage() {
                     setTargetUniversity(v);
                     if (v !== UNIVERSITY_OTHER) setTargetUniversityOther("");
                   }}
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-none px-3 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full border border-rule rounded-none px-3 py-2 bg-paper text-graphite"
                 >
                   <option value="">全大学に公開</option>
                   {UNIVERSITY_OPTIONS.map((u) => (
@@ -358,9 +344,9 @@ export default function ClubPostsPage() {
               <div>
                 <label
                   htmlFor="post-content"
-                  className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1"
+                  className="block text-sm font-bold text-ink mb-1"
                 >
-                  本文 <span className="text-red-600">*</span>
+                  本文 <span className="text-seal">*</span>
                 </label>
                 <Textarea
                   id="post-content"
@@ -377,10 +363,10 @@ export default function ClubPostsPage() {
                 />
                 <div className="flex justify-end mt-1">
                   <span
-                    className={`text-xs tabular-nums ${
+                    className={`text-xs font-numeric tabular-nums ${
                       contentLen >= MAX_CONTENT_LENGTH
-                        ? "text-amber-600 dark:text-amber-400 font-bold"
-                        : "text-slate-500"
+                        ? "text-seal font-bold"
+                        : "text-graphite/70"
                     }`}
                   >
                     {contentLen}/{MAX_CONTENT_LENGTH}
@@ -390,7 +376,7 @@ export default function ClubPostsPage() {
               <div className="flex gap-2 justify-end pt-2">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="outlineMuted"
                   disabled={submitting}
                   onClick={closeModal}
                 >
@@ -398,7 +384,7 @@ export default function ClubPostsPage() {
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-primary text-white"
+                  variant="primary"
                   disabled={submitting || !content.trim()}
                 >
                   {submitting ? "送信中..." : "投稿する"}

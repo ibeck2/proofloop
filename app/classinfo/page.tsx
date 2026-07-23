@@ -9,17 +9,17 @@ export default function ClassInfoPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#f5f7f8] text-slate-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-mist text-graphite font-body flex items-center justify-center p-6">
       <main className="w-full max-w-2xl">
-        <section className="bg-white border border-slate-200 shadow-sm rounded-lg p-8 md:p-10 text-center">
-          <div className="mx-auto mb-5 w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-            <Construction className="w-10 h-10 text-primary" aria-hidden />
+        <section className="bg-paper border border-rule shadow-sm rounded-lg p-8 md:p-10 text-center">
+          <div className="mx-auto mb-5 w-20 h-20 rounded-full bg-mist flex items-center justify-center">
+            <Construction className="w-10 h-10 text-ink" aria-hidden="true" />
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-black text-primary tracking-tight">
+          <h1 className="text-2xl md:text-3xl font-black font-mincho text-ink tracking-tight">
             準備中
           </h1>
-          <p className="mt-4 text-slate-600 leading-relaxed">
+          <p className="mt-4 text-graphite leading-relaxed">
             授業レビュー・過去問機能は現在開発中です。
             <br />
             公開までもうしばらくお待ちください！

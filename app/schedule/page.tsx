@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Clock, MapPin, Video, Bookmark, CalendarX, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui";
 
@@ -167,16 +168,16 @@ export default function SchedulePage() {
 
   if (loading) {
     return (
-      <div className="bg-[#f5f5f7] text-slate-900 min-h-screen pb-20 md:pb-8">
+      <div className="bg-mist text-graphite font-body min-h-screen pb-20 md:pb-8">
         <main className="max-w-[900px] mx-auto px-4 py-8">
-          <h1 className="text-primary text-2xl font-bold mb-6">イベントスケジュール</h1>
+          <h1 className="text-ink text-2xl font-bold font-mincho mb-6">イベントスケジュール</h1>
           <div className="flex gap-4 mb-6">
-            <div className="h-10 w-24 bg-slate-200 rounded animate-pulse" />
-            <div className="h-10 w-24 bg-slate-200 rounded animate-pulse" />
+            <div className="h-10 w-24 bg-rule rounded animate-pulse" />
+            <div className="h-10 w-24 bg-rule rounded animate-pulse" />
           </div>
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-28 bg-slate-100 rounded-lg animate-pulse" />
+              <div key={i} className="h-28 bg-mist rounded-lg animate-pulse" />
             ))}
           </div>
         </main>
@@ -185,19 +186,19 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="bg-[#f5f5f7] text-slate-900 min-h-screen pb-20 md:pb-8">
+    <div className="bg-mist text-graphite font-body min-h-screen pb-20 md:pb-8">
       <main className="max-w-[900px] mx-auto px-4 py-8">
-        <h1 className="text-primary text-2xl font-bold mb-6">イベントスケジュール</h1>
+        <h1 className="text-ink text-2xl font-bold font-mincho mb-6">イベントスケジュール</h1>
 
         {/* View Toggle */}
-        <div className="flex border-b border-slate-200 mb-6">
+        <div className="flex border-b border-rule mb-6">
           <button
             type="button"
             onClick={() => setViewMode("list")}
             className={`flex-1 py-3 px-4 font-bold text-sm transition-colors ${
               viewMode === "list"
-                ? "text-primary border-b-2 border-primary bg-primary/5"
-                : "text-slate-600 hover:bg-slate-100"
+                ? "text-ink border-b-2 border-ink bg-mist"
+                : "text-graphite hover:bg-mist"
             }`}
           >
             リスト表示
@@ -207,8 +208,8 @@ export default function SchedulePage() {
             onClick={() => setViewMode("calendar")}
             className={`flex-1 py-3 px-4 font-bold text-sm transition-colors ${
               viewMode === "calendar"
-                ? "text-primary border-b-2 border-primary bg-primary/5"
-                : "text-slate-600 hover:bg-slate-100"
+                ? "text-ink border-b-2 border-ink bg-mist"
+                : "text-graphite hover:bg-mist"
             }`}
           >
             月間表示
@@ -218,44 +219,46 @@ export default function SchedulePage() {
         {viewMode === "list" && (
           <section className="space-y-4">
             {events.length === 0 ? (
-              <div className="bg-white border border-slate-200 rounded-lg p-12 text-center">
-                <span className="material-symbols-outlined text-5xl text-slate-300">event_busy</span>
-                <p className="text-slate-600 mt-2">現在予定されているイベントはありません</p>
+              <div className="bg-paper border border-rule rounded-lg p-12 text-center">
+                <CalendarX className="w-12 h-12 text-graphite/40 mx-auto" aria-hidden="true" />
+                <p className="text-graphite mt-2">現在予定されているイベントはありません</p>
               </div>
             ) : (
               events.map((ev) => (
                 <div
                   key={ev.id}
-                  className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm hover:border-primary/20 transition-colors"
+                  className="bg-paper border border-rule rounded-lg overflow-hidden shadow-sm hover:border-ink/20 transition-colors"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-stretch">
                     <Link
                       href={`/events/${ev.id}`}
                       className="flex-1 p-5 flex flex-col gap-2 min-w-0"
                     >
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                      <span className="text-xs font-bold text-graphite/70 uppercase tracking-wider">
                         {ev.organizations?.name ?? "団体"}
                       </span>
-                      <h3 className="text-primary font-bold text-lg">{ev.title ?? "（タイトルなし）"}</h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                      <h3 className="text-ink font-bold text-lg">{ev.title ?? "（タイトルなし）"}</h3>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-graphite">
                         <span className="flex items-center gap-1">
-                          <span className="material-symbols-outlined text-[18px]">schedule</span>
+                          <Clock className="w-[18px] h-[18px]" aria-hidden="true" />
                           {formatEventDate(ev.event_date)}
                         </span>
                         {ev.location && (
                           <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[18px]">
-                              {ev.location.startsWith("http") ? "videocam" : "location_on"}
-                            </span>
+                            {ev.location.startsWith("http") ? (
+                              <Video className="w-[18px] h-[18px]" aria-hidden="true" />
+                            ) : (
+                              <MapPin className="w-[18px] h-[18px]" aria-hidden="true" />
+                            )}
                             {ev.location.length > 50 ? ev.location.slice(0, 50) + "…" : ev.location}
                           </span>
                         )}
                       </div>
                       {ev.description && (
-                        <p className="text-slate-600 text-sm line-clamp-2">{ev.description}</p>
+                        <p className="text-graphite text-sm line-clamp-2">{ev.description}</p>
                       )}
                     </Link>
-                    <div className="flex items-center px-4 py-3 sm:py-5 border-t sm:border-t-0 sm:border-l border-slate-100">
+                    <div className="flex items-center px-4 py-3 sm:py-5 border-t sm:border-t-0 sm:border-l border-rule">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -263,17 +266,16 @@ export default function SchedulePage() {
                           toggleSave(ev.id);
                         }}
                         disabled={togglingId === ev.id}
-                        className="p-2 rounded-full hover:bg-slate-100 transition-colors disabled:opacity-50"
+                        className="p-2 rounded-full hover:bg-mist transition-colors disabled:opacity-50"
                         aria-label={savedEventIds.includes(ev.id) ? "保存を解除" : "イベントを保存"}
                       >
-                        <span
-                          className={`material-symbols-outlined text-2xl ${
-                            savedEventIds.includes(ev.id) ? "text-blue-600 !font-[500]" : "text-slate-400"
+                        <Bookmark
+                          className={`w-6 h-6 ${
+                            savedEventIds.includes(ev.id) ? "text-ink" : "text-graphite/70"
                           }`}
-                          style={savedEventIds.includes(ev.id) ? { fontVariationSettings: '"FILL" 1' } : undefined}
-                        >
-                          {savedEventIds.includes(ev.id) ? "bookmark" : "bookmark_border"}
-                        </span>
+                          aria-hidden="true"
+                          fill={savedEventIds.includes(ev.id) ? "currentColor" : "none"}
+                        />
                       </button>
                     </div>
                   </div>
@@ -284,39 +286,41 @@ export default function SchedulePage() {
         )}
 
         {viewMode === "calendar" && (
-          <section className="bg-white border border-slate-200 rounded-lg p-4 md:p-6 shadow-sm">
+          <section className="bg-paper border border-rule rounded-lg p-4 md:p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <Button
                 type="button"
                 variant="outline"
                 className="shrink-0"
+                aria-label="前の月へ"
                 onClick={() =>
                   setCalendarMonth((prev) =>
                     prev.month === 0 ? { year: prev.year - 1, month: 11 } : { year: prev.year, month: prev.month - 1 }
                   )
                 }
               >
-                <span className="material-symbols-outlined text-xl">chevron_left</span>
+                <ChevronLeft className="w-5 h-5" aria-hidden="true" />
               </Button>
-              <h2 className="text-lg font-bold text-slate-800">{monthLabel}</h2>
+              <h2 className="text-lg font-bold font-mincho text-graphite">{monthLabel}</h2>
               <Button
                 type="button"
                 variant="outline"
                 className="shrink-0"
+                aria-label="次の月へ"
                 onClick={() =>
                   setCalendarMonth((prev) =>
                     prev.month === 11 ? { year: prev.year + 1, month: 0 } : { year: prev.year, month: prev.month + 1 }
                   )
                 }
               >
-                <span className="material-symbols-outlined text-xl">chevron_right</span>
+                <ChevronRight className="w-5 h-5" aria-hidden="true" />
               </Button>
             </div>
-            <div className="grid grid-cols-7 gap-px bg-slate-200 rounded overflow-hidden">
+            <div className="grid grid-cols-7 gap-px bg-rule rounded overflow-hidden">
               {WEEKDAYS.map((w) => (
                 <div
                   key={w}
-                  className="bg-slate-50 py-2 text-center text-xs font-bold text-slate-600"
+                  className="bg-mist py-2 text-center text-xs font-bold text-graphite"
                 >
                   {w}
                 </div>
@@ -333,9 +337,9 @@ export default function SchedulePage() {
                 return (
                   <div
                     key={i}
-                    className={`min-h-[80px] md:min-h-[100px] bg-white p-1 ${
-                      !cell.date ? "bg-slate-50/50" : ""
-                    } ${isSelected ? "ring-2 ring-primary ring-inset" : ""}`}
+                    className={`min-h-[80px] md:min-h-[100px] bg-paper p-1 ${
+                      !cell.date ? "bg-mist/50" : ""
+                    } ${isSelected ? "ring-2 ring-ink ring-inset" : ""}`}
                   >
                     {cell.date && (
                       <>
@@ -349,7 +353,7 @@ export default function SchedulePage() {
                             })
                           }
                           className={`w-full text-left text-sm font-bold mb-1 ${
-                            isSelected ? "text-primary" : "text-slate-700"
+                            isSelected ? "text-ink" : "text-graphite"
                           }`}
                         >
                           {cell.day}
@@ -359,14 +363,14 @@ export default function SchedulePage() {
                             <Link
                               key={ev.id}
                               href={`/events/${ev.id}`}
-                              className="block truncate text-[10px] md:text-xs bg-primary/10 text-primary rounded px-1 py-0.5 hover:bg-primary/20"
+                              className="block truncate text-[10px] md:text-xs bg-mist text-ink rounded px-1 py-0.5 hover:bg-ink/10"
                               onClick={(e) => e.stopPropagation()}
                             >
                               {formatEventTime(ev.event_date)} {ev.title ?? ""}
                             </Link>
                           ))}
                           {dayEvents.length > 3 && (
-                            <span className="text-[10px] text-slate-500">+{dayEvents.length - 3}</span>
+                            <span className="text-[10px] text-graphite/70">+{dayEvents.length - 3}</span>
                           )}
                         </div>
                       </>
@@ -377,43 +381,42 @@ export default function SchedulePage() {
             </div>
 
             {selectedDay && eventsForSelectedDay && eventsForSelectedDay.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-slate-200">
-                <h3 className="text-sm font-bold text-slate-700 mb-3">
+              <div className="mt-6 pt-4 border-t border-rule">
+                <h3 className="text-sm font-bold text-graphite mb-3">
                   {selectedDay.year}年{selectedDay.month + 1}月{selectedDay.day}日のイベント
                 </h3>
                 <ul className="space-y-3">
                   {eventsForSelectedDay.map((ev) => (
                     <li key={ev.id} className="flex items-start gap-3">
-                      <span className="text-primary font-bold text-sm shrink-0">
+                      <span className="text-ink font-bold text-sm shrink-0">
                         {formatEventTime(ev.event_date)}
                       </span>
                       <div className="min-w-0 flex-1">
                         <Link
                           href={`/events/${ev.id}`}
-                          className="text-primary font-bold hover:underline"
+                          className="text-ink font-bold hover:underline"
                         >
                           {ev.title ?? "（タイトルなし）"}
                         </Link>
-                        <p className="text-slate-600 text-sm">{ev.organizations?.name ?? "団体"}</p>
+                        <p className="text-graphite text-sm">{ev.organizations?.name ?? "団体"}</p>
                         {ev.location && (
-                          <p className="text-slate-500 text-xs mt-0.5">{ev.location}</p>
+                          <p className="text-graphite/70 text-xs mt-0.5">{ev.location}</p>
                         )}
                       </div>
                       <button
                         type="button"
                         onClick={() => toggleSave(ev.id)}
                         disabled={togglingId === ev.id}
-                        className="p-1.5 shrink-0 rounded-full hover:bg-slate-100 disabled:opacity-50"
+                        className="p-1.5 shrink-0 rounded-full hover:bg-mist disabled:opacity-50"
                         aria-label={savedEventIds.includes(ev.id) ? "保存を解除" : "保存"}
                       >
-                        <span
-                          className={`material-symbols-outlined text-xl ${
-                            savedEventIds.includes(ev.id) ? "text-blue-600 !font-[500]" : "text-slate-400"
+                        <Bookmark
+                          className={`w-5 h-5 ${
+                            savedEventIds.includes(ev.id) ? "text-ink" : "text-graphite/70"
                           }`}
-                          style={savedEventIds.includes(ev.id) ? { fontVariationSettings: '"FILL" 1' } : undefined}
-                        >
-                          {savedEventIds.includes(ev.id) ? "bookmark" : "bookmark_border"}
-                        </span>
+                          aria-hidden="true"
+                          fill={savedEventIds.includes(ev.id) ? "currentColor" : "none"}
+                        />
                       </button>
                     </li>
                   ))}
@@ -421,7 +424,7 @@ export default function SchedulePage() {
               </div>
             )}
             {selectedDay && eventsForSelectedDay?.length === 0 && (
-              <div className="mt-6 pt-4 border-t border-slate-200 text-center text-slate-500 text-sm">
+              <div className="mt-6 pt-4 border-t border-rule text-center text-graphite/70 text-sm">
                 この日のイベントはありません
               </div>
             )}

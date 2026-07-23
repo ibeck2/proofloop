@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Star } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui";
 
@@ -170,24 +171,24 @@ export default function AdminReviewsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-display">
+    <div className="min-h-screen bg-mist text-graphite font-body">
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <Link href="/" className="text-accent text-sm font-bold mb-6 inline-flex items-center gap-1 hover:underline">
+        <Link href="/" className="text-ink text-sm font-bold mb-6 inline-flex items-center gap-1 hover:underline">
           ← トップに戻る
         </Link>
-        <h1 className="text-2xl font-bold text-navy mb-2">口コミ承認管理</h1>
-        <p className="text-slate-600 text-sm mb-8">承認待ちの口コミを一覧で確認し、承認または却下できます。</p>
+        <h1 className="text-2xl font-bold text-ink font-mincho mb-2">口コミ承認管理</h1>
+        <p className="text-graphite/70 text-sm mb-8">承認待ちの口コミを一覧で確認し、承認または却下できます。</p>
 
         {!sessionChecked || !isAdmin ? (
           !sessionChecked ? (
-            <p className="text-slate-500">確認中...</p>
+            <p className="text-graphite/70">確認中...</p>
           ) : (
-            <p className="text-slate-500">トップへ移動しました。システム管理者（profiles.role = admin）のみアクセスできます。</p>
+            <p className="text-graphite/70">トップへ移動しました。システム管理者（profiles.role = admin）のみアクセスできます。</p>
           )
         ) : loading ? (
-          <p className="text-slate-500">読み込み中...</p>
+          <p className="text-graphite/70">読み込み中...</p>
         ) : reviews.length === 0 ? (
-          <p className="text-slate-500 py-12 text-center border border-dashed border-slate-300 rounded-lg bg-white">
+          <p className="text-graphite/70 py-12 text-center border border-dashed border-rule rounded-lg bg-paper">
             承認待ちの口コミはありません
           </p>
         ) : (
@@ -195,14 +196,14 @@ export default function AdminReviewsPage() {
             {reviews.map((r) => (
               <li
                 key={r.id}
-                className="p-5 rounded-lg border border-slate-200 bg-white shadow-sm"
+                className="p-5 rounded-lg border border-rule bg-paper shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-slate-500 mb-1">
+                    <p className="text-xs text-graphite/70 mb-1">
                       <Link
                         href={`/organizations/${r.organization_id}`}
-                        className="text-accent hover:underline"
+                        className="text-ink hover:underline"
                       >
                         {r.organization_name ?? "（団体名なし）"}
                       </Link>
@@ -210,25 +211,20 @@ export default function AdminReviewsPage() {
                       {new Date(r.created_at).toLocaleString("ja-JP")}
                     </p>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="flex text-amber-500 text-sm">
+                      <span className="flex text-ink text-sm" aria-hidden="true">
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <span
+                          <Star
                             key={star}
-                            className={`material-symbols-outlined text-lg ${star <= r.rating ? "opacity-100" : "opacity-30"}`}
-                            style={
-                              star <= r.rating
-                                ? { fontVariationSettings: "'FILL' 1" }
-                                : undefined
-                            }
-                          >
-                            star
-                          </span>
+                            className={`w-[18px] h-[18px] ${star <= r.rating ? "fill-current opacity-100" : "opacity-30"}`}
+                          />
                         ))}
                       </span>
-                      <span className="text-slate-500 text-sm">{r.rating} 星</span>
+                      <span className="text-graphite/70 text-sm">
+                        <span className="font-numeric tabular-nums">{r.rating}</span> 星
+                      </span>
                     </div>
                     {r.content && (
-                      <p className="text-slate-700 text-sm whitespace-pre-wrap">{r.content}</p>
+                      <p className="text-graphite text-sm whitespace-pre-wrap">{r.content}</p>
                     )}
                   </div>
                   <div className="flex gap-2 shrink-0">
