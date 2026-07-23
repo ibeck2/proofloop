@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui";
+import { ImagePlus, Trash2 } from "lucide-react";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
 type PhotoRow = {
@@ -101,7 +101,7 @@ export default function ClubPhotosPage() {
   if (ctxLoading) {
     return (
       <div className="p-6 lg:p-10">
-        <p className="text-text-sub">読み込み中...</p>
+        <p className="text-graphite">読み込み中...</p>
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default function ClubPhotosPage() {
   if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="p-6 lg:p-10">
-        <p className="text-text-sub">
+        <p className="text-graphite">
           管理できる団体がありません。プロフィール編集から団体情報を作成すると、フォトギャラリーを管理できるようになります。
         </p>
       </div>
@@ -118,38 +118,41 @@ export default function ClubPhotosPage() {
 
   return (
     <div className="p-6 lg:p-10 max-w-4xl">
-      <h2 className="text-2xl font-bold text-navy dark:text-white mb-2">フォトギャラリー管理</h2>
-      <p className="text-text-sub text-sm mb-6">団体の写真をアップロードし、団体詳細ページのフォトギャラリーに表示できます。</p>
+      <h2 className="font-mincho text-2xl font-bold text-ink mb-2">フォトギャラリー管理</h2>
+      <p className="text-graphite text-sm mb-6">団体の写真をアップロードし、団体詳細ページのフォトギャラリーに表示できます。</p>
 
-      <div className="mb-8 p-5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-        <label className="block text-sm font-bold text-navy dark:text-slate-200 mb-2">写真をアップロード</label>
+      <div className="mb-8 p-5 rounded-lg border border-rule bg-paper">
+        <label className="block text-sm font-bold text-ink mb-2">写真をアップロード</label>
         <input
           type="file"
           accept="image/*"
           onChange={handleFileChange}
           disabled={uploading}
-          className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-bold file:bg-primary file:text-white file:cursor-pointer hover:file:bg-primary/90"
+          className="block w-full text-sm text-graphite/70 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:font-bold file:bg-ink file:text-paper file:cursor-pointer hover:file:bg-ink/90"
         />
-        {uploading && <p className="text-sm text-slate-500 mt-2">アップロード中...</p>}
+        {uploading && <p className="text-sm text-graphite/70 mt-2">アップロード中...</p>}
         {errorMessage && (
-          <p className="text-sm text-red-600 dark:text-red-400 mt-2" role="alert">
+          <p className="text-sm text-seal mt-2" role="alert">
             {errorMessage}
           </p>
         )}
       </div>
 
       <div>
-        <h3 className="text-lg font-bold text-navy dark:text-white mb-4">アップロード済みの写真</h3>
+        <h3 className="text-lg font-bold text-ink mb-4">アップロード済みの写真</h3>
         {photos.length === 0 ? (
-          <p className="text-text-sub py-8 text-center border border-dashed border-slate-300 dark:border-slate-600 rounded-lg">
-            まだ写真がありません。上から画像をアップロードしてください。
-          </p>
+          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-rule bg-mist py-16 px-6 text-center">
+            <ImagePlus className="w-10 h-10 text-graphite/40" aria-hidden="true" />
+            <p className="text-graphite text-sm">
+              まだ写真がありません。上から画像をアップロードしてください。
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {photos.map((photo) => (
               <div
                 key={photo.id}
-                className="relative group aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200 dark:border-slate-700"
+                className="relative group aspect-square rounded-lg overflow-hidden bg-mist border border-rule"
               >
                 <img
                   src={photo.photo_url}
@@ -160,8 +163,9 @@ export default function ClubPhotosPage() {
                   type="button"
                   onClick={() => handleDelete(photo)}
                   disabled={deletingId === photo.id}
-                  className="absolute bottom-2 right-2 px-3 py-1.5 bg-red-600 text-white text-sm font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                  className="absolute bottom-2 right-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-ink text-paper text-sm font-bold rounded opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
                 >
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
                   {deletingId === photo.id ? "削除中..." : "削除"}
                 </button>
               </div>

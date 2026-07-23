@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Repeat } from "lucide-react";
 import { Button } from "@/components/ui";
 
 type PreviewRow = {
@@ -126,68 +127,80 @@ export default function InviteAcceptPage() {
   const orgDisplayName = preview?.organization_name?.trim() || "団体";
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-slate-900 font-display flex flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-lg shadow-sm p-8">
-        <h1 className="text-xl font-bold text-primary mb-2">ProofLoop 招待</h1>
+    <div className="min-h-screen bg-mist flex items-center justify-center p-4">
+      <div className="w-full max-w-[420px] bg-paper border border-rule shadow-sm">
+        <div className="p-8">
+          <div className="text-center mb-8">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-ink font-numeric font-bold text-xl tracking-tight"
+            >
+              <Repeat className="w-6 h-6" aria-hidden="true" />
+              ProofLoop
+            </Link>
+            <p className="text-graphite text-sm mt-2">招待</p>
+          </div>
 
-        {loading ? (
-          <p className="text-slate-600 text-sm">読み込み中...</p>
-        ) : invalidToken || !preview ? (
-          <p className="text-slate-600 text-sm">
-            この招待リンクは無効か、期限切れです。
-          </p>
-        ) : (
-          <>
-            <p className="text-slate-700 text-sm mb-6">
-              <strong className="text-slate-900">{orgDisplayName}</strong>
-              の管理者として招待されています。
+          {loading ? (
+            <p className="text-graphite text-sm">読み込み中...</p>
+          ) : invalidToken || !preview ? (
+            <p className="text-graphite text-sm">
+              この招待リンクは無効か、期限切れです。
             </p>
+          ) : (
+            <>
+              <p className="text-graphite text-sm mb-6">
+                <strong className="text-ink">{orgDisplayName}</strong>
+                の管理者として招待されています。
+              </p>
 
-            {!sessionUserId ? (
-              <div className="space-y-4">
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  参加するにはログインまたは新規登録が必要です。
-                  <br />
-                  ログイン後、再度このリンクを開いてください。
-                </p>
-                <div className="flex flex-col gap-2">
-                  <Link
-                    href="/signup"
-                    className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-primary text-white hover:bg-[#001f45] border-0 px-6 py-2.5 text-sm w-full text-center"
-                  >
-                    新規登録
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-white border border-accent text-accent hover:bg-accent hover:text-white px-6 py-2.5 text-sm w-full text-center"
-                  >
-                    ログイン
-                  </Link>
+              {!sessionUserId ? (
+                <div className="space-y-4">
+                  <p className="text-graphite text-sm leading-relaxed">
+                    参加するにはログインまたは新規登録が必要です。
+                    <br />
+                    ログイン後、再度このリンクを開いてください。
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <Link
+                      href="/signup"
+                      className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-ink text-paper hover:bg-[#001f45] border-0 px-6 py-2.5 text-sm w-full text-center"
+                    >
+                      新規登録
+                    </Link>
+                    <Link
+                      href="/login"
+                      className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-paper border border-seal text-seal hover:bg-seal hover:text-paper px-6 py-2.5 text-sm w-full text-center"
+                    >
+                      ログイン
+                    </Link>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-xs text-slate-500">
-                  招待先メール: {preview.invitation_email}
-                </p>
-                <Button
-                  type="button"
-                  className="w-full bg-primary text-white"
-                  disabled={accepting}
-                  onClick={handleAccept}
-                >
-                  {accepting ? "処理中..." : `${orgDisplayName} に参加する`}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-xs text-graphite/70">
+                    招待先メール: {preview.invitation_email}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    className="w-full"
+                    disabled={accepting}
+                    onClick={handleAccept}
+                  >
+                    {accepting ? "処理中..." : `${orgDisplayName} に参加する`}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
 
-        <p className="mt-8 text-center">
-          <Link href="/" className="text-sm text-primary hover:underline">
-            トップへ戻る
-          </Link>
-        </p>
+          <p className="mt-8 text-center">
+            <Link href="/" className="text-sm text-ink hover:underline">
+              トップへ戻る
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

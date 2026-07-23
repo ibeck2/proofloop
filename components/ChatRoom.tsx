@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { ApplicationMessage } from "@/lib/types/application";
+import { Send } from "lucide-react";
 import MessageBubble from "@/components/MessageBubble";
 import { fetchOrganizationOwnerUserId } from "@/lib/organizationMembers";
 
@@ -279,8 +280,8 @@ export default function ChatRoom({
   if (!applicationId) return null;
 
   const containerClass = fillHeight
-    ? "flex flex-col min-h-0 flex-1 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/30 overflow-hidden"
-    : "flex flex-col rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/30 overflow-hidden";
+    ? "flex flex-col min-h-0 flex-1 rounded-xl border border-rule bg-mist overflow-hidden"
+    : "flex flex-col rounded-xl border border-rule bg-mist overflow-hidden";
   const messagesClass = fillHeight
     ? "flex-1 min-h-0 overflow-y-auto p-3 space-y-2 overflow-x-hidden hide-scrollbar"
     : "max-h-64 overflow-y-auto p-3 space-y-2 overflow-x-hidden hide-scrollbar";
@@ -289,9 +290,9 @@ export default function ChatRoom({
     <div className={containerClass}>
       <div className={messagesClass}>
         {loading ? (
-          <p className="text-slate-500 dark:text-slate-400 text-sm text-center py-6">読み込み中...</p>
+          <p className="text-graphite/70 text-sm text-center py-6">読み込み中...</p>
         ) : messages.length === 0 ? (
-          <p className="text-slate-500 dark:text-slate-400 text-sm text-center py-6">まだメッセージはありません</p>
+          <p className="text-graphite/70 text-sm text-center py-6">まだメッセージはありません</p>
         ) : (
           <>
             {messages.map((msg) => (
@@ -306,23 +307,21 @@ export default function ChatRoom({
           </>
         )}
       </div>
-      <form onSubmit={handleSend} className="p-3 border-t border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shrink-0 flex gap-2">
+      <form onSubmit={handleSend} className="p-3 border-t border-rule bg-paper shrink-0 flex gap-2">
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
           rows={2}
-          className="flex-1 border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary resize-none min-h-0"
+          className="flex-1 border border-rule rounded-xl px-3 py-2 text-sm bg-paper text-graphite focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink resize-none min-h-0"
         />
         <button
           type="submit"
           disabled={sending || !input.trim()}
-          className="shrink-0 self-end p-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="shrink-0 self-end p-2.5 rounded-xl bg-ink text-paper hover:bg-ink/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           aria-label="送信"
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 22 }}>
-            send
-          </span>
+          <Send className="w-5 h-5" aria-hidden="true" />
         </button>
       </form>
     </div>

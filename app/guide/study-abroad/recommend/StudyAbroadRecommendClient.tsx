@@ -2,6 +2,70 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ChevronRight,
+  RefreshCw,
+  Flag,
+  Languages,
+  GraduationCap,
+  Compass,
+  Briefcase,
+  CalendarDays,
+  Zap,
+  Clock,
+  Plane,
+  Globe,
+  PiggyBank,
+  Wallet,
+  Coins,
+  Banknote,
+  Gem,
+  Mic,
+  Frown,
+  Meh,
+  Smile,
+  Laugh,
+  Star,
+  Shield,
+  BadgeCheck,
+  Palmtree,
+  Brain,
+  type LucideIcon,
+} from "lucide-react";
+
+// ─────────────────────────────────────────────
+// 質問データの icon 文字列（Material Symbols名）→ lucide コンポーネントの対応表
+// 質問データ自体（QUESTIONS）は変更せず、表示時にこの表で引く。
+// ─────────────────────────────────────────────
+const QUESTION_ICONS: Record<string, LucideIcon> = {
+  flag: Flag,
+  translate: Languages,
+  school: GraduationCap,
+  explore: Compass,
+  business_center: Briefcase,
+  calendar_month: CalendarDays,
+  bolt: Zap,
+  schedule: Clock,
+  flight: Plane,
+  public: Globe,
+  savings: PiggyBank,
+  money_off: Wallet,
+  currency_yen: Coins,
+  attach_money: Banknote,
+  diamond: Gem,
+  record_voice_over: Mic,
+  sentiment_dissatisfied: Frown,
+  sentiment_neutral: Meh,
+  sentiment_satisfied: Smile,
+  sentiment_very_satisfied: Laugh,
+  star: Star,
+  shield: Shield,
+  price_check: BadgeCheck,
+  language: Languages,
+  beach_access: Palmtree,
+};
 
 // ─────────────────────────────────────────────
 // 質問定義
@@ -422,41 +486,38 @@ export default function StudyAbroadRecommendClient() {
     setResults(null);
   };
 
-  const costColor = (cost: Destination["cost"]) => {
-    if (cost === "低") return "text-emerald-600 bg-emerald-50 border-emerald-200";
-    if (cost === "中") return "text-blue-600 bg-blue-50 border-blue-200";
-    if (cost === "高") return "text-amber-600 bg-amber-50 border-amber-200";
-    return "text-red-600 bg-red-50 border-red-200";
-  };
+  // 費用の高低は文字列（「費用：低/中/高/非常に高」）自体がすでに区別を伝えているため、
+  // 色相を4段階で変える意味がない。§2.1に従い単一の中立トーンへ潰す。
+  const costBadgeClass = "text-ink bg-mist border-rule";
 
   const medal = ["🥇", "🥈", "🥉"];
 
   return (
-    <div className="bg-white text-primary min-h-screen font-body pb-20 md:pb-0">
+    <div className="bg-paper text-ink min-h-screen font-body pb-20 md:pb-0">
       <main className="w-full max-w-[800px] mx-auto px-6 py-12 md:py-20 flex flex-col gap-10">
         {/* パンくず */}
-        <nav className="flex items-center gap-2 text-xs text-text-grey">
-          <Link href="/guide" className="hover:text-primary transition-colors">
+        <nav className="flex items-center gap-2 text-xs text-graphite">
+          <Link href="/guide" className="hover:text-ink transition-colors">
             新入生ガイド
           </Link>
-          <span className="material-symbols-outlined text-sm">chevron_right</span>
-          <Link href="/guide/study-abroad" className="hover:text-primary transition-colors">
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+          <Link href="/guide/study-abroad" className="hover:text-ink transition-colors">
             留学どうする？
           </Link>
-          <span className="material-symbols-outlined text-sm">chevron_right</span>
-          <span className="text-primary font-bold">留学先診断</span>
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+          <span className="text-ink font-bold">留学先診断</span>
         </nav>
 
         {/* ヘッダー */}
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-accent text-2xl">psychology</span>
-            <span className="text-accent text-sm font-bold tracking-widest uppercase">Study Abroad Finder</span>
+            <Brain className="w-6 h-6 text-ink" aria-hidden="true" />
+            <span className="text-ink text-sm font-bold tracking-widest uppercase">Study Abroad Finder</span>
           </div>
-          <h1 className="text-primary text-2xl md:text-4xl font-black leading-tight">
+          <h1 className="text-ink text-2xl md:text-4xl font-black leading-tight">
             あなたに合った留学先を診断
           </h1>
-          <p className="text-text-grey text-sm">
+          <p className="text-graphite text-sm">
             5つの質問に答えるだけで、英語圏・ヨーロッパ・アジアの中からあなたに最適な留学先をレコメンドします。
           </p>
         </div>
@@ -466,45 +527,49 @@ export default function StudyAbroadRecommendClient() {
           <div className="flex flex-col gap-8">
             {/* プログレスバー */}
             <div className="flex flex-col gap-2">
-              <div className="flex justify-between text-xs text-text-grey">
+              <div className="flex justify-between text-xs text-graphite">
                 <span>
                   質問 {step + 1} / {totalSteps}
                 </span>
                 <span>{Math.round((step / totalSteps) * 100)}% 完了</span>
               </div>
-              <div className="w-full h-2 bg-slate-100">
+              <div className="w-full h-2 bg-mist">
                 <div
-                  className="h-2 bg-accent transition-all duration-300"
+                  className="h-2 bg-ink transition-all duration-300"
                   style={{ width: `${(step / totalSteps) * 100}%` }}
                 />
               </div>
             </div>
 
             {/* 質問カード */}
-            <div className="border border-[#f0f2f5] p-8 flex flex-col gap-6">
+            <div className="border border-rule p-8 flex flex-col gap-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/5 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-xl">{currentQ.icon}</span>
+                <div className="w-10 h-10 bg-mist flex items-center justify-center">
+                  {(() => {
+                    const QIcon = QUESTION_ICONS[currentQ.icon];
+                    return <QIcon className="w-5 h-5 text-ink" aria-hidden="true" />;
+                  })()}
                 </div>
-                <h2 className="text-primary font-black text-lg leading-snug">{currentQ.text}</h2>
+                <h2 className="text-ink font-black text-lg leading-snug">{currentQ.text}</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {currentQ.options.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => handleAnswer(opt.value)}
-                    className="group border border-[#f0f2f5] hover:border-accent hover:bg-accent/5 transition-all p-4 flex items-center gap-3 text-left"
-                  >
-                    <div className="w-9 h-9 bg-primary/5 group-hover:bg-accent/10 flex items-center justify-center shrink-0 transition-colors">
-                      <span className="material-symbols-outlined text-primary group-hover:text-accent text-lg transition-colors">
-                        {opt.icon}
+                {currentQ.options.map((opt) => {
+                  const OptIcon = QUESTION_ICONS[opt.icon];
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleAnswer(opt.value)}
+                      className="group border border-rule hover:border-ink hover:bg-mist transition-all p-4 flex items-center gap-3 text-left"
+                    >
+                      <div className="w-9 h-9 bg-mist group-hover:bg-ink/10 flex items-center justify-center shrink-0 transition-colors">
+                        <OptIcon className="w-[18px] h-[18px] text-ink transition-colors" aria-hidden="true" />
+                      </div>
+                      <span className="text-ink font-bold text-sm transition-colors">
+                        {opt.label}
                       </span>
-                    </div>
-                    <span className="text-primary font-bold text-sm group-hover:text-accent transition-colors">
-                      {opt.label}
-                    </span>
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -512,9 +577,9 @@ export default function StudyAbroadRecommendClient() {
             {step > 0 && (
               <button
                 onClick={() => setStep(step - 1)}
-                className="text-text-grey text-sm flex items-center gap-1 hover:text-primary transition-colors self-start"
+                className="text-graphite text-sm flex items-center gap-1 hover:text-ink transition-colors self-start"
               >
-                <span className="material-symbols-outlined text-sm">arrow_back</span>
+                <ArrowLeft className="w-4 h-4" aria-hidden="true" />
                 前の質問に戻る
               </button>
             )}
@@ -523,16 +588,16 @@ export default function StudyAbroadRecommendClient() {
           /* 結果画面 */
           <div className="flex flex-col gap-8">
             <div className="flex flex-col gap-2">
-              <h2 className="text-primary text-xl md:text-2xl font-black">あなたにおすすめの留学先</h2>
-              <p className="text-text-grey text-sm">回答内容をもとに、最適な留学先を上位3件選びました。</p>
+              <h2 className="text-ink text-xl md:text-2xl font-black">あなたにおすすめの留学先</h2>
+              <p className="text-graphite text-sm">回答内容をもとに、最適な留学先を上位3件選びました。</p>
             </div>
 
             <div className="flex flex-col gap-5">
               {results.map((dest, i) => (
                 <div
                   key={`${dest.country}-${dest.city}`}
-                  className={`border p-6 flex flex-col gap-4 ${
-                    i === 0 ? "border-accent/40 bg-accent/5" : "border-[#f0f2f5]"
+                  className={`p-6 flex flex-col gap-4 ${
+                    i === 0 ? "border-l-4 border-l-ink bg-mist" : "border border-rule"
                   }`}
                 >
                   {/* ヘッダー */}
@@ -542,31 +607,31 @@ export default function StudyAbroadRecommendClient() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{medal[i]}</span>
-                          <h3 className="font-black text-primary text-lg">{dest.country}</h3>
+                          <h3 className="font-black text-ink text-lg">{dest.country}</h3>
                         </div>
-                        <p className="text-text-grey text-xs">{dest.region}</p>
+                        <p className="text-graphite text-xs">{dest.region}</p>
                       </div>
                     </div>
-                    <span className={`text-xs px-2 py-1 border font-bold shrink-0 ${costColor(dest.cost)}`}>
+                    <span className={`text-xs px-2 py-1 border font-bold shrink-0 ${costBadgeClass}`}>
                       費用：{dest.cost}
                     </span>
                   </div>
 
                   {/* 主要大学 */}
                   <div className="flex flex-col gap-1">
-                    <p className="text-xs font-bold text-primary">主要大学・プログラム</p>
-                    <p className="text-xs text-text-grey">{dest.universities.join("、")}</p>
+                    <p className="text-xs font-bold text-ink">主要大学・プログラム</p>
+                    <p className="text-xs text-graphite">{dest.universities.join("、")}</p>
                   </div>
 
                   {/* メリット・デメリット */}
                   <div className="flex flex-col gap-2 text-xs">
                     <div className="flex gap-2">
-                      <span className="text-emerald-600 font-bold shrink-0">◎ メリット</span>
-                      <span className="text-text-grey leading-relaxed">{dest.merit}</span>
+                      <span className="text-ink font-bold shrink-0">◎ メリット</span>
+                      <span className="text-graphite leading-relaxed">{dest.merit}</span>
                     </div>
                     <div className="flex gap-2">
-                      <span className="text-amber-600 font-bold shrink-0">△ 注意点</span>
-                      <span className="text-text-grey leading-relaxed">{dest.demerit}</span>
+                      <span className="text-graphite font-bold shrink-0">△ 注意点</span>
+                      <span className="text-graphite leading-relaxed">{dest.demerit}</span>
                     </div>
                   </div>
 
@@ -575,7 +640,7 @@ export default function StudyAbroadRecommendClient() {
                     {dest.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="text-[10px] px-2 py-0.5 bg-primary/5 text-primary border border-primary/10"
+                        className="text-[10px] px-2 py-0.5 bg-mist text-ink border border-rule"
                       >
                         {tag}
                       </span>
@@ -589,16 +654,16 @@ export default function StudyAbroadRecommendClient() {
             <div className="flex flex-col gap-3">
               <Link
                 href="/guide/study-abroad"
-                className="w-full flex items-center justify-center gap-2 bg-primary text-white hover:bg-primary-hover transition-colors py-4 font-black"
+                className="w-full flex items-center justify-center gap-2 bg-ink text-paper hover:bg-ink/90 transition-colors py-4 font-black"
               >
                 留学の詳しい情報を見る
-                <span className="material-symbols-outlined">arrow_forward</span>
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
               <button
                 onClick={reset}
-                className="w-full flex items-center justify-center gap-2 border border-[#f0f2f5] py-3 text-text-grey hover:text-primary hover:border-primary transition-colors text-sm font-bold"
+                className="w-full flex items-center justify-center gap-2 border border-rule py-3 text-graphite hover:text-ink hover:border-ink transition-colors text-sm font-bold"
               >
-                <span className="material-symbols-outlined text-sm">refresh</span>
+                <RefreshCw className="w-4 h-4" aria-hidden="true" />
                 もう一度診断する
               </button>
             </div>

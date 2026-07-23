@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { ArrowLeft, ExternalLink, Video, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui";
 
 const STEPS = ["エントリー", "ES提出", "面接", "最終結果"] as const;
@@ -22,16 +23,16 @@ export default function SelectionTrackerPage() {
   const { currentStepIndex, clubName, esFormUrl, interviewDate, interviewZoomUrl } = MOCK_SELECTION;
 
   return (
-    <div className="bg-[#f5f5f7] text-slate-900 font-display min-h-screen pb-20 md:pb-8">
+    <div className="bg-mist text-graphite font-body min-h-screen pb-20 md:pb-8">
       <main className="max-w-[560px] mx-auto px-4 py-8 md:py-12">
         <div className="mb-2">
-          <Link href="/clubprofile" className="text-primary text-sm font-bold hover:underline flex items-center gap-1">
-            <span className="material-symbols-outlined text-lg">arrow_back</span>
+          <Link href="/clubprofile" className="text-ink text-sm font-bold hover:underline flex items-center gap-1">
+            <ArrowLeft className="w-[18px] h-[18px]" aria-hidden="true" />
             プロフィールに戻る
           </Link>
         </div>
-        <h1 className="text-primary text-xl font-bold mb-1">選考進捗</h1>
-        <p className="text-text-sub text-sm mb-8">{clubName}</p>
+        <h1 className="font-mincho text-ink text-xl font-bold mb-1">選考進捗</h1>
+        <p className="text-graphite text-sm mb-8">{clubName}</p>
 
         {/* ステップインジケーター */}
         <div className="mb-10">
@@ -42,17 +43,17 @@ export default function SelectionTrackerPage() {
                   <div
                     className={`w-8 h-8 flex items-center justify-center text-sm font-bold border-2 ${
                       index === currentStepIndex
-                        ? "bg-accent border-accent text-white"
+                        ? "bg-seal border-seal text-paper"
                         : index < currentStepIndex
-                          ? "bg-primary border-primary text-white"
-                          : "bg-white border-slate-300 text-text-sub"
+                          ? "bg-ink border-ink text-paper"
+                          : "bg-paper border-rule text-graphite"
                     }`}
                   >
                     {index + 1}
                   </div>
                   <span
                     className={`mt-2 text-xs font-bold ${
-                      index === currentStepIndex ? "text-accent" : index < currentStepIndex ? "text-primary" : "text-text-sub"
+                      index === currentStepIndex ? "text-seal" : index < currentStepIndex ? "text-ink" : "text-graphite"
                     }`}
                   >
                     {step}
@@ -61,7 +62,7 @@ export default function SelectionTrackerPage() {
                 {index < STEPS.length - 1 && (
                   <div
                     className={`flex-1 h-0.5 min-w-[8px] ${
-                      index < currentStepIndex ? "bg-primary" : "bg-slate-200"
+                      index < currentStepIndex ? "bg-ink" : "bg-rule"
                     }`}
                   />
                 )}
@@ -71,54 +72,54 @@ export default function SelectionTrackerPage() {
         </div>
 
         {/* 現在のステップに応じたアクションカード */}
-        <div className="bg-white border border-slate-200 p-6 mb-8">
+        <div className="bg-paper border border-rule p-6 mb-8">
           {currentStepIndex === 0 && (
             <>
-              <h2 className="text-primary font-bold text-lg mb-2">エントリー完了</h2>
-              <p className="text-slate-700 text-sm leading-relaxed mb-6">
+              <h2 className="text-ink font-bold text-lg mb-2">エントリー完了</h2>
+              <p className="text-graphite text-sm leading-relaxed mb-6">
                 エントリーが完了しました。次のステップ「ES提出」のご案内が届き次第、この画面に表示されます。
               </p>
             </>
           )}
           {currentStepIndex === 1 && (
             <>
-              <h2 className="text-primary font-bold text-lg mb-2">エントリーシートを提出してください</h2>
-              <p className="text-slate-700 text-sm leading-relaxed mb-6">
+              <h2 className="text-ink font-bold text-lg mb-2">エントリーシートを提出してください</h2>
+              <p className="text-graphite text-sm leading-relaxed mb-6">
                 指定のフォームからエントリーシートを提出してください。提出期限にご注意ください。
               </p>
               <Link
                 href={esFormUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 font-bold text-sm hover:bg-[#001f45] transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-ink text-paper px-6 py-3 font-bold text-sm hover:bg-ink/90 transition-colors"
               >
-                <span className="material-symbols-outlined text-lg">open_in_new</span>
+                <ExternalLink className="w-[18px] h-[18px]" aria-hidden="true" />
                 ESフォームを開く（外部サイト）
               </Link>
             </>
           )}
           {currentStepIndex === 2 && (
             <>
-              <h2 className="text-primary font-bold text-lg mb-2">オンライン面接のご案内</h2>
-              <p className="text-slate-700 text-sm leading-relaxed mb-4">
+              <h2 className="text-ink font-bold text-lg mb-2">オンライン面接のご案内</h2>
+              <p className="text-graphite text-sm leading-relaxed mb-4">
                 以下の日時にオンライン面接を実施します。開始時刻の5分前までにZoomにアクセスしてください。
               </p>
-              <p className="text-primary font-bold text-base mb-6">{interviewDate}</p>
+              <p className="text-ink font-bold text-base mb-6">{interviewDate}</p>
               <Link
                 href={interviewZoomUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 font-bold text-sm hover:bg-[#001f45] transition-colors"
+                className="inline-flex items-center justify-center gap-2 bg-ink text-paper px-6 py-3 font-bold text-sm hover:bg-ink/90 transition-colors"
               >
-                <span className="material-symbols-outlined text-lg">videocam</span>
+                <Video className="w-[18px] h-[18px]" aria-hidden="true" />
                 オンライン面接（Zoom）に参加する
               </Link>
             </>
           )}
           {currentStepIndex === 3 && (
             <>
-              <h2 className="text-primary font-bold text-lg mb-2">最終結果</h2>
-              <p className="text-slate-700 text-sm leading-relaxed mb-6">
+              <h2 className="text-ink font-bold text-lg mb-2">最終結果</h2>
+              <p className="text-graphite text-sm leading-relaxed mb-6">
                 選考結果は、団体からメッセージでお知らせします。ご不明点は下のボタンから団体へお問い合わせください。
               </p>
             </>
@@ -128,9 +129,9 @@ export default function SelectionTrackerPage() {
         {/* 団体とのメッセージリンク */}
         <Link
           href={`/companymessage${id ? `?club=${id}` : ""}`}
-          className="flex items-center justify-center gap-2 w-full py-4 border-2 border-primary text-primary font-bold text-sm hover:bg-primary/5 transition-colors"
+          className="flex items-center justify-center gap-2 w-full py-4 border-2 border-ink text-ink font-bold text-sm hover:bg-mist transition-colors"
         >
-          <span className="material-symbols-outlined">chat</span>
+          <MessageCircle className="w-6 h-6" aria-hidden="true" />
           この団体にメッセージを送る
         </Link>
       </main>

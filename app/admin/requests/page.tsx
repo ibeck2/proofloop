@@ -289,38 +289,38 @@ export default function AdminRequestsPage() {
 
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-500">確認中...</p>
+      <div className="min-h-screen bg-mist flex items-center justify-center">
+        <p className="text-graphite/70">確認中...</p>
       </div>
     );
   }
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <p className="text-slate-500">アクセスできません</p>
+      <div className="min-h-screen bg-mist flex items-center justify-center">
+        <p className="text-graphite/70">アクセスできません</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-display">
+    <div className="min-h-screen bg-mist text-graphite font-body">
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-navy">運営・団体管理者申請（審査）</h1>
-            <p className="text-slate-600 text-sm mt-1">pending 状態の申請を承認または却下できます。</p>
+            <h1 className="text-2xl font-bold text-ink font-mincho">運営・団体管理者申請（審査）</h1>
+            <p className="text-graphite/70 text-sm mt-1">pending 状態の申請を承認または却下できます。</p>
           </div>
-          <Link href="/" className="text-accent text-sm font-bold hover:underline inline-flex items-center gap-1">
+          <Link href="/" className="text-ink text-sm font-bold hover:underline inline-flex items-center gap-1">
             ← トップに戻る
           </Link>
         </div>
 
         {loading ? (
-          <p className="text-slate-500">読み込み中...</p>
+          <p className="text-graphite/70">読み込み中...</p>
         ) : requests.length === 0 ? (
-          <div className="py-12 text-center border border-dashed border-slate-300 rounded-lg bg-white">
-            <p className="text-slate-500 font-medium">審査中の申請はありません</p>
+          <div className="py-12 text-center border border-dashed border-rule rounded-lg bg-paper">
+            <p className="text-graphite/70 font-medium">審査中の申請はありません</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -340,29 +340,29 @@ export default function AdminRequestsPage() {
               const snsHandle = r.proof_link ? extractHandleFromProofLink(r.proof_link, snsType) : null;
 
               return (
-                <div key={r.id} className="p-5 rounded-lg border border-slate-200 bg-white shadow-sm">
+                <div key={r.id} className="p-5 rounded-lg border border-rule bg-paper shadow-sm">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs text-slate-500">
+                      <p className="text-xs text-graphite/70">
                         {formatDate(r.created_at)}
                       </p>
                       <div className="mt-1">
-                        <p className="text-sm font-bold text-slate-900 truncate">
+                        <p className="text-sm font-bold text-ink truncate">
                           申請者: {applicantName}
                         </p>
                         {applicantUniversity && (
-                          <p className="text-xs text-slate-500">大学: {applicantUniversity}</p>
+                          <p className="text-xs text-graphite/70">大学: {applicantUniversity}</p>
                         )}
-                        <p className="text-sm font-bold text-primary mt-2">
+                        <p className="text-sm font-bold text-ink mt-2">
                           対象団体: {targetName}
                         </p>
                       </div>
 
                       <div className="mt-3">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <p className="text-xs font-bold text-slate-500">本人確認リンク</p>
+                          <p className="text-xs font-bold text-graphite/70">本人確認リンク</p>
                           {snsType ? (
-                            <span className="inline-flex items-center rounded-full bg-slate-100 text-slate-700 text-xs font-bold px-2 py-0.5">
+                            <span className="inline-flex items-center rounded-full bg-mist text-graphite text-xs font-bold px-2 py-0.5">
                               {snsType}:{snsHandle ? ` ${snsHandle}` : ""}
                             </span>
                           ) : null}
@@ -371,7 +371,7 @@ export default function AdminRequestsPage() {
                           href={r.proof_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-accent text-sm font-medium hover:underline break-all"
+                          className="text-ink text-sm font-medium hover:underline break-all"
                         >
                           {r.proof_link}
                         </a>
@@ -379,8 +379,8 @@ export default function AdminRequestsPage() {
 
                       {r.message && r.message.trim() && (
                         <div className="mt-3">
-                          <p className="text-xs font-bold text-slate-500 mb-1">運営へのメッセージ</p>
-                          <p className="text-sm text-slate-700 whitespace-pre-wrap">{r.message}</p>
+                          <p className="text-xs font-bold text-graphite/70 mb-1">運営へのメッセージ</p>
+                          <p className="text-sm text-graphite whitespace-pre-wrap">{r.message}</p>
                         </div>
                       )}
                     </div>

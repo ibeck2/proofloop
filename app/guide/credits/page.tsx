@@ -1,6 +1,37 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site-url";
+import {
+  BookOpen,
+  SquarePen,
+  Pencil,
+  RefreshCw,
+  ChevronRight,
+  GraduationCap,
+  AlertCircle,
+  AlertTriangle,
+  Lightbulb,
+  HelpCircle,
+  ChevronDown,
+  ArrowRight,
+  Briefcase,
+  Users,
+  Plane,
+  Home,
+  Asterisk,
+  ListChecks,
+  SlidersHorizontal,
+  PiggyBank,
+  PlaneTakeoff,
+  RotateCcw,
+  ClipboardCheck,
+  ArrowLeftRight,
+  TrendingDown,
+  Clock,
+  LayoutGrid,
+  FileCheck2,
+  MessageCircle,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "単位どうする？履修・GPA・卒業要件で失敗しないための完全ガイド | ProofLoop",
@@ -32,68 +63,56 @@ const REGISTRATION_TIMELINE = [
     event: "シラバス公開・履修ガイダンス",
     detail:
       "大学から履修ガイダンス（学部・学科ごと）の日程が告知される。シラバスが公開されるので、必修科目と興味のある科目を一通り確認しておく。",
-    icon: "menu_book",
-    color: "bg-primary",
+    Icon: BookOpen,
   },
   {
     month: "4月上旬〜中旬",
     event: "前期（春学期）履修登録",
     detail:
       "履修登録システム（Web）で時間割を確定。多くの大学で1〜2週間しか期間がない。期間内に登録しないとその学期は単位を取れない学部もあるので最優先で対応。",
-    icon: "edit_note",
-    color: "bg-accent",
+    Icon: SquarePen,
   },
   {
     month: "4月中旬〜下旬",
     event: "履修修正・追加期間",
     detail:
       "授業を実際に受けてみて「自分に合わない」「想定より重い」と感じたら、修正期間内に履修を変更できる。期間を過ぎると取消も追加も基本不可。",
-    icon: "edit",
-    color: "bg-emerald-600",
+    Icon: Pencil,
   },
   {
     month: "9月（後期）",
     event: "後期（秋学期）履修登録",
     detail:
       "前期と同じ流れを後期にも繰り返す。前期の成績を見てから後期の負荷を調整できるので、前期はあえて余裕を持たせるのも戦略の一つ。",
-    icon: "autorenew",
-    color: "bg-blue-600",
+    Icon: RefreshCw,
   },
 ] as const;
 
 const UNIT_TYPES = [
   {
     name: "必修科目",
-    icon: "priority_high",
-    color: "text-rose-600",
-    bg: "bg-rose-50",
+    Icon: Asterisk,
     description:
       "卒業のために必ず取らないといけない科目。落とすと翌年再履修になり、最悪の場合留年に直結する。",
     note: "落単リスクが最も高い。最優先で出席・課題提出を死守。",
   },
   {
     name: "選択必修",
-    icon: "rule",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
+    Icon: ListChecks,
     description:
       "指定されたグループの中から「N単位以上」取るタイプ。例：第二外国語の中からどれか1つ、専門基礎科目から4単位以上 等。",
     note: "選び方の自由度はあるが「合計N単位」の制約は厳守。",
   },
   {
     name: "選択科目",
-    icon: "tune",
-    color: "text-blue-600",
-    bg: "bg-blue-50",
+    Icon: SlidersHorizontal,
     description:
       "卒業要件の総単位数の範囲で自由に選べる科目。興味分野を深掘りしたり、GPA稼ぎ・他学部聴講に活用できる。",
     note: "履修の自由度が高い反面、計画を立てないと卒業要件未達になりやすい。",
   },
   {
     name: "教養（一般教育）",
-    icon: "diversity_3",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
+    Icon: Users,
     description:
       "専門分野以外の幅広い教養を学ぶ科目。多くの大学で卒業までに一定単位の取得が必須。",
     note: "1〜2年次に集中して取る大学が多い。3年以降に残すと取りにくい。",
@@ -102,76 +121,68 @@ const UNIT_TYPES = [
 
 const GPA_USE_CASES = [
   {
-    icon: "savings",
+    Icon: PiggyBank,
     title: "奨学金の選考",
     body: "日本学生支援機構（JASSO）の給付・貸与型ともに、継続採用にはGPAや成績順位が条件。民間奨学金はさらにGPA重視のものが多い。",
-    color: "text-rose-600",
-    bg: "bg-rose-50",
   },
   {
-    icon: "flight_takeoff",
+    Icon: PlaneTakeoff,
     title: "交換留学・認定留学",
     body: "ほぼ全ての交換留学プログラムにGPA下限がある（例：GPA 2.7以上、3.0以上）。1年次の成績で出願資格が決まるため早期から重要。",
-    color: "text-sky-600",
-    bg: "bg-sky-50",
   },
   {
-    icon: "school",
+    Icon: GraduationCap,
     title: "推薦入試・大学院進学",
     body: "学部内推薦で大学院に進む場合、GPAが評価軸になる。研究室配属の希望順もGPAで決まる学部が多い。",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
   },
   {
-    icon: "business_center",
+    Icon: Briefcase,
     title: "就活（一部企業）",
     body: "外資系・コンサル・総合商社など一部企業はESや面接でGPAを聞く。一般の日系大企業ではあまり重視されないが、ESに記入欄がある企業は対策しておくと安心。",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
   },
 ] as const;
 
 const FAIL_RECOVERY = [
   {
     title: "再履修（次年度に取り直す）",
-    icon: "refresh",
+    Icon: RotateCcw,
     body: "最も一般的な対応。同じ科目を翌年度（または翌学期）にもう一度受講する。時間割が他の科目とかぶると詰むので、必修を落とした場合は即時のリカバリ計画が必要。",
   },
   {
     title: "追試・再試験",
-    icon: "task_alt",
+    Icon: ClipboardCheck,
     body: "大学・科目によっては落単者向けの再試験を実施。ただし対象は「出席要件は満たしたが点数が足りない」ケース限定が多い。出席不足は再試験対象外になることが多いので注意。",
   },
   {
     title: "代替科目で要件を埋める",
-    icon: "swap_horiz",
+    Icon: ArrowLeftRight,
     body: "選択科目を落とした場合は、別の選択科目で卒業要件を埋めることも可能。必修・選択必修は代替不可なので再履修一択。",
   },
   {
     title: "進級・留年の判定",
-    icon: "trending_down",
+    Icon: TrendingDown,
     body: "学部によっては「進級要件」が別途設定され、必修を落とすと2年に上がれない（医・歯・薬・理工系で多い）。学部の便覧で進級要件を必ず確認しておく。",
   },
 ] as const;
 
 const HOWTO_ITEMS = [
   {
-    icon: "schedule",
+    Icon: Clock,
     title: "1限・5限を入れすぎない",
     body: "1限は朝の遅刻で出席率が落ちやすく、5限以降はバイト・サークルとの両立が難しい。やむを得ず入れる場合は週1〜2コマに留めるのが無難。",
   },
   {
-    icon: "view_module",
+    Icon: LayoutGrid,
     title: "空きコマを2コマ以上連続で作らない",
     body: "空きコマが3〜4コマ連続すると拘束時間ばかり伸びて消耗する。可能なら連続させる、または午前/午後で固める時間割を意識する。",
   },
   {
-    icon: "fact_check",
+    Icon: FileCheck2,
     title: "シラバスは「評価方法」と「出席要件」を必ず見る",
     body: "シラバスには「期末試験50%、レポート30%、出席20%」等の評価配分が書かれている。出席要件（2/3以上等）も明記されているので、サボれる科目かを事前に判断できる。",
   },
   {
-    icon: "forum",
+    Icon: MessageCircle,
     title: "先輩・同期に評判を聞く",
     body: "「単位が取りやすい」「課題が多い」「テストが厳しい」などの実情はシラバスに書かれない。先輩のリアルな評判が最も信頼できる情報源。ProofLoopの授業情報機能（準備中）で今後一覧化予定。",
   },
@@ -209,14 +220,12 @@ const FAQ_ITEMS = [
 // ─────────────────────────────────────────────
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <details className="border-b border-[#f0f2f5] last:border-0 group">
+    <details className="border-b border-rule last:border-0 group">
       <summary className="flex items-center justify-between gap-4 py-5 cursor-pointer list-none">
-        <span className="font-bold text-primary text-sm leading-snug">{q}</span>
-        <span className="material-symbols-outlined text-text-grey shrink-0 group-open:rotate-180 transition-transform duration-200">
-          expand_more
-        </span>
+        <span className="font-bold text-ink text-sm leading-snug">{q}</span>
+        <ChevronDown className="w-4 h-4 text-graphite shrink-0 group-open:rotate-180 transition-transform duration-200" aria-hidden="true" />
       </summary>
-      <p className="text-text-grey text-sm leading-relaxed pb-5">{a}</p>
+      <p className="text-graphite text-sm leading-relaxed pb-5">{a}</p>
     </details>
   );
 }
@@ -226,31 +235,31 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 // ─────────────────────────────────────────────
 export default function CreditsGuidePage() {
   return (
-    <div className="bg-white text-primary min-h-screen font-body pb-20 md:pb-0">
+    <div className="bg-paper text-ink min-h-screen font-body pb-20 md:pb-0">
       <main className="w-full max-w-[1200px] mx-auto px-6 py-12 md:py-20 flex flex-col gap-16">
         {/* パンくず */}
-        <nav className="flex items-center gap-2 text-xs text-text-grey -mb-10">
-          <Link href="/" className="hover:text-primary transition-colors">
+        <nav className="flex items-center gap-2 text-xs text-graphite -mb-10">
+          <Link href="/" className="hover:text-ink transition-colors">
             ホーム
           </Link>
-          <span className="material-symbols-outlined text-sm">chevron_right</span>
-          <Link href="/guide" className="hover:text-primary transition-colors">
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+          <Link href="/guide" className="hover:text-ink transition-colors">
             新入生ガイド
           </Link>
-          <span className="material-symbols-outlined text-sm">chevron_right</span>
-          <span className="text-primary font-bold">単位・授業どうする？</span>
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+          <span className="text-ink font-bold">単位・授業どうする？</span>
         </nav>
 
         {/* Hero */}
         <section className="flex flex-col gap-6 max-w-3xl">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-accent text-2xl">school</span>
-            <span className="text-accent text-sm font-bold tracking-widest uppercase">Credits Guide</span>
+            <GraduationCap className="w-6 h-6 text-ink" aria-hidden="true" />
+            <span className="text-ink text-sm font-bold tracking-widest uppercase">Credits Guide</span>
           </div>
-          <h1 className="text-primary text-3xl md:text-5xl font-black leading-tight tracking-tight">
+          <h1 className="text-ink text-3xl md:text-5xl font-black leading-tight tracking-tight font-mincho">
             単位・授業、どうする？
           </h1>
-          <p className="text-text-grey text-base md:text-lg leading-relaxed">
+          <p className="text-graphite text-base md:text-lg leading-relaxed">
             履修登録のスケジュール・必修と選択の違い・GPAの仕組みと使い場・単位を落としたときの対処まで。大学の単位制度でつまずかないために、新入生が押さえておくべき基礎を一気にまとめました。
           </p>
           {/* クイックナビ */}
@@ -266,7 +275,7 @@ export default function CreditsGuidePage() {
               <a
                 key={item.href}
                 href={item.href}
-                className="text-xs px-3 py-1.5 border border-primary/20 text-primary hover:bg-primary hover:text-white transition-colors font-bold"
+                className="text-xs px-3 py-1.5 border border-ink/20 text-ink hover:bg-ink hover:text-paper transition-colors font-bold"
               >
                 {item.label}
               </a>
@@ -277,39 +286,40 @@ export default function CreditsGuidePage() {
         {/* §1 履修登録スケジュール */}
         <section id="registration" className="flex flex-col gap-6 scroll-mt-20">
           <div className="flex flex-col gap-1">
-            <h2 className="text-primary text-xl md:text-2xl font-black">履修登録：いつ・何をするか</h2>
-            <p className="text-text-grey text-sm">
+            <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">履修登録：いつ・何をするか</h2>
+            <p className="text-graphite text-sm">
               履修登録の期間は短く、ミスると1学期分の単位が丸ごと取れません。スケジュールを先に押さえましょう。
             </p>
           </div>
           <div className="flex flex-col gap-0">
-            {REGISTRATION_TIMELINE.map((item, i) => (
-              <div key={i} className="flex gap-4">
-                <div className="flex flex-col items-center shrink-0">
-                  <div className={`w-10 h-10 ${item.color} flex items-center justify-center shrink-0`}>
-                    <span className="material-symbols-outlined text-white text-sm">{item.icon}</span>
+            {REGISTRATION_TIMELINE.map((item, i) => {
+              const Icon = item.Icon;
+              return (
+                <div key={i} className="flex gap-4">
+                  <div className="flex flex-col items-center shrink-0">
+                    <div className="w-10 h-10 bg-ink flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-paper" aria-hidden="true" />
+                    </div>
+                    {i < REGISTRATION_TIMELINE.length - 1 && (
+                      <div className="w-0.5 bg-rule flex-1 my-1" />
+                    )}
                   </div>
-                  {i < REGISTRATION_TIMELINE.length - 1 && (
-                    <div className="w-0.5 bg-slate-200 flex-1 my-1" />
-                  )}
+                  <div className="flex flex-col gap-1 pb-8 pt-2">
+                    <span className="text-xs font-bold text-ink">{item.month}</span>
+                    <h3 className="font-black text-ink text-base">{item.event}</h3>
+                    <p className="text-graphite text-sm leading-relaxed">{item.detail}</p>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1 pb-8 pt-2">
-                  <span className="text-xs font-bold text-accent">{item.month}</span>
-                  <h3 className="font-black text-primary text-base">{item.event}</h3>
-                  <p className="text-text-grey text-sm leading-relaxed">{item.detail}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* 注意ボックス */}
-          <div className="border border-rose-200 bg-rose-50 p-5 flex gap-3">
-            <span className="material-symbols-outlined text-rose-600 text-lg shrink-0 mt-0.5">
-              error
-            </span>
+          <div className="border border-rule border-l-4 border-l-seal bg-mist p-5 flex gap-3">
+            <AlertCircle className="w-[18px] h-[18px] text-seal shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <p className="text-rose-800 font-bold text-sm">履修登録忘れは即・単位ゼロ</p>
-              <p className="text-rose-700 text-xs leading-relaxed mt-1">
+              <p className="text-ink font-bold text-sm">履修登録忘れは即・単位ゼロ</p>
+              <p className="text-graphite text-xs leading-relaxed mt-1">
                 履修登録をしないまま授業に出ても、その科目の単位は一切取れません。登録期間は1〜2週間しかなく、入学直後で忙しい時期と重なります。ガイダンスの日程と登録締切は必ずカレンダーに入れて、初日にシラバスを開く習慣をつけましょう。
               </p>
             </div>
@@ -319,34 +329,37 @@ export default function CreditsGuidePage() {
         {/* §2 単位の仕組み */}
         <section id="units" className="flex flex-col gap-6 scroll-mt-20">
           <div className="flex flex-col gap-1">
-            <h2 className="text-primary text-xl md:text-2xl font-black">単位の仕組み（必修・選択・卒業要件）</h2>
-            <p className="text-text-grey text-sm">
+            <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">単位の仕組み（必修・選択・卒業要件）</h2>
+            <p className="text-graphite text-sm">
               卒業に必要な単位は4年制大学で概ね124単位前後。その中身は「必修 / 選択必修 / 選択 / 教養」の4区分が一般的です。
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {UNIT_TYPES.map((type, i) => (
-              <div key={i} className="border border-[#f0f2f5] p-5 flex flex-col gap-3">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 ${type.bg} flex items-center justify-center shrink-0`}>
-                    <span className={`material-symbols-outlined text-xl ${type.color}`}>{type.icon}</span>
+            {UNIT_TYPES.map((type, i) => {
+              const Icon = type.Icon;
+              return (
+                <div key={i} className="border border-rule p-5 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-mist flex items-center justify-center shrink-0">
+                      <Icon className="w-5 h-5 text-ink" aria-hidden="true" />
+                    </div>
+                    <h3 className="font-black text-ink text-base">{type.name}</h3>
                   </div>
-                  <h3 className="font-black text-primary text-base">{type.name}</h3>
+                  <p className="text-graphite text-sm leading-relaxed">{type.description}</p>
+                  <div className="flex gap-2 text-xs pt-1 border-t border-rule">
+                    <span className="text-ink font-bold shrink-0">→ ポイント</span>
+                    <span className="text-graphite leading-relaxed">{type.note}</span>
+                  </div>
                 </div>
-                <p className="text-text-grey text-sm leading-relaxed">{type.description}</p>
-                <div className="flex gap-2 text-xs pt-1 border-t border-[#f0f2f5]">
-                  <span className="text-accent font-bold shrink-0">→ ポイント</span>
-                  <span className="text-text-grey leading-relaxed">{type.note}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* 学年別ペース */}
-          <div className="border border-[#f0f2f5] p-6 flex flex-col gap-4">
-            <h3 className="text-primary font-black text-base">学年別の単位取得ペース（目安）</h3>
-            <p className="text-text-grey text-sm leading-relaxed">
-              卒業要件124単位を4年で均等に割ると31単位/年ですが、現実には<strong className="text-primary">1〜2年で前倒し</strong>して取るのが定石です。3〜4年はゼミ・卒論・就活で授業を入れにくくなるためです。
+          <div className="border border-rule p-6 flex flex-col gap-4">
+            <h3 className="text-ink font-black text-base">学年別の単位取得ペース（目安）</h3>
+            <p className="text-graphite text-sm leading-relaxed">
+              卒業要件124単位を4年で均等に割ると31単位/年ですが、現実には<strong className="text-ink">1〜2年で前倒し</strong>して取るのが定石です。3〜4年はゼミ・卒論・就活で授業を入れにくくなるためです。
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
               {[
@@ -355,14 +368,14 @@ export default function CreditsGuidePage() {
                 { year: "3年", target: "30〜36", note: "ゼミ・専門科目・就活と両立" },
                 { year: "4年", target: "8〜16", note: "卒論・残り単位・就活" },
               ].map((row) => (
-                <div key={row.year} className="bg-primary/5 p-3 flex flex-col gap-1">
-                  <span className="font-black text-primary">{row.year}</span>
-                  <span className="text-accent font-bold text-base">{row.target}単位</span>
-                  <span className="text-text-grey leading-snug">{row.note}</span>
+                <div key={row.year} className="bg-mist p-3 flex flex-col gap-1">
+                  <span className="font-black text-ink">{row.year}</span>
+                  <span className="text-ink font-bold text-base font-numeric tabular-nums">{row.target}単位</span>
+                  <span className="text-graphite leading-snug">{row.note}</span>
                 </div>
               ))}
             </div>
-            <p className="text-[11px] text-text-grey">
+            <p className="text-[11px] text-graphite">
               ※ 学部・大学により変動。正確な数字は所属学部の「履修要項」「学生便覧」を確認してください。
             </p>
           </div>
@@ -371,28 +384,28 @@ export default function CreditsGuidePage() {
         {/* §3 GPA */}
         <section id="gpa" className="flex flex-col gap-6 scroll-mt-20">
           <div className="flex flex-col gap-1">
-            <h2 className="text-primary text-xl md:text-2xl font-black">GPAの仕組みと効く場面</h2>
-            <p className="text-text-grey text-sm">
+            <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">GPAの仕組みと効く場面</h2>
+            <p className="text-graphite text-sm">
               GPA（Grade Point Average）は成績の平均点。奨学金・留学・進学・就活と、思った以上に多くの場面で見られます。
             </p>
           </div>
 
           {/* GPA計算表 */}
-          <div className="border border-[#f0f2f5] p-6 flex flex-col gap-4">
-            <h3 className="text-primary font-black text-base">GPAの計算方法（4.0スケール）</h3>
-            <p className="text-text-grey text-sm leading-relaxed">
+          <div className="border border-rule p-6 flex flex-col gap-4">
+            <h3 className="text-ink font-black text-base">GPAの計算方法（4.0スケール）</h3>
+            <p className="text-graphite text-sm leading-relaxed">
               一般的な4.0スケールでは、各科目の成績にポイントを割り当て、単位数で重みを付けて平均します。
             </p>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border border-[#f0f2f5]">
-                <thead className="bg-primary/5">
+              <table className="w-full text-sm border border-rule">
+                <thead className="bg-mist">
                   <tr>
-                    <th className="px-4 py-2 text-left font-bold text-primary">成績評価</th>
-                    <th className="px-4 py-2 text-left font-bold text-primary">点数の目安</th>
-                    <th className="px-4 py-2 text-left font-bold text-primary">グレードポイント</th>
+                    <th className="px-4 py-2 text-left font-bold text-ink">成績評価</th>
+                    <th className="px-4 py-2 text-left font-bold text-ink">点数の目安</th>
+                    <th className="px-4 py-2 text-left font-bold text-ink">グレードポイント</th>
                   </tr>
                 </thead>
-                <tbody className="text-text-grey">
+                <tbody className="text-graphite">
                   {[
                     { grade: "秀（S / A+）", score: "90〜100点", gp: "4.0" },
                     { grade: "優（A）", score: "80〜89点", gp: "3.0" },
@@ -400,43 +413,44 @@ export default function CreditsGuidePage() {
                     { grade: "可（C）", score: "60〜69点", gp: "1.0" },
                     { grade: "不可（D / F）", score: "59点以下", gp: "0.0" },
                   ].map((row) => (
-                    <tr key={row.grade} className="border-t border-[#f0f2f5]">
+                    <tr key={row.grade} className="border-t border-rule">
                       <td className="px-4 py-2">{row.grade}</td>
-                      <td className="px-4 py-2">{row.score}</td>
-                      <td className="px-4 py-2 font-bold text-primary">{row.gp}</td>
+                      <td className="px-4 py-2 font-numeric tabular-nums">{row.score}</td>
+                      <td className="px-4 py-2 font-bold text-ink font-numeric tabular-nums">{row.gp}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="text-[11px] text-text-grey">
+            <p className="text-[11px] text-graphite">
               ※ 大学によっては5段階（5.0スケール）や独自の換算式を使う場合があります。所属大学の規定を確認してください。
             </p>
           </div>
 
           {/* GPAが効く場面 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {GPA_USE_CASES.map((item, i) => (
-              <div key={i} className="border border-[#f0f2f5] p-5 flex gap-4">
-                <div className={`w-10 h-10 ${item.bg} flex items-center justify-center shrink-0`}>
-                  <span className={`material-symbols-outlined text-xl ${item.color}`}>{item.icon}</span>
+            {GPA_USE_CASES.map((item, i) => {
+              const Icon = item.Icon;
+              return (
+                <div key={i} className="border border-rule p-5 flex gap-4">
+                  <div className="w-10 h-10 bg-mist flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 text-ink" aria-hidden="true" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="text-ink text-sm font-bold">{item.title}</h3>
+                    <p className="text-graphite text-sm leading-relaxed">{item.body}</p>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="text-primary text-sm font-bold">{item.title}</h3>
-                  <p className="text-text-grey text-sm leading-relaxed">{item.body}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* GPAを下げないコツ */}
-          <div className="border border-emerald-200 bg-emerald-50 p-5 flex gap-3">
-            <span className="material-symbols-outlined text-emerald-700 text-lg shrink-0 mt-0.5">
-              tips_and_updates
-            </span>
+          <div className="border border-rule border-l-4 border-l-ink bg-mist p-5 flex gap-3">
+            <Lightbulb className="w-[18px] h-[18px] text-ink shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <p className="text-emerald-900 font-bold text-sm">GPAを下げないための3原則</p>
-              <ul className="text-emerald-800 text-xs leading-relaxed mt-1 flex flex-col gap-1 list-disc pl-4">
+              <p className="text-ink font-bold text-sm">GPAを下げないための3原則</p>
+              <ul className="text-graphite text-xs leading-relaxed mt-1 flex flex-col gap-1 list-disc pl-4">
                 <li>「捨て科目」を作らない。0点を1つ含むだけで平均が大きく下がる</li>
                 <li>「合わない」と感じたら修正期間内にW（履修取消）で逃げる</li>
                 <li>難易度が読めない科目は1年次にまとめて挑戦し、データを集める</li>
@@ -444,14 +458,14 @@ export default function CreditsGuidePage() {
             </div>
           </div>
 
-          <div className="mt-6 border-l-4 border-primary bg-neutral-light p-4">
-            <p className="font-display text-base font-bold text-primary">
+          <div className="mt-6 border border-rule border-l-4 border-l-ink bg-mist p-4">
+            <p className="font-body text-base font-bold text-ink">
               自分のGPAを計算してみる
             </p>
-            <p className="mt-2 text-sm text-text-grey">
+            <p className="mt-2 text-sm text-graphite">
               大学ごとに異なる換算方式に対応したGPA計算機を用意しています。出典つきで正確に計算できます。
             </p>
-            <Link href="/gpa" className="mt-3 inline-block text-sm font-bold text-accent underline">
+            <Link href="/gpa" className="mt-3 inline-block text-sm font-bold text-ink underline">
               GPA計算機を使う
             </Link>
           </div>
@@ -460,33 +474,34 @@ export default function CreditsGuidePage() {
         {/* §4 落としたら */}
         <section id="fail" className="flex flex-col gap-6 scroll-mt-20">
           <div className="flex flex-col gap-1">
-            <h2 className="text-primary text-xl md:text-2xl font-black">単位を落としたら：再履修・再試験・留年</h2>
-            <p className="text-text-grey text-sm">
+            <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">単位を落としたら：再履修・再試験・留年</h2>
+            <p className="text-graphite text-sm">
               単位を落とすこと自体は珍しくありません。問題は「落としたあとの動き」。早く動けば留年は十分回避できます。
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {FAIL_RECOVERY.map((item, i) => (
-              <div key={i} className="border border-[#f0f2f5] p-5 flex gap-4">
-                <div className="w-10 h-10 bg-amber-50 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-amber-600 text-xl">{item.icon}</span>
+            {FAIL_RECOVERY.map((item, i) => {
+              const Icon = item.Icon;
+              return (
+                <div key={i} className="border border-rule p-5 flex gap-4">
+                  <div className="w-10 h-10 bg-mist flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 text-ink" aria-hidden="true" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="text-ink text-sm font-bold">{item.title}</h3>
+                    <p className="text-graphite text-sm leading-relaxed">{item.body}</p>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="text-primary text-sm font-bold">{item.title}</h3>
-                  <p className="text-text-grey text-sm leading-relaxed">{item.body}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* 進級要件の注意 */}
-          <div className="border border-amber-200 bg-amber-50 p-5 flex gap-3">
-            <span className="material-symbols-outlined text-amber-700 text-lg shrink-0 mt-0.5">
-              warning
-            </span>
+          <div className="border border-rule border-l-4 border-l-seal bg-mist p-5 flex gap-3">
+            <AlertTriangle className="w-[18px] h-[18px] text-seal shrink-0 mt-0.5" aria-hidden="true" />
             <div>
-              <p className="text-amber-900 font-bold text-sm">「進級要件」がある学部は要注意</p>
-              <p className="text-amber-800 text-xs leading-relaxed mt-1">
+              <p className="text-ink font-bold text-sm">「進級要件」がある学部は要注意</p>
+              <p className="text-graphite text-xs leading-relaxed mt-1">
                 医・歯・薬・理工系などの一部学部では、卒業要件とは別に「進級要件」が課されています。例えば「2年次に進級するには1年次の必修を全て取得していること」など。1単位足りないだけで丸1年留年するケースもあるため、入学直後に学生便覧で進級要件を必ず確認しておきましょう。
               </p>
             </div>
@@ -495,29 +510,32 @@ export default function CreditsGuidePage() {
 
         {/* §5 コツ */}
         <section id="howto" className="flex flex-col gap-6 scroll-mt-20">
-          <h2 className="text-primary text-xl md:text-2xl font-black">失敗しない履修のコツ</h2>
+          <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">失敗しない履修のコツ</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {HOWTO_ITEMS.map((item, i) => (
-              <div key={i} className="border border-[#f0f2f5] p-6 flex gap-4">
-                <div className="w-10 h-10 bg-primary/5 flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-primary text-xl">{item.icon}</span>
+            {HOWTO_ITEMS.map((item, i) => {
+              const Icon = item.Icon;
+              return (
+                <div key={i} className="border border-rule p-6 flex gap-4">
+                  <div className="w-10 h-10 bg-mist flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5 text-ink" aria-hidden="true" />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <h3 className="text-ink text-sm font-bold">{item.title}</h3>
+                    <p className="text-graphite text-sm leading-relaxed">{item.body}</p>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <h3 className="text-primary text-sm font-bold">{item.title}</h3>
-                  <p className="text-text-grey text-sm leading-relaxed">{item.body}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
         {/* §6 FAQ */}
         <section id="faq" className="flex flex-col gap-6 scroll-mt-20">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-accent text-xl">help</span>
-            <h2 className="text-primary text-xl md:text-2xl font-black">よくある質問</h2>
+            <HelpCircle className="w-5 h-5 text-ink" aria-hidden="true" />
+            <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">よくある質問</h2>
           </div>
-          <div className="border border-[#f0f2f5] px-6">
+          <div className="border border-rule px-6">
             {FAQ_ITEMS.map((item, i) => (
               <FaqItem key={i} q={item.q} a={item.a} />
             ))}
@@ -525,61 +543,61 @@ export default function CreditsGuidePage() {
         </section>
 
         {/* §7 classinfo 送客 */}
-        <section style={{ backgroundColor: "#002b5c" }} className="p-8 flex flex-col md:flex-row items-center gap-6 justify-between">
+        <section className="bg-ink p-8 flex flex-col md:flex-row items-center gap-6 justify-between">
           <div className="flex flex-col gap-2">
-            <h2 className="font-black text-xl md:text-2xl" style={{ color: "#ffffff" }}>
+            <h2 className="font-black text-xl md:text-2xl text-paper font-mincho">
               授業の評判は ProofLoop で
             </h2>
-            <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
+            <p className="text-sm leading-relaxed text-paper/70">
               シラバスに書かれない「単位の取りやすさ」「課題の重さ」「テストの傾向」を、先輩の口コミと過去の履修者データで可視化する授業情報機能を準備中。リリース時にお知らせします。
             </p>
           </div>
           <Link
             href="/classinfo"
-            className="shrink-0 inline-flex items-center gap-2 bg-accent text-white hover:bg-[#600000] transition-colors px-8 py-4 font-black text-base whitespace-nowrap"
+            className="shrink-0 inline-flex items-center gap-2 bg-seal text-paper hover:bg-seal/90 transition-colors px-8 py-4 font-black text-base whitespace-nowrap"
           >
             授業情報を見る
-            <span className="material-symbols-outlined">arrow_forward</span>
+            <ArrowRight className="w-5 h-5" aria-hidden="true" />
           </Link>
         </section>
 
         {/* 他のガイド */}
-        <section className="border border-[#f0f2f5] p-6 flex flex-col gap-4">
-          <h3 className="text-primary font-black text-base">他のガイドも読む</h3>
+        <section className="border border-rule p-6 flex flex-col gap-4">
+          <h3 className="text-ink font-black text-base">他のガイドも読む</h3>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/baito"
-              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-rule hover:border-ink/40 text-sm font-bold text-ink hover:text-ink/70 transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">work</span>
+              <Briefcase className="w-4 h-4" aria-hidden="true" />
               バイト・インターンどうする？
             </Link>
             <Link
               href="/guide/circle"
-              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-rule hover:border-ink/40 text-sm font-bold text-ink hover:text-ink/70 transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">groups</span>
+              <Users className="w-4 h-4" aria-hidden="true" />
               サークルどうする？
             </Link>
             <Link
               href="/guide/study-abroad"
-              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-rule hover:border-ink/40 text-sm font-bold text-ink hover:text-ink/70 transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">flight</span>
+              <Plane className="w-4 h-4" aria-hidden="true" />
               留学どうする？
             </Link>
             <Link
               href="/guide/living-alone"
-              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-rule hover:border-ink/40 text-sm font-bold text-ink hover:text-ink/70 transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">cottage</span>
+              <Home className="w-4 h-4" aria-hidden="true" />
               一人暮らしどうする？
             </Link>
             <Link
               href="/guide"
-              className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-rule hover:border-ink/40 text-sm font-bold text-ink hover:text-ink/70 transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">menu_book</span>
+              <BookOpen className="w-4 h-4" aria-hidden="true" />
               新入生ガイド一覧へ
             </Link>
           </div>

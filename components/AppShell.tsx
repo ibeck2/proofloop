@@ -154,13 +154,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="hidden md:flex items-center gap-3">
                   {session ? (
                     <>
-                      <span className="text-text-grey text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                      <span className="text-graphite text-sm font-medium flex items-center gap-2 whitespace-nowrap">
                         {profileLoaded ? loginLabel : "ログイン中: ゲストさん"}
                       </span>
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        className="inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors px-6 h-10 font-bold text-sm rounded-none"
                       >
                         ログアウト
                       </button>
@@ -187,7 +187,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   type="button"
                   aria-label="メニューを開く"
                   aria-expanded={isMenuOpen}
-                  className="md:hidden p-2 -mr-2 text-text-grey hover:text-primary transition-colors"
+                  className="md:hidden p-2 -mr-2 text-graphite hover:text-ink transition-colors"
                   onClick={() => setIsMenuOpen((prev) => !prev)}
                 >
                   {isMenuOpen ? (
@@ -222,7 +222,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           >
             <div className="flex flex-col h-full pt-14 pb-6">
               <div className="px-4 pb-4 border-b border-slate-100">
-                <span className="font-display font-bold text-primary text-lg">メニュー</span>
+                <span className="font-body font-bold text-ink text-lg">メニュー</span>
               </div>
               <nav className="flex-1 px-2 py-4 flex flex-col gap-1">
                 {MOBILE_NAV_LINKS.filter((link) => !link.loginOnly || session).map(({ href, label, Icon }) => (
@@ -247,18 +247,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/mypage"
                       onClick={closeMenu}
-                      className="flex items-center gap-2 px-4 py-3 rounded-lg font-bold text-sm text-primary bg-primary/10"
+                      className="flex items-center gap-2 px-4 py-3 rounded-lg font-bold text-sm text-ink bg-mist"
                     >
                       <User className="w-5 h-5" aria-hidden="true" />
                       マイページ
                     </Link>
-                    <div className="flex items-center gap-2 text-text-grey text-sm font-medium px-2 py-2">
+                    <div className="flex items-center gap-2 text-graphite text-sm font-medium px-2 py-2">
                       {profileLoaded ? loginLabel : "ログイン中: ゲストさん"}
                     </div>
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="w-full inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors py-3 font-bold text-sm rounded-none"
+                      className="w-full inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors py-3 font-bold text-sm rounded-none"
                     >
                       ログアウト
                     </button>

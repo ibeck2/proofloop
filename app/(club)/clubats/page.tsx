@@ -3,6 +3,18 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import {
+  Mail,
+  UserPlus,
+  BarChart3,
+  ChevronDown,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  GripVertical,
+  X,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { ApplicationWithProfile } from "@/lib/types/application";
@@ -23,17 +35,36 @@ const PRIORITY_OPTIONS = [
   { value: "未設定", label: "未設定" },
 ] as const;
 
+/**
+ * 優先度バッジは元々は項目ごとに色相を変えていた（装飾の色）。
+ * 優先度は装飾ではなく意味なので、色相ではなく紺の濃淡で表す。
+ */
+const PRIORITY_BADGE_CLASS: Record<string, string> = {
+  高: "border border-ink bg-ink text-paper",
+  中: "border border-rule bg-mist text-ink",
+  低: "border border-rule bg-paper text-graphite",
+};
+const DEFAULT_PRIORITY_BADGE_CLASS = "border border-rule bg-paper text-graphite";
+
 function priorityBadgeClass(priority: string | null | undefined): string {
-  switch (priority) {
-    case "高":
-      return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800";
-    case "中":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 border-amber-200 dark:border-amber-800";
-    case "低":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800";
-    default:
-      return "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-600";
-  }
+  return PRIORITY_BADGE_CLASS[priority ?? ""] ?? DEFAULT_PRIORITY_BADGE_CLASS;
+}
+
+/**
+ * 選考ステージの配色（新規応募 → 各選考ステップ）を表す紺の4階調。
+ * components/home/OrganizationField.tsx で使っているものと同じ4色。
+ * 段階が進むほど濃くなる（＝ゴールに近づく）ことを示す。
+ * 「内定・完了」はこのグラデーションの最終形として ink 固定。
+ * 「お見送り」「返信なし」はファネルの外に出た状態として rule（中立色）で統一する。
+ */
+const FUNNEL_TINTS = ["#AEBFD0", "#7391AF", "#33587F", "#002B5C"];
+
+function funnelTint(index: number): string {
+  return FUNNEL_TINTS[index % FUNNEL_TINTS.length];
+}
+
+function funnelTintIsLight(index: number): boolean {
+  return index % FUNNEL_TINTS.length < 2;
 }
 
 type SelectionFlowStep = {
@@ -402,7 +433,7 @@ export default function ClubAtsPage() {
     return (
       <div className="p-6 md:p-10">
         <div className="flex items-center justify-center py-20">
-          <p className="text-slate-500">読み込み中...</p>
+          <p className="text-graphite/70">読み込み中...</p>
         </div>
       </div>
     );
@@ -411,9 +442,9 @@ export default function ClubAtsPage() {
   if (!ctxLoading && (hasNoMemberships || !isReady || !orgId)) {
     return (
       <div className="p-6 md:p-10">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 p-6 text-center">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">管理できる団体がありません</p>
-          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+        <div className="rounded-lg border border-rule border-l-4 border-l-seal bg-mist p-6 text-center">
+          <p className="text-ink font-medium">管理できる団体がありません</p>
+          <p className="text-graphite text-sm mt-1">
             プロフィール編集で団体を登録するか、既存団体への参加申請を行ってください。
           </p>
         </div>
@@ -425,40 +456,40 @@ export default function ClubAtsPage() {
     <div className="p-6 md:p-10">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">採用管理（ATS）</h1>
+          <h1 className="text-2xl font-bold text-ink font-mincho">採用管理（ATS）</h1>
           {orgName && (
-            <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{orgName} の応募者を管理します</p>
+            <p className="text-graphite text-sm mt-1">{orgName} の応募者を管理します</p>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Link
             href={withOrgQuery("/clubmessages")}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium text-sm transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-rule text-graphite hover:bg-mist font-medium text-sm transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">mail</span>
+            <Mail className="w-5 h-5" aria-hidden="true" />
             メッセージ一覧を開く
           </Link>
           <button
             type="button"
             onClick={() => setManualModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed border-ink text-ink hover:bg-mist font-medium text-sm transition-colors"
           >
-            <span className="material-symbols-outlined text-[20px]">person_add</span>
+            <UserPlus className="w-5 h-5" aria-hidden="true" />
             ＋ 候補者を手動追加
           </button>
         </div>
       </div>
 
       {/* ファネル分析ダッシュボード */}
-      <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm">
+      <div className="mb-6 rounded-xl border border-rule bg-paper p-5 shadow-sm">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">応募者総数（有効）</p>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{totalValidApplicants} 名</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">お見送りを除く選考中＋内定</p>
+            <p className="text-xs font-medium text-graphite/70 uppercase tracking-wider">応募者総数（有効）</p>
+            <p className="text-2xl font-bold text-ink mt-1 font-numeric tabular-nums">{totalValidApplicants} 名</p>
+            <p className="text-xs text-graphite/70 mt-0.5">お見送りを除く選考中＋内定</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">計画採用人数</p>
+            <p className="text-xs font-medium text-graphite/70 uppercase tracking-wider">計画採用人数</p>
             <div className="flex items-center gap-2 mt-1">
               <input
                 type="number"
@@ -473,52 +504,54 @@ export default function ClubAtsPage() {
                   const num = v === "" ? "" : Math.max(0, parseInt(v, 10) || 0);
                   savePlannedHireCount(num);
                 }}
-                className="w-24 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-lg font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-1 focus:ring-primary"
+                className="w-24 border border-rule rounded-lg px-3 py-2 text-lg font-bold bg-paper text-ink font-numeric focus:ring-1 focus:ring-ink"
               />
-              <span className="text-slate-600 dark:text-slate-300">名</span>
-              {savingPlan && <span className="text-xs text-slate-400">保存中...</span>}
+              <span className="text-graphite">名</span>
+              {savingPlan && <span className="text-xs text-graphite/70">保存中...</span>}
             </div>
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">全体目標通過率</p>
-            <p className="text-2xl font-bold text-primary mt-1">
+            <p className="text-xs font-medium text-graphite/70 uppercase tracking-wider">全体目標通過率</p>
+            <p className="text-2xl font-bold text-ink mt-1 font-numeric tabular-nums">
               {overallTargetRatePct != null
                 ? `${overallTargetRatePct.toFixed(1)}%${overallTargetMultiple != null ? `（${overallTargetMultiple.toFixed(1)}倍）` : ""}`
                 : "—"}
             </p>
             {totalValidApplicants === 0 && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">応募者がいると計算されます</p>
+              <p className="text-xs text-graphite/70 mt-0.5">応募者がいると計算されます</p>
             )}
           </div>
         </div>
 
         {/* 選考シミュレーター（アコーディオン） */}
-        <div className="border-t border-slate-200 dark:border-slate-600 pt-4">
+        <div className="border-t border-rule pt-4">
           <button
             type="button"
             onClick={() => setSimulatorOpen((o) => !o)}
-            className="flex items-center justify-between w-full text-left font-bold text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-lg px-3 py-2 -mx-3 transition-colors"
+            className="flex items-center justify-between w-full text-left font-bold text-ink hover:bg-mist rounded-lg px-3 py-2 -mx-3 transition-colors"
           >
             <span className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">insights</span>
+              <BarChart3 className="w-5 h-5 text-ink" aria-hidden="true" />
               選考シミュレーター
             </span>
-            <span className="material-symbols-outlined text-slate-400 transition-transform" style={{ transform: simulatorOpen ? "rotate(180deg)" : undefined }}>
-              expand_more
-            </span>
+            <ChevronDown
+              className="w-5 h-5 text-graphite/70 transition-transform"
+              style={{ transform: simulatorOpen ? "rotate(180deg)" : undefined }}
+              aria-hidden="true"
+            />
           </button>
           {simulatorOpen && (
             <div className="mt-4 space-y-4">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-graphite">
                 各ステップの目標通過率（%）を入力すると、総合予測通過率が計算されます。未入力は100%として計算します。
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {selectionFlow.length === 0 ? (
-                  <p className="text-slate-500 text-sm">プロフィールで選考フローを設定すると、ここで目標通過率を入力できます。</p>
+                  <p className="text-graphite/70 text-sm">プロフィールで選考フローを設定すると、ここで目標通過率を入力できます。</p>
                 ) : (
                   selectionFlow.map((step) => (
                     <div key={step.name}>
-                      <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{step.name}（%）</label>
+                      <label className="block text-xs font-medium text-graphite/70 mb-1">{step.name}（%）</label>
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
@@ -533,30 +566,30 @@ export default function ClubAtsPage() {
                           }}
                           onBlur={() => saveStepTargetRates(stepTargetRatesRef.current)}
                           placeholder="100"
-                          className="w-20 border border-slate-300 dark:border-slate-600 rounded-lg px-2 py-1.5 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                          className="w-20 border border-rule rounded-lg px-2 py-1.5 text-sm bg-paper text-ink font-numeric"
                         />
-                        <span className="text-slate-500">%</span>
+                        <span className="text-graphite/70">%</span>
                       </div>
                     </div>
                   ))
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-4 pt-2">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  総合予測通過率: <span className="font-bold text-primary">{(combinedSimulatedRate * 100).toFixed(1)}%</span>
+                <p className="text-sm font-medium text-graphite">
+                  総合予測通過率: <span className="font-bold text-ink font-numeric tabular-nums">{(combinedSimulatedRate * 100).toFixed(1)}%</span>
                   {totalValidApplicants > 0 && (
-                    <span className="text-slate-500 font-normal ml-1">
+                    <span className="text-graphite/70 font-normal ml-1">
                       （予測通過人数: 約{Math.round(predictedPassCount)}名）
                     </span>
                   )}
                 </p>
               </div>
               {simulatorTooStrict && (
-                <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-4 py-3">
-                  <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                <div className="rounded-lg border border-rule border-l-4 border-l-seal bg-mist px-4 py-3">
+                  <p className="text-sm font-medium text-ink">
                     ※各ステップの通過率が低すぎます。このままでは計画採用人数を下回る可能性があります。
                   </p>
-                  <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                  <p className="text-xs text-graphite mt-1">
                     予測通過: 約{Math.round(predictedPassCount)}名 / 計画: {plannedNum}名
                   </p>
                 </div>
@@ -570,135 +603,163 @@ export default function ClubAtsPage() {
       <div className="overflow-x-auto pb-4 -mx-2">
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="flex gap-4 min-w-max px-2">
-            {appsByLane.map(({ lane, apps }) => (
-              <div
-                key={lane.id}
-                className="w-[300px] flex-shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 overflow-hidden flex flex-col"
-              >
+            {appsByLane.map(({ lane, apps }, laneIdx) => {
+              const isAccepted = lane.id === "accepted";
+              const isClosed = lane.id === "rejected" || lane.id === "no_reply";
+              const tint = !isAccepted && !isClosed ? funnelTint(laneIdx) : null;
+              const tintIsLight = tint != null && funnelTintIsLight(laneIdx);
+
+              const underperforming = (() => {
+                if (isAccepted || isClosed || lane.id === "new") return false;
+                const rate = stepTargetRates[lane.id];
+                if (rate == null || totalValidApplicants === 0) return false;
+                const prevLaneIdx = laneIdx - 1;
+                if (prevLaneIdx < 0) return false;
+                const prevApps = appsByLane[prevLaneIdx]?.apps.length ?? 0;
+                const expected = Math.floor(prevApps * (rate / 100));
+                return apps.length < expected * 0.9;
+              })();
+
+              return (
                 <div
-                  className={`px-4 py-3 border-b border-slate-200 dark:border-slate-700 shrink-0 ${
-                    (() => {
-                      if (lane.id === "rejected" || lane.id === "accepted" || lane.id === "new") return "bg-white dark:bg-slate-800";
-                      const rate = stepTargetRates[lane.id];
-                      if (rate == null || totalValidApplicants === 0) return "bg-white dark:bg-slate-800";
-                      const prevLaneIdx = lanes.findIndex((l) => l.id === lane.id) - 1;
-                      if (prevLaneIdx < 0) return "bg-white dark:bg-slate-800";
-                      const prevApps = appsByLane[prevLaneIdx]?.apps.length ?? 0;
-                      const expected = Math.floor(prevApps * (rate / 100));
-                      return apps.length < expected * 0.9 ? "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800" : "bg-white dark:bg-slate-800";
-                    })()
-                  }`}
+                  key={lane.id}
+                  className="w-[300px] flex-shrink-0 rounded-xl border border-rule bg-mist overflow-hidden flex flex-col"
                 >
-                  <h2 className="font-bold text-slate-800 dark:text-slate-100 text-sm flex items-center gap-2 flex-wrap">
-                    {lane.id === "accepted" && (
-                      <span className="material-symbols-outlined text-emerald-600 text-lg">check_circle</span>
-                    )}
-                    {lane.id === "rejected" && (
-                      <span className="material-symbols-outlined text-slate-500 text-lg">cancel</span>
-                    )}
-                    <span>{lane.title}</span>
-                    <span className="inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded-full text-xs font-bold bg-slate-200 dark:bg-slate-600 text-slate-700 dark:text-slate-200">
-                      （{apps.length}）
-                    </span>
-                  </h2>
-                </div>
-                <Droppable droppableId={lane.id}>
-                  {(droppableProvided) => (
-                    <div
-                      ref={droppableProvided.innerRef}
-                      {...droppableProvided.droppableProps}
-                      className="p-3 space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto flex-1 min-h-[80px]"
-                    >
-                      {apps.map((app, index) => {
-                        const isProofLoop = !!app.user_id;
-                        const displayName = isProofLoop && app.profiles
-                          ? app.profiles.display_name || "（名前未設定）"
-                          : (app.manual_name || "（名前未設定）");
-                        const displaySub = isProofLoop && app.profiles
-                          ? [app.profiles.university, app.profiles.faculty].filter(Boolean).join(" · ") || "—"
-                          : (app.manual_university || "—");
-                        const displayMeta = isProofLoop && app.profiles
-                          ? `入学年度: ${app.profiles.enrollment_year || "—"} · 応募日: ${formatAppDate(app.created_at)}`
-                          : `応募日: ${formatAppDate(app.created_at)}`;
-                        return (
-                          <Draggable key={app.id} draggableId={app.id} index={index}>
-                            {(draggableProvided, snapshot) => (
-                              <div
-                                ref={draggableProvided.innerRef}
-                                {...draggableProvided.draggableProps}
-                                className={`rounded-lg border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 transition-shadow flex ${
-                                  snapshot.isDragging
-                                    ? "shadow-xl opacity-95 scale-[1.02] ring-2 ring-primary/30 z-50"
-                                    : "shadow-sm hover:shadow-md"
-                                }`}
-                              >
+                  <div
+                    className={`px-4 py-3 border-b border-rule bg-paper shrink-0 border-l-4 ${
+                      isAccepted ? "border-l-ink" : isClosed ? "border-l-rule" : ""
+                    }`}
+                    style={tint ? { borderLeftColor: tint } : undefined}
+                  >
+                    <h2 className="font-bold text-sm flex items-center gap-2 flex-wrap">
+                      {isAccepted && <CheckCircle2 className="w-[18px] h-[18px] text-ink shrink-0" aria-hidden="true" />}
+                      {lane.id === "rejected" && <XCircle className="w-[18px] h-[18px] text-graphite/70 shrink-0" aria-hidden="true" />}
+                      {lane.id === "no_reply" && <Clock className="w-[18px] h-[18px] text-graphite/70 shrink-0" aria-hidden="true" />}
+                      <span className={isClosed ? "text-graphite" : "text-ink"}>{lane.title}</span>
+                      {underperforming && (
+                        <AlertTriangle
+                          className="w-[14px] h-[14px] text-graphite shrink-0"
+                          aria-label="想定より通過人数が少ない状態です"
+                        />
+                      )}
+                      <span
+                        className={`inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded-full text-xs font-bold font-numeric tabular-nums ${
+                          isClosed ? "bg-mist text-graphite border border-rule" : ""
+                        }`}
+                        style={
+                          !isClosed
+                            ? {
+                                backgroundColor: isAccepted ? "#002B5C" : tint ?? undefined,
+                                color: isAccepted ? "#FFFFFF" : tintIsLight ? "#002B5C" : "#FFFFFF",
+                              }
+                            : undefined
+                        }
+                      >
+                        （{apps.length}）
+                      </span>
+                    </h2>
+                  </div>
+                  <Droppable droppableId={lane.id}>
+                    {(droppableProvided) => (
+                      <div
+                        ref={droppableProvided.innerRef}
+                        {...droppableProvided.droppableProps}
+                        className="p-3 space-y-3 max-h-[calc(100vh-280px)] overflow-y-auto flex-1 min-h-[80px]"
+                      >
+                        {apps.map((app, index) => {
+                          const isProofLoop = !!app.user_id;
+                          const displayName = isProofLoop && app.profiles
+                            ? app.profiles.display_name || "（名前未設定）"
+                            : (app.manual_name || "（名前未設定）");
+                          const displaySub = isProofLoop && app.profiles
+                            ? [app.profiles.university, app.profiles.faculty].filter(Boolean).join(" · ") || "—"
+                            : (app.manual_university || "—");
+                          const displayMeta = isProofLoop && app.profiles
+                            ? `入学年度: ${app.profiles.enrollment_year || "—"} · 応募日: ${formatAppDate(app.created_at)}`
+                            : `応募日: ${formatAppDate(app.created_at)}`;
+                          return (
+                            <Draggable key={app.id} draggableId={app.id} index={index}>
+                              {(draggableProvided, snapshot) => (
                                 <div
-                                  {...draggableProvided.dragHandleProps}
-                                  className="flex-shrink-0 p-2 self-start cursor-grab active:cursor-grabbing text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 touch-none"
-                                  onClick={(e) => e.stopPropagation()}
-                                  aria-label="ドラッグして移動"
+                                  ref={draggableProvided.innerRef}
+                                  {...draggableProvided.draggableProps}
+                                  className={`rounded-lg border border-rule border-l-4 bg-paper transition-shadow flex ${
+                                    isAccepted ? "border-l-ink" : ""
+                                  } ${
+                                    snapshot.isDragging
+                                      ? "shadow-xl opacity-95 scale-[1.02] ring-2 ring-ink/30 z-50"
+                                      : "shadow-sm hover:shadow-md"
+                                  }`}
+                                  style={!isAccepted && !isClosed && tint ? { borderLeftColor: tint } : undefined}
                                 >
-                                  <span className="material-symbols-outlined text-[20px]">drag_indicator</span>
-                                </div>
-                                <div
-                                  className="flex-1 min-w-0 p-3 pr-4 pt-3 cursor-pointer relative"
-                                  onClick={() => setDetailApp(app)}
-                                >
-                                  <div className="absolute top-2 right-2 flex items-center gap-1.5">
-                                    {unreadApplicationIds.has(app.id) && (
-                                      <span className="relative flex h-2.5 w-2.5 shrink-0" title="未読メッセージあり">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
-                                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                                  <div
+                                    {...draggableProvided.dragHandleProps}
+                                    className="flex-shrink-0 p-2 self-start cursor-grab active:cursor-grabbing text-graphite/70 hover:text-graphite touch-none"
+                                    onClick={(e) => e.stopPropagation()}
+                                    aria-label="ドラッグして移動"
+                                  >
+                                    <GripVertical className="w-5 h-5" aria-hidden="true" />
+                                  </div>
+                                  <div
+                                    className="flex-1 min-w-0 p-3 pr-4 pt-3 cursor-pointer relative"
+                                    onClick={() => setDetailApp(app)}
+                                  >
+                                    <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                                      {unreadApplicationIds.has(app.id) && (
+                                        <span className="relative flex h-2.5 w-2.5 shrink-0" title="未読メッセージあり">
+                                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ink opacity-75" />
+                                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-ink" />
+                                        </span>
+                                      )}
+                                      <span className={`text-xs font-medium px-2 py-0.5 rounded ${priorityBadgeClass(app.priority)}`}>
+                                        {app.priority || "未設定"}
+                                      </span>
+                                    </div>
+                                    {!isProofLoop && app.source && (
+                                      <span className="inline-block text-xs font-medium px-2 py-0.5 rounded bg-mist text-graphite border border-rule mt-1">
+                                        {app.source}
                                       </span>
                                     )}
-                                    <span className={`text-xs font-medium px-2 py-0.5 rounded border ${priorityBadgeClass(app.priority)}`}>
-                                      {app.priority || "未設定"}
-                                    </span>
-                                  </div>
-                                  {!isProofLoop && app.source && (
-                                    <span className="inline-block text-xs font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600 dark:bg-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-500 mt-1">
-                                      {app.source}
-                                    </span>
-                                  )}
-                                  <p className="font-medium text-slate-900 dark:text-white truncate pr-16">
-                                    {displayName}
-                                  </p>
-                                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                                    {displaySub}
-                                  </p>
-                                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                                    {displayMeta}
-                                  </p>
-                                  <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-700" onClick={(e) => e.stopPropagation()}>
-                                    <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">ステータス変更</label>
-                                    <select
-                                      value={getLaneId(app, selectionFlow)}
-                                      onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                                      disabled={updatingId === app.id}
-                                      className="w-full text-sm border border-slate-300 dark:border-slate-600 rounded-md px-2 py-1.5 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary"
-                                    >
-                                      {lanes.map((l) => (
-                                        <option key={l.id} value={l.id}>
-                                          {l.title}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    {updatingId === app.id && (
-                                      <p className="text-xs text-primary mt-1">更新中...</p>
-                                    )}
+                                    <p className="font-medium text-ink truncate pr-16">
+                                      {displayName}
+                                    </p>
+                                    <p className="text-xs text-graphite/70 mt-1 line-clamp-2">
+                                      {displaySub}
+                                    </p>
+                                    <p className="text-xs text-graphite/70 mt-0.5">
+                                      {displayMeta}
+                                    </p>
+                                    <div className="mt-3 pt-3 border-t border-rule" onClick={(e) => e.stopPropagation()}>
+                                      <label className="block text-xs font-medium text-graphite/70 mb-1">ステータス変更</label>
+                                      <select
+                                        value={getLaneId(app, selectionFlow)}
+                                        onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                                        disabled={updatingId === app.id}
+                                        className="w-full text-sm border border-rule rounded-md px-2 py-1.5 bg-paper text-ink focus:ring-1 focus:ring-ink"
+                                      >
+                                        {lanes.map((l) => (
+                                          <option key={l.id} value={l.id}>
+                                            {l.title}
+                                          </option>
+                                        ))}
+                                      </select>
+                                      {updatingId === app.id && (
+                                        <p className="text-xs text-ink mt-1">更新中...</p>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        );
-                      })}
-                      {droppableProvided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </div>
-            ))}
+                              )}
+                            </Draggable>
+                          );
+                        })}
+                        {droppableProvided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </div>
+              );
+            })}
           </div>
         </DragDropContext>
       </div>
@@ -716,29 +777,29 @@ export default function ClubAtsPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="applicant-detail-title"
-            className="fixed left-1/2 top-1/2 z-[210] w-[min(520px,92vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl overflow-hidden flex flex-col"
+            className="fixed left-1/2 top-1/2 z-[210] w-[min(520px,92vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-paper border border-rule rounded-xl shadow-xl overflow-hidden flex flex-col"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-600">
-              <h3 id="applicant-detail-title" className="text-lg font-bold text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-rule">
+              <h3 id="applicant-detail-title" className="text-lg font-bold text-ink">
                 応募者詳細
               </h3>
               <button
                 type="button"
                 aria-label="閉じる"
                 onClick={() => setDetailApp(null)}
-                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="p-2 rounded-lg text-graphite hover:bg-mist transition-colors"
               >
-                <span className="material-symbols-outlined">close</span>
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <div className="px-6 py-4 overflow-y-auto flex-1 space-y-6">
               {/* 優先度変更 */}
               <div>
-                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">優先度</h4>
+                <h4 className="text-sm font-bold text-ink mb-2">優先度</h4>
                 <select
                   value={detailApp.priority ?? "未設定"}
                   onChange={(e) => handlePriorityChange(detailApp.id, e.target.value)}
-                  className="w-full text-sm border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary"
+                  className="w-full text-sm border border-rule rounded-lg px-3 py-2 bg-paper text-ink focus:ring-1 focus:ring-ink"
                 >
                   {PRIORITY_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
@@ -746,59 +807,59 @@ export default function ClubAtsPage() {
                 </select>
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">プロフィール</h4>
+                <h4 className="text-sm font-bold text-ink mb-2">プロフィール</h4>
                 {detailApp.user_id && detailApp.profiles ? (
-                  <dl className="rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 divide-y divide-slate-200 dark:divide-slate-600">
+                  <dl className="rounded-lg border border-rule bg-mist divide-y divide-rule">
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">氏名</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm font-medium">{detailApp.profiles.display_name ?? "—"}</dd>
+                      <dt className="text-graphite/70 text-sm">氏名</dt>
+                      <dd className="text-ink text-sm font-medium">{detailApp.profiles.display_name ?? "—"}</dd>
                     </div>
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">メール</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm">{detailApp.profiles.email ?? "—"}</dd>
+                      <dt className="text-graphite/70 text-sm">メール</dt>
+                      <dd className="text-graphite text-sm">{detailApp.profiles.email ?? "—"}</dd>
                     </div>
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">大学名</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm">{detailApp.profiles.university ?? "—"}</dd>
+                      <dt className="text-graphite/70 text-sm">大学名</dt>
+                      <dd className="text-graphite text-sm">{detailApp.profiles.university ?? "—"}</dd>
                     </div>
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">学部・学科</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm">{detailApp.profiles.faculty ?? "—"}</dd>
+                      <dt className="text-graphite/70 text-sm">学部・学科</dt>
+                      <dd className="text-graphite text-sm">{detailApp.profiles.faculty ?? "—"}</dd>
                     </div>
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">入学年度</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm">{detailApp.profiles.enrollment_year ?? "—"}</dd>
+                      <dt className="text-graphite/70 text-sm">入学年度</dt>
+                      <dd className="text-graphite text-sm">{detailApp.profiles.enrollment_year ?? "—"}</dd>
                     </div>
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">応募日</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm">{formatAppDate(detailApp.created_at)}</dd>
+                      <dt className="text-graphite/70 text-sm">応募日</dt>
+                      <dd className="text-graphite text-sm">{formatAppDate(detailApp.created_at)}</dd>
                     </div>
                   </dl>
                 ) : (
-                  <dl className="rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 divide-y divide-slate-200 dark:divide-slate-600">
+                  <dl className="rounded-lg border border-rule bg-mist divide-y divide-rule">
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">氏名</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm font-medium">{detailApp.manual_name ?? "—"}</dd>
+                      <dt className="text-graphite/70 text-sm">氏名</dt>
+                      <dd className="text-ink text-sm font-medium">{detailApp.manual_name ?? "—"}</dd>
                     </div>
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">大学・学年など</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm">{detailApp.manual_university ?? "—"}</dd>
+                      <dt className="text-graphite/70 text-sm">大学・学年など</dt>
+                      <dd className="text-graphite text-sm">{detailApp.manual_university ?? "—"}</dd>
                     </div>
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">流入経路</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm">{detailApp.source ?? "—"}</dd>
+                      <dt className="text-graphite/70 text-sm">流入経路</dt>
+                      <dd className="text-graphite text-sm">{detailApp.source ?? "—"}</dd>
                     </div>
                     <div className="px-4 py-2 flex justify-between gap-4">
-                      <dt className="text-slate-500 dark:text-slate-400 text-sm">追加日</dt>
-                      <dd className="text-slate-900 dark:text-white text-sm">{formatAppDate(detailApp.created_at)}</dd>
+                      <dt className="text-graphite/70 text-sm">追加日</dt>
+                      <dd className="text-graphite text-sm">{formatAppDate(detailApp.created_at)}</dd>
                     </div>
                   </dl>
                 )}
               </div>
               <div>
-                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">志望動機・自己PR</h4>
-                <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 p-4">
-                  <p className="text-slate-800 dark:text-slate-200 text-sm whitespace-pre-wrap">
+                <h4 className="text-sm font-bold text-ink mb-2">志望動機・自己PR</h4>
+                <div className="rounded-lg border border-rule bg-mist p-4">
+                  <p className="text-graphite text-sm whitespace-pre-wrap">
                     {detailApp.applicant_message?.trim() || "（未入力）"}
                   </p>
                 </div>
@@ -806,10 +867,10 @@ export default function ClubAtsPage() {
 
               {/* メッセージ履歴・連絡（ProofLoop応募者のみ） */}
               <div>
-                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">メッセージ履歴・連絡</h4>
+                <h4 className="text-sm font-bold text-ink mb-2">メッセージ履歴・連絡</h4>
                 {!detailApp.user_id ? (
-                  <div className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
-                    <p className="text-amber-800 dark:text-amber-200 text-sm">
+                  <div className="rounded-lg border border-rule border-l-4 border-l-ink bg-mist p-4">
+                    <p className="text-ink text-sm">
                       ※外部からの応募者のため、システム内メッセージは利用できません。LINE等で直接ご連絡ください。
                     </p>
                   </div>
@@ -842,10 +903,10 @@ export default function ClubAtsPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="manual-add-title"
-            className="fixed left-1/2 top-1/2 z-[210] w-[min(440px,92vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl overflow-hidden flex flex-col"
+            className="fixed left-1/2 top-1/2 z-[210] w-[min(440px,92vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-paper border border-rule rounded-xl shadow-xl overflow-hidden flex flex-col"
           >
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-600">
-              <h3 id="manual-add-title" className="text-lg font-bold text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-rule">
+              <h3 id="manual-add-title" className="text-lg font-bold text-ink">
                 候補者を手動追加
               </h3>
               <button
@@ -853,15 +914,15 @@ export default function ClubAtsPage() {
                 aria-label="閉じる"
                 onClick={() => !manualSubmitting && setManualModalOpen(false)}
                 disabled={manualSubmitting}
-                className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                className="p-2 rounded-lg text-graphite hover:bg-mist transition-colors disabled:opacity-50"
               >
-                <span className="material-symbols-outlined">close</span>
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <form onSubmit={handleManualAddSubmit} className="px-6 py-4 overflow-y-auto space-y-4">
               <div>
-                <label htmlFor="manual-name" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">
-                  氏名 <span className="text-red-500">必須</span>
+                <label htmlFor="manual-name" className="block text-sm font-bold text-ink mb-1">
+                  氏名 <span className="text-ink font-normal">（必須）</span>
                 </label>
                 <Input
                   id="manual-name"
@@ -873,8 +934,8 @@ export default function ClubAtsPage() {
                 />
               </div>
               <div>
-                <label htmlFor="manual-university" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">
-                  大学・学年など <span className="text-slate-400 font-normal">任意</span>
+                <label htmlFor="manual-university" className="block text-sm font-bold text-ink mb-1">
+                  大学・学年など <span className="text-graphite/70 font-normal">任意</span>
                 </label>
                 <Input
                   id="manual-university"
@@ -885,14 +946,14 @@ export default function ClubAtsPage() {
                 />
               </div>
               <div>
-                <label htmlFor="manual-source" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">
+                <label htmlFor="manual-source" className="block text-sm font-bold text-ink mb-1">
                   流入経路
                 </label>
                 <select
                   id="manual-source"
                   value={manualSource}
                   onChange={(e) => setManualSource(e.target.value)}
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary"
+                  className="w-full border border-rule rounded-lg px-3 py-2 bg-paper text-ink focus:ring-1 focus:ring-ink"
                 >
                   {SOURCE_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
@@ -900,14 +961,14 @@ export default function ClubAtsPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="manual-step" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">
+                <label htmlFor="manual-step" className="block text-sm font-bold text-ink mb-1">
                   初期ステップ
                 </label>
                 <select
                   id="manual-step"
                   value={manualStep}
                   onChange={(e) => setManualStep(e.target.value)}
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary"
+                  className="w-full border border-rule rounded-lg px-3 py-2 bg-paper text-ink focus:ring-1 focus:ring-ink"
                 >
                   <option value="新規応募">新規応募</option>
                   {selectionFlow.map((s) => (
@@ -916,14 +977,14 @@ export default function ClubAtsPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="manual-priority" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-1">
+                <label htmlFor="manual-priority" className="block text-sm font-bold text-ink mb-1">
                   優先度
                 </label>
                 <select
                   id="manual-priority"
                   value={manualPriority}
                   onChange={(e) => setManualPriority(e.target.value)}
-                  className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary"
+                  className="w-full border border-rule rounded-lg px-3 py-2 bg-paper text-ink focus:ring-1 focus:ring-ink"
                 >
                   {PRIORITY_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>

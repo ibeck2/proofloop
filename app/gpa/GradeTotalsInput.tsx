@@ -21,12 +21,12 @@ export default function GradeTotalsInput({
         <div key={option.label} className="flex items-end gap-3">
           <label
             htmlFor={`${idPrefix}-total-${option.label}`}
-            className="w-32 text-sm text-primary"
+            className="w-32 text-sm text-ink"
           >
             {option.label}（{option.point}）
           </label>
           <div className="w-32">
-            <span className="block text-xs text-text-grey">合計単位数</span>
+            <span className="block text-xs text-graphite">合計単位数</span>
             <input
               id={`${idPrefix}-total-${option.label}`}
               type="number"
@@ -35,7 +35,7 @@ export default function GradeTotalsInput({
               inputMode="numeric"
               value={totals[option.label] ?? ""}
               onChange={(e) => onChange(option.label, e.target.value)}
-              className="mt-1 w-full border border-border-grey p-2 text-primary"
+              className="mt-1 w-full border border-rule p-2 text-ink"
               placeholder="0"
             />
           </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Heart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { formatRelativeTime } from "@/lib/format";
 import { normalizeJoinedRow } from "@/lib/organizationMembers";
@@ -37,18 +38,20 @@ type PostRow = {
   organizations: OrgSummary | OrgSummary[] | null;
 };
 
+// カテゴリはタグであって優劣・警告ではないため、色相では区別しない（ルール2.1）。
+// 全カテゴリ同一のトークンを返す。
 function categoryPillClass(cat: string): string {
   switch (cat) {
     case "recruitment":
-      return "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-800";
+      return "bg-mist text-ink border-rule";
     case "campus_life":
-      return "bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-800";
+      return "bg-mist text-ink border-rule";
     case "event":
-      return "bg-violet-50 text-violet-800 border-violet-200 dark:bg-violet-900/30 dark:text-violet-200 dark:border-violet-800";
+      return "bg-mist text-ink border-rule";
     case "report":
-      return "bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-200 dark:border-sky-800";
+      return "bg-mist text-ink border-rule";
     default:
-      return "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-600";
+      return "bg-mist text-ink border-rule";
   }
 }
 
@@ -227,13 +230,13 @@ export default function TimelinePage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] dark:bg-background-dark pb-24 md:pb-8">
+    <div className="min-h-screen bg-mist pb-24 md:pb-8">
       <div className="max-w-xl mx-auto px-4 py-6 md:py-8">
         <header className="mb-6">
-          <h1 className="text-primary dark:text-white text-2xl font-bold font-display tracking-tight">
+          <h1 className="text-ink text-2xl font-bold font-mincho tracking-tight">
             タイムライン
           </h1>
-          <p className="text-text-sub dark:text-slate-400 text-sm mt-1">
+          <p className="font-body text-graphite/70 text-sm mt-1">
             団体からの新着情報・お知らせ
           </p>
         </header>
@@ -246,10 +249,10 @@ export default function TimelinePage() {
                 key={f.value}
                 type="button"
                 onClick={() => setFilter(f.value)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-xs font-bold font-body border transition-colors ${
                   active
-                    ? "bg-primary text-white border-primary"
-                    : "bg-white dark:bg-slate-900 text-text-grey border-slate-200 dark:border-slate-700 hover:border-primary/40"
+                    ? "bg-ink text-paper border-ink"
+                    : "bg-paper text-graphite border-rule hover:border-ink/40"
                 }`}
               >
                 {f.icon} {f.label}
@@ -259,9 +262,9 @@ export default function TimelinePage() {
         </div>
 
         {loading ? (
-          <p className="text-center text-slate-500 text-sm py-12">読み込み中...</p>
+          <p className="text-center font-body text-graphite/70 text-sm py-12">読み込み中...</p>
         ) : filteredEmpty ? (
-          <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/40 p-10 text-center text-slate-500 text-sm">
+          <div className="rounded-xl border border-dashed border-rule bg-paper/60 p-10 text-center font-body text-graphite/70 text-sm">
             該当する投稿がありません
           </div>
         ) : (
@@ -277,7 +280,7 @@ export default function TimelinePage() {
               return (
                 <li
                   key={post.id}
-                  className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden"
+                  className="bg-paper border border-rule rounded-xl shadow-sm overflow-hidden"
                 >
                   <div className="p-4 pb-3">
                     <div className="flex gap-3">
@@ -289,10 +292,10 @@ export default function TimelinePage() {
                           <img
                             src={org.logo_url}
                             alt=""
-                            className="w-11 h-11 rounded-full object-cover bg-slate-100 border border-slate-200"
+                            className="w-11 h-11 rounded-full object-cover bg-mist border border-rule"
                           />
                         ) : (
-                          <div className="w-11 h-11 rounded-full bg-primary/10 border border-slate-200 flex items-center justify-center text-primary font-bold text-sm">
+                          <div className="w-11 h-11 rounded-full bg-mist border border-rule flex items-center justify-center text-ink font-bold text-sm">
                             {orgName.slice(0, 1)}
                           </div>
                         )}
@@ -301,13 +304,13 @@ export default function TimelinePage() {
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                           <Link
                             href={`/organizations/${org?.id ?? post.organization_id}`}
-                            className="font-bold text-slate-900 dark:text-white text-sm hover:text-primary truncate"
+                            className="font-bold font-body text-graphite text-sm hover:text-ink truncate"
                           >
                             {orgName}
                           </Link>
-                          <span className="text-slate-400 text-xs">·</span>
+                          <span className="text-graphite/70 text-xs">·</span>
                           <time
-                            className="text-xs text-slate-500 dark:text-slate-400 shrink-0"
+                            className="text-xs font-body text-graphite/70 shrink-0"
                             dateTime={post.created_at}
                           >
                             {formatRelativeTime(post.created_at)}
@@ -318,44 +321,38 @@ export default function TimelinePage() {
                           if (!meta) return null;
                           return (
                             <span
-                              className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full border ${categoryPillClass(post.category)}`}
+                              className={`inline-block mt-2 text-[10px] font-bold font-body px-2 py-0.5 rounded-full border ${categoryPillClass(post.category)}`}
                             >
                               {meta.icon} {meta.label}
                             </span>
                           );
                         })() : null}
                         {targetBadge ? (
-                          <span className="inline-block mt-2 ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                          <span className="inline-block mt-2 ml-2 text-[10px] font-bold font-body px-2 py-0.5 rounded-full bg-mist text-graphite border border-rule">
                             {targetBadge}
                           </span>
                         ) : null}
                       </div>
                     </div>
-                    <p className="mt-3 text-slate-800 dark:text-slate-200 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                    <p className="mt-3 font-body text-graphite text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                       {post.content}
                     </p>
                   </div>
-                  <footer className="flex items-center gap-1 px-4 py-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40">
+                  <footer className="flex items-center gap-1 px-4 py-2 border-t border-rule bg-mist/80">
                     <button
                       type="button"
                       disabled={busy}
                       onClick={() => handleToggleLike(post.id)}
-                      className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-bold font-body text-graphite hover:bg-paper transition-colors disabled:opacity-50"
                       aria-pressed={liked}
                       aria-label={liked ? "いいねを取り消す" : "いいねする"}
                     >
-                      <span
-                        className="material-symbols-outlined text-[22px]"
-                        style={{
-                          fontVariationSettings: liked
-                            ? "'FILL' 1, 'wght' 600"
-                            : "'FILL' 0, 'wght' 400",
-                          color: liked ? "#e11d48" : undefined,
-                        }}
-                      >
-                        favorite
-                      </span>
-                      <span className="tabular-nums text-rose-700 dark:text-rose-300">
+                      <Heart
+                        className={`w-[22px] h-[22px] ${liked ? "text-ink" : "text-graphite/70"}`}
+                        aria-hidden="true"
+                        fill={liked ? "currentColor" : "none"}
+                      />
+                      <span className={`tabular-nums font-numeric ${liked ? "text-ink" : "text-graphite/70"}`}>
                         {count}
                       </span>
                     </button>

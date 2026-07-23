@@ -12,8 +12,8 @@ export default function ScaleInfoPanel({
   university?: University;
 }) {
   return (
-    <div className="mt-3 border-l-4 border-primary bg-neutral-light p-3 text-xs text-text-grey">
-      <p className="font-bold text-primary">換算方式：{scale.label}</p>
+    <div className="mt-3 border border-rule border-l-4 border-l-ink bg-mist p-3 text-xs text-graphite">
+      <p className="font-bold text-ink">換算方式：{scale.label}</p>
       {scale.note ? <p className="mt-1">{scale.note}</p> : null}
       {university ? (
         <p className="mt-1">
@@ -22,7 +22,7 @@ export default function ScaleInfoPanel({
             href={university.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-accent underline"
+            className="text-ink underline"
           >
             {university.name} 公式
           </a>

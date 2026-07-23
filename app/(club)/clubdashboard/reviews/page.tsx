@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Star, Reply, Pencil } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
@@ -94,7 +95,7 @@ export default function ClubDashboardReviewsPage() {
   if (ctxLoading) {
     return (
       <div className="p-6 lg:p-10 flex items-center justify-center min-h-[200px]">
-        <p className="text-slate-500">読み込み中...</p>
+        <p className="text-graphite/70">読み込み中...</p>
       </div>
     );
   }
@@ -102,9 +103,9 @@ export default function ClubDashboardReviewsPage() {
   if (hasNoMemberships || !isReady || !orgId) {
     return (
       <div className="p-6 lg:p-10">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 p-6 text-center">
-          <p className="text-amber-800 dark:text-amber-200 font-medium">管理できる団体がありません</p>
-          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">プロフィール編集で団体を登録してください。</p>
+        <div className="border border-rule border-l-4 border-l-seal bg-mist p-6 text-center">
+          <p className="text-ink font-bold font-body">管理できる団体がありません</p>
+          <p className="text-graphite/70 text-sm mt-1 font-body">プロフィール編集で団体を登録してください。</p>
         </div>
       </div>
     );
@@ -112,44 +113,43 @@ export default function ClubDashboardReviewsPage() {
 
   return (
     <div className="p-6 lg:p-10">
-      <h1 className="text-primary text-2xl font-bold tracking-tight">口コミ・レビュー管理</h1>
+      <h1 className="font-mincho text-ink text-2xl font-bold tracking-tight">口コミ・レビュー管理</h1>
       {orgName && (
-        <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">{orgName} への承認済み口コミ一覧</p>
+        <p className="text-graphite/70 text-sm mt-1 font-body">{orgName} への承認済み口コミ一覧</p>
       )}
 
       <div className="mt-6">
         {reviews.length === 0 ? (
-          <div className="py-12 text-center border border-dashed border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-            <p className="text-slate-500 dark:text-slate-400 text-sm">承認済みの口コミはまだありません</p>
+          <div className="py-12 text-center border border-dashed border-rule rounded-lg bg-mist">
+            <p className="text-graphite/70 text-sm font-body">承認済みの口コミはまだありません</p>
           </div>
         ) : (
           <ul className="space-y-4">
             {reviews.map((r) => (
               <li
                 key={r.id}
-                className="p-5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-sm"
+                className="p-5 rounded-xl border border-rule bg-paper shadow-sm"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="flex text-amber-500" aria-label={`${r.rating}点`}>
+                  <span className="flex text-ink" aria-label={`${r.rating}点`}>
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <span
+                      <Star
                         key={star}
-                        className={`material-symbols-outlined text-lg ${star <= r.rating ? "opacity-100" : "opacity-30"}`}
-                        style={star <= r.rating ? { fontVariationSettings: "'FILL' 1" } : undefined}
-                      >
-                        star
-                      </span>
+                        className={`w-[18px] h-[18px] ${star <= r.rating ? "opacity-100" : "opacity-30"}`}
+                        fill={star <= r.rating ? "currentColor" : "none"}
+                        aria-hidden="true"
+                      />
                     ))}
                   </span>
-                  <span className="text-slate-500 dark:text-slate-400 text-sm">{formatReviewDate(r.created_at)}</span>
+                  <span className="text-graphite/70 text-sm font-body">{formatReviewDate(r.created_at)}</span>
                 </div>
                 {r.content && (
-                  <p className="text-slate-700 dark:text-slate-200 text-sm whitespace-pre-wrap mb-4">{r.content}</p>
+                  <p className="text-graphite text-sm whitespace-pre-wrap mb-4 font-body">{r.content}</p>
                 )}
 
                 {(expandingReplyId === r.id || r.club_reply) && (
-                  <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-600">
-                    <label htmlFor={`reply-${r.id}`} className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
+                  <div className="mt-3 pt-3 border-t border-rule">
+                    <label htmlFor={`reply-${r.id}`} className="block text-sm font-bold text-ink mb-2 font-body">
                       団体からの返信（お礼）
                     </label>
                     <textarea
@@ -158,19 +158,19 @@ export default function ClubDashboardReviewsPage() {
                       onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [r.id]: e.target.value }))}
                       placeholder="お礼メッセージを入力..."
                       rows={3}
-                      className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-1 focus:ring-primary resize-y"
+                      className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-graphite focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink resize-y"
                     />
                     <div className="mt-2 flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => handleSubmitReply(r.id)}
                         disabled={submittingId === r.id}
-                        className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 rounded-lg bg-ink text-paper text-sm font-medium hover:bg-ink/90 disabled:opacity-50 disabled:cursor-not-allowed font-body"
                       >
                         {submittingId === r.id ? "送信中..." : "送信する"}
                       </button>
                       {r.club_reply && (
-                        <span className="text-slate-500 dark:text-slate-400 text-xs">
+                        <span className="text-graphite/70 text-xs font-body">
                           {r.club_replied_at
                             ? `返信日: ${formatReviewDate(r.club_replied_at)}`
                             : ""}
@@ -184,9 +184,9 @@ export default function ClubDashboardReviewsPage() {
                   <button
                     type="button"
                     onClick={() => handleOpenReply(r)}
-                    className="mt-2 text-sm font-medium text-primary hover:underline inline-flex items-center gap-1"
+                    className="mt-2 text-sm font-medium text-ink hover:underline inline-flex items-center gap-1 font-body"
                   >
-                    <span className="material-symbols-outlined text-[18px]">reply</span>
+                    <Reply className="w-[18px] h-[18px]" aria-hidden="true" />
                     返信（お礼）を書く
                   </button>
                 )}
@@ -194,9 +194,9 @@ export default function ClubDashboardReviewsPage() {
                   <button
                     type="button"
                     onClick={() => handleOpenReply(r)}
-                    className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary hover:underline inline-flex items-center gap-1"
+                    className="mt-2 text-sm font-medium text-graphite/70 hover:text-ink hover:underline inline-flex items-center gap-1 font-body"
                   >
-                    <span className="material-symbols-outlined text-[18px]">edit</span>
+                    <Pencil className="w-[18px] h-[18px]" aria-hidden="true" />
                     返信を編集する
                   </button>
                 )}

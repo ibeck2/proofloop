@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
+import { Filter } from "lucide-react";
 import SearchOrgCard from "@/components/SearchOrgCard";
 import { Button, Input } from "@/components/ui";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
@@ -98,21 +99,21 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="bg-white text-slate-900 font-display pb-20 md:pb-0">
+    <div className="bg-paper text-graphite font-body pb-20 md:pb-0">
       <main className="max-w-7xl mx-auto px-4 md:px-10 py-8 md:py-12">
         <div className="flex flex-col md:flex-row gap-12">
           {/* Sidebar: Filter Section */}
           <aside className="w-full md:w-64 flex-shrink-0">
             <div className="space-y-8">
               <div>
-                <h2 className="text-navy text-lg font-bold mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-sm">filter_alt</span>
+                <h2 className="text-ink text-lg font-bold mb-4 flex items-center gap-2">
+                  <Filter className="w-4 h-4" aria-hidden="true" />
                   絞り込み検索
                 </h2>
               </div>
               {/* Keyword search - reflected in state, fetchOrgs runs via useEffect */}
-              <div className="border-b border-grey-custom/20 pb-6">
-                <p className="text-navy font-bold mb-3">キーワード</p>
+              <div className="border-b border-rule pb-6">
+                <p className="text-ink font-bold mb-3">キーワード</p>
                 <Input
                   type="text"
                   placeholder="団体名・説明で検索"
@@ -120,19 +121,19 @@ export default function SearchPage() {
                   onChange={(e) => setKeyword(e.target.value)}
                   className="w-full"
                 />
-                <p className="text-grey-custom text-xs mt-2">
+                <p className="text-graphite text-xs mt-2">
                   団体名または活動内容で部分一致検索します
                 </p>
               </div>
               {/* University Filter */}
-              <div className="border-b border-grey-custom/20 pb-6">
-                <p className="text-navy font-bold mb-4">大学</p>
+              <div className="border-b border-rule pb-6">
+                <p className="text-ink font-bold mb-4">大学</p>
                 <div className="space-y-3 max-h-48 overflow-y-auto">
                   {UNIVERSITY_OPTIONS.map((uni) => (
                     <label key={uni} className="flex items-center gap-3 cursor-pointer group">
                       <input
                         type="checkbox"
-                        className="w-5 h-5 border-grey-custom text-accent focus:ring-0 rounded"
+                        className="w-5 h-5 border-rule text-ink focus:ring-0 rounded"
                         checked={selectedUniversities.includes(uni)}
                         onChange={() =>
                           setSelectedUniversities((prev) =>
@@ -140,7 +141,7 @@ export default function SearchPage() {
                           )
                         }
                       />
-                      <span className="text-navy text-sm group-hover:text-accent transition-colors line-clamp-1">
+                      <span className="text-ink text-sm group-hover:underline underline-offset-4 line-clamp-1">
                         {uni}
                       </span>
                     </label>
@@ -149,17 +150,17 @@ export default function SearchPage() {
               </div>
               {/* Category Filter */}
               <div className="pb-6">
-                <p className="text-navy font-bold mb-4">カテゴリ</p>
+                <p className="text-ink font-bold mb-4">カテゴリ</p>
                 <div className="space-y-3">
                   {CATEGORIES.map((cat) => (
                     <label key={cat} className="flex items-center gap-3 cursor-pointer group">
                       <input
                         type="checkbox"
-                        className="w-5 h-5 border-grey-custom text-accent focus:ring-0 rounded"
+                        className="w-5 h-5 border-rule text-ink focus:ring-0 rounded"
                         checked={selectedCategories.includes(cat)}
                         onChange={() => toggleCategory(cat)}
                       />
-                      <span className="text-navy text-sm group-hover:text-accent transition-colors line-clamp-2">
+                      <span className="text-ink text-sm group-hover:underline underline-offset-4 line-clamp-2">
                         {cat}
                       </span>
                     </label>
@@ -179,35 +180,41 @@ export default function SearchPage() {
           {/* Main Content Area */}
           <section className="flex-1 min-w-0">
             <div className="mb-6">
-              <h2 className="text-navy text-3xl font-bold mb-2">サークル検索</h2>
-              <p className="text-grey-custom text-sm mb-4">大学生活を彩る団体を見つけよう</p>
+              <h2 className="text-ink font-mincho text-3xl font-bold mb-2">サークル検索</h2>
+              <p className="text-graphite text-sm mb-4">大学生活を彩る団体を見つけよう</p>
             </div>
             <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div className="text-grey-custom text-sm">
-                {loading ? "検索中..." : `全 ${orgs.length} 件の団体`}
+              <div className="text-graphite text-sm">
+                {loading ? (
+                  "検索中..."
+                ) : (
+                  <>
+                    全 <span className="font-numeric tabular-nums">{orgs.length}</span> 件の団体
+                  </>
+                )}
               </div>
             </div>
 
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <article key={i} className="bg-white border border-grey-custom/10 rounded-lg overflow-hidden animate-pulse">
-                    <div className="aspect-[2/1] bg-slate-200" />
+                  <article key={i} className="bg-paper border border-rule rounded-lg overflow-hidden animate-pulse">
+                    <div className="aspect-[2/1] bg-mist" />
                     <div className="p-5 space-y-3">
                       <div className="flex gap-2">
-                        <span className="h-5 w-20 bg-slate-200 rounded" />
-                        <span className="h-5 w-24 bg-slate-100 rounded" />
+                        <span className="h-5 w-20 bg-mist rounded" />
+                        <span className="h-5 w-24 bg-mist rounded" />
                       </div>
-                      <div className="h-5 bg-slate-200 w-3/4 rounded" />
-                      <div className="h-4 bg-slate-100 w-full rounded" />
-                      <div className="h-4 bg-slate-100 w-1/2 rounded" />
-                      <div className="h-4 bg-slate-100 w-20 mt-4 rounded" />
+                      <div className="h-5 bg-mist w-3/4 rounded" />
+                      <div className="h-4 bg-mist w-full rounded" />
+                      <div className="h-4 bg-mist w-1/2 rounded" />
+                      <div className="h-4 bg-mist w-20 mt-4 rounded" />
                     </div>
                   </article>
                 ))}
               </div>
             ) : orgs.length === 0 ? (
-              <p className="text-grey-custom text-center py-12 border border-grey-custom/20 rounded-lg bg-slate-50">
+              <p className="text-graphite text-center py-12 border border-rule rounded-lg bg-mist">
                 条件に一致する団体が見つかりませんでした。キーワード、大学、カテゴリを変えて検索してみてください。
               </p>
             ) : (

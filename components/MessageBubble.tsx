@@ -20,12 +20,12 @@ export default function MessageBubble({
       <div
         className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm ${
           isFromSelf
-            ? "bg-primary text-white rounded-br-md rounded-bl-2xl"
-            : "bg-white dark:bg-slate-600 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-500 rounded-bl-md rounded-br-2xl"
+            ? "bg-ink text-paper rounded-br-md rounded-bl-2xl"
+            : "bg-mist text-graphite border border-rule rounded-bl-md rounded-br-2xl"
         }`}
       >
         <MessageContent content={content} className="text-inherit" />
-        <p className={`text-xs mt-1.5 ${isFromSelf ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}>
+        <p className={`text-xs mt-1.5 ${isFromSelf ? "text-paper/80" : "text-graphite/70"}`}>
           {createdAt
             ? new Date(createdAt).toLocaleString("ja-JP", {
                 month: "short",
