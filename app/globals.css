@@ -3,15 +3,12 @@
 @tailwind utilities;
 
 :root {
+  /* このサイトはライトテーマのみ。ページは常に白い面を描くので、
+     body の背景も白で固定する。OSのダークモード設定に連動したダーク上書きを
+     残すと、フッター上の余白などに黒い帯が出る。 */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

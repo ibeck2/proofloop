@@ -169,13 +169,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <>
                       <Link
                         href="/login"
-                        className="inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        className="inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors px-6 h-10 font-bold text-sm rounded-none"
                       >
                         ログイン
                       </Link>
                       <Link
                         href="/signup"
-                        className="inline-flex items-center justify-center bg-accent text-white hover:bg-[#600000] transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        className="inline-flex items-center justify-center bg-seal text-paper hover:bg-[#600000] transition-colors px-6 h-10 font-bold text-sm rounded-none"
                       >
                         新規登録
                       </Link>
@@ -268,14 +268,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/login"
                       onClick={closeMenu}
-                      className="w-full inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors py-3 font-bold text-sm rounded-none"
+                      className="w-full inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors py-3 font-bold text-sm rounded-none"
                     >
                       ログイン
                     </Link>
                     <Link
                       href="/signup"
                       onClick={closeMenu}
-                      className="w-full inline-flex items-center justify-center bg-accent text-white hover:bg-[#600000] transition-colors py-3 font-bold text-sm rounded-none"
+                      className="w-full inline-flex items-center justify-center bg-seal text-paper hover:bg-[#600000] transition-colors py-3 font-bold text-sm rounded-none"
                     >
                       新規登録
                     </Link>
