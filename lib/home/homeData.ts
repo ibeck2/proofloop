@@ -60,11 +60,21 @@ export async function getHomeData(): Promise<HomeData> {
         query = query.eq(column, value);
       }
 
-      const { count } = await query;
+      const { count, error } = await query;
+
+      // supabase-js は Postgrest のエラーで throw しない。ここで握り潰すと
+      // 「取得に失敗した大学」が「0件の大学」と区別できなくなり、
+      // 実数として表示している数字が静かに嘘になる。
+      if (error) {
+        throw new Error(
+          `count query failed (${column ?? "total"}${value ? `=${value}` : ""}): ${error.message}`
+        );
+      }
+
       return count ?? 0;
     };
 
-    const [total, universityRaw, categoryRaw, heroRows] = await Promise.all([
+    const [total, universityRaw, categoryRaw] = await Promise.all([
       countApproved(),
       Promise.all(
         UNIVERSITY_OPTIONS.map(async (university) => ({
@@ -79,25 +89,46 @@ export async function getHomeData(): Promise<HomeData> {
           count: await countApproved("category", category),
         }))
       ),
-      supabase
-        .from("organizations")
-        .select("id, name, university, category")
-        .eq("is_approved", true)
-        .order("created_at", { ascending: false })
-        .limit(60)
-        .then(({ data }) => (data ?? []) as HeroOrgRow[]),
     ]);
+
+    const universityCounts = universityRaw
+      .filter((u) => u.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    // ヒーローの4行は「掲載の新しい順」では選べない。
+    // 団体は一括投入されており created_at が固まっているため、
+    // 直近60件を取ると2大学しか含まれない（本番で確認済み）。
+    // 掲載数の多い上位4大学から1件ずつ拾う形にして、4行を必ず埋める。
+    const heroCandidates = (
+      await Promise.all(
+        universityCounts.slice(0, 4).map(async ({ university }) => {
+          const { data, error } = await supabase
+            .from("organizations")
+            .select("id, name, university, category")
+            .eq("is_approved", true)
+            .eq("university", university)
+            .order("name", { ascending: true })
+            .limit(5);
+
+          if (error) {
+            throw new Error(
+              `hero query failed (${university}): ${error.message}`
+            );
+          }
+
+          return (data ?? []) as HeroOrgRow[];
+        })
+      )
+    ).flat();
 
     return {
       totalOrganizations: total,
-      universityCounts: universityRaw
-        .filter((u) => u.count > 0)
-        .sort((a, b) => b.count - a.count),
+      universityCounts,
       categoryCounts: categoryRaw.filter((c) => c.count > 0),
-      heroOrganizations: selectHeroOrganizations(heroRows, 4),
+      heroOrganizations: selectHeroOrganizations(heroCandidates, 4),
     };
-  } catch {
-    console.error("getHomeData: 取得に失敗しました");
+  } catch (error) {
+    console.error("getHomeData: 取得に失敗しました", error);
     return EMPTY;
   }
 }
