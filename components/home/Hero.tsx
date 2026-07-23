@@ -1,25 +1,35 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import type { HeroOrg } from "@/lib/home/heroOrganizations";
+import type { FieldCluster } from "@/lib/home/organizationField";
+import OrganizationField from "./OrganizationField";
 
 type Props = {
   organizations: HeroOrg[];
   totalOrganizations: number;
   universityCount: number;
+  field: FieldCluster[];
 };
 
 export default function Hero({
   organizations,
   totalOrganizations,
   universityCount,
+  field,
 }: Props) {
   return (
     <section className="flex flex-col gap-8 md:gap-10">
-      <h1 className="font-mincho font-bold text-ink text-[2rem] leading-[1.4] md:text-5xl md:leading-[1.35] tracking-tight">
-        見えていなかった力を、
-        <br />
-        100%に。
-      </h1>
+      <div className="flex flex-col gap-5 md:gap-6">
+        <h1 className="font-mincho font-bold text-ink text-[2rem] leading-[1.4] md:text-5xl md:leading-[1.35] tracking-tight">
+          見えていなかった力を、
+          <br />
+          100%に。
+        </h1>
+        <p className="font-body text-sm md:text-base text-graphite leading-relaxed max-w-[42rem]">
+          全国の学生団体を、大学と分野から探せます。活動の内容も、新歓の選考の流れも、団体のページにまとまっています。
+          団体を運営する側には、メンバー管理・新歓・イベント・タスクの機能があります。
+        </p>
+      </div>
 
       {organizations.length > 0 && (
         <ul className="border-t border-rule">
@@ -50,16 +60,22 @@ export default function Hero({
       )}
 
       {totalOrganizations > 0 && (
-        <p className="font-body text-sm text-graphite">
-          <span className="font-numeric tabular-nums text-ink font-bold">
-            {universityCount}
-          </span>
-          大学{" "}
-          <span className="font-numeric tabular-nums text-ink font-bold">
-            {totalOrganizations.toLocaleString("ja-JP")}
-          </span>
-          団体を掲載しています。
-        </p>
+        <div className="flex flex-col gap-5">
+          <p className="font-body text-sm text-graphite">
+            <span className="font-numeric tabular-nums text-ink font-bold">
+              {universityCount}
+            </span>
+            大学{" "}
+            <span className="font-numeric tabular-nums text-ink font-bold">
+              {totalOrganizations.toLocaleString("ja-JP")}
+            </span>
+            団体を掲載しています。
+          </p>
+          <OrganizationField
+            clusters={field}
+            totalOrganizations={totalOrganizations}
+          />
+        </div>
       )}
 
       <form action="/search" method="get" className="flex border border-ink">

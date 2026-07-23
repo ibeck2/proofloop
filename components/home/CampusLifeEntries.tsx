@@ -19,10 +19,10 @@ export default function CampusLifeEntries() {
             id="campus-life-heading"
             className="font-mincho font-bold text-ink text-2xl md:text-3xl"
           >
-            大学生活の疑問も、ここで解く
+            大学生活の疑問もここで解消
           </h2>
           <p className="font-body text-sm text-graphite">
-            単位・お金・住まい・働き方。調べものから入っても構いません。
+            単位・お金・住まい・働き方。
           </p>
         </div>
         <Link

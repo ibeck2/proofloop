@@ -1,6 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import { UNIVERSITY_OPTIONS } from "@/constants/universities";
 import { selectHeroOrganizations, type HeroOrg, type HeroOrgRow } from "./heroOrganizations";
+import {
+  buildOrganizationField,
+  type FieldCluster,
+  type FieldRow,
+} from "./organizationField";
 
 export type UniversityCount = { university: string; count: number };
 export type CategoryCount = { category: string; label: string; count: number };
@@ -10,6 +15,8 @@ export type HomeData = {
   universityCounts: UniversityCount[];
   categoryCounts: CategoryCount[];
   heroOrganizations: HeroOrg[];
+  /** 「1団体＝1マーク」の図の元データ。大学ごとの分野内訳 */
+  organizationField: FieldCluster[];
 };
 
 /** トップに出すカテゴリ。DBの値（category）と、画面に出す短いラベルの対応 */
@@ -25,6 +32,7 @@ const EMPTY: HomeData = {
   universityCounts: [],
   categoryCounts: [],
   heroOrganizations: [],
+  organizationField: [],
 };
 
 /**
@@ -121,6 +129,30 @@ export async function getHomeData(): Promise<HomeData> {
       )
     ).flat();
 
+    // 図に描くのは1団体1マーク。集計はJS側で行うので、
+    // 大学×分野の組み合わせぶんクエリを撃つ必要はなく、
+    // (university, category) を全件1回引いて数えるほうが軽い。
+    // PostgREST は1リクエスト1,000行が上限なのでページングする。
+    const PAGE_SIZE = 1000;
+    const MAX_ROWS = 5000;
+    const fieldRows: FieldRow[] = [];
+
+    for (let from = 0; from < MAX_ROWS; from += PAGE_SIZE) {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("university, category")
+        .eq("is_approved", true)
+        .range(from, from + PAGE_SIZE - 1);
+
+      if (error) {
+        throw new Error(`field query failed (from=${from}): ${error.message}`);
+      }
+
+      const page = (data ?? []) as FieldRow[];
+      fieldRows.push(...page);
+      if (page.length < PAGE_SIZE) break;
+    }
+
     return {
       totalOrganizations: total,
       universityCounts,
@@ -128,6 +160,7 @@ export async function getHomeData(): Promise<HomeData> {
         .filter((c) => c.count > 0)
         .sort((a, b) => b.count - a.count),
       heroOrganizations: selectHeroOrganizations(heroCandidates, 4),
+      organizationField: buildOrganizationField(fieldRows),
     };
   } catch (error) {
     console.error("getHomeData: 取得に失敗しました", error);

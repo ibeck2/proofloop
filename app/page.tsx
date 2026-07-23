@@ -36,6 +36,7 @@ export default async function Page() {
           organizations={home.heroOrganizations}
           totalOrganizations={home.totalOrganizations}
           universityCount={home.universityCounts.length}
+          field={home.organizationField}
         />
         <DirectoryPreview universityCounts={home.universityCounts} />
         <CategoryEntries categories={home.categoryCounts} />
