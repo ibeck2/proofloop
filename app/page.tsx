@@ -1,19 +1,28 @@
-"use client";
-
 import Link from "next/link";
+import type { Metadata } from "next";
 import UpcomingEvents from "@/components/UpcomingEvents";
+import Hero from "@/components/home/Hero";
+import { getHomeData } from "@/lib/home/homeData";
 
-export default function Page() {
+export const revalidate = 3600;
+
+export const metadata: Metadata = {
+  title: "学生団体を探す｜大学別・分野別に見つかる",
+  description:
+    "全国の大学の学生団体を大学別・分野別に掲載。サークル・研究会・学祭実行委員会を探せます。GPA計算機や単位・お金のガイドも。",
+};
+
+export default async function Page() {
+  const home = await getHomeData();
+
   return (
-    <div className="bg-background-light dark:bg-background-dark text-primary min-h-screen flex flex-col font-body pb-20 md:pb-0">
-      <main className="flex-grow w-full max-w-[1200px] mx-auto px-6 py-12 md:py-20 flex flex-col gap-16">
-        {/* Hero Section */}
-        <section className="flex flex-col items-center justify-center gap-10 text-center max-w-4xl mx-auto w-full">
-          <h2 className="text-primary text-2xl md:text-4xl lg:text-5xl font-black leading-tight tracking-tight max-w-3xl">
-            全ての大学生のポテンシャルを<span className="whitespace-nowrap">引き出す</span><br className="hidden sm:block" />
-            プラットフォーム ProofLoop
-          </h2>
-        </section>
+    <div className="bg-paper text-graphite min-h-screen flex flex-col font-body pb-20 md:pb-0">
+      <main className="flex-grow w-full max-w-[1100px] mx-auto px-6 py-12 md:py-16 flex flex-col gap-16 md:gap-20">
+        <Hero
+          organizations={home.heroOrganizations}
+          totalOrganizations={home.totalOrganizations}
+          universityCount={home.universityCounts.length}
+        />
 
         {/* Quick Access */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">

@@ -40,3 +40,30 @@ body {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #002b5c;
 }
+
+/* ヒーローの「顕在化」演出。
+   仕様: docs/superpowers/specs/2026-07-23-ui-identity-design.md §6.2
+   読み込み時に1回だけ。ループしない。 */
+@keyframes pl-surface {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pl-surface {
+  opacity: 0;
+  animation: pl-surface 320ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-surface {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
