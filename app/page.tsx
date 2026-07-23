@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import UpcomingEvents from "@/components/UpcomingEvents";
 import Hero from "@/components/home/Hero";
+import DirectoryPreview from "@/components/home/DirectoryPreview";
+import CategoryEntries from "@/components/home/CategoryEntries";
 import { getHomeData } from "@/lib/home/homeData";
 
 export const revalidate = 3600;
@@ -24,41 +26,8 @@ export default async function Page() {
           universityCount={home.universityCounts.length}
         />
 
-        {/* Quick Access */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
-          {/* Card 1: サークルを探す */}
-          <Link className="group block border border-[#f0f2f5] bg-white hover:border-accent hover:shadow-sm transition-all p-8 flex flex-col items-center justify-center gap-4 text-center h-64 rounded-none" href="/search">
-            <div className="w-16 h-16 bg-primary/5 flex items-center justify-center group-hover:bg-accent/10 transition-colors rounded-none">
-              <span className="material-symbols-outlined text-primary text-4xl group-hover:text-accent">groups</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <h3 className="text-primary text-xl font-bold">サークルを探す</h3>
-              <p className="text-text-grey text-sm">各大学の公認サークルを網羅。あなたに合ったサークルがきっと見つかる。</p>
-            </div>
-          </Link>
-
-          {/* Card 2: バイト・インターン */}
-          <Link className="group block border border-[#f0f2f5] bg-white hover:border-accent hover:shadow-sm transition-all p-8 flex flex-col items-center justify-center gap-4 text-center h-64 rounded-none" href="/baito">
-            <div className="w-16 h-16 bg-primary/5 flex items-center justify-center group-hover:bg-accent/10 transition-colors rounded-none">
-              <span className="material-symbols-outlined text-primary text-4xl group-hover:text-accent">work</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <h3 className="text-primary text-xl font-bold">バイト・インターン</h3>
-              <p className="text-text-grey text-sm">大学生目線で厳選。授業・サークルと両立できる仕事を探そう。</p>
-            </div>
-          </Link>
-
-          {/* Card 3: 過去問・授業レビュー */}
-          <Link className="group block border border-[#f0f2f5] bg-white hover:border-accent hover:shadow-sm transition-all p-8 flex flex-col items-center justify-center gap-4 text-center h-64 rounded-none" href="/classinfo">
-            <div className="w-16 h-16 bg-primary/5 flex items-center justify-center group-hover:bg-accent/10 transition-colors rounded-none">
-              <span className="material-symbols-outlined text-primary text-4xl group-hover:text-accent">school</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <h3 className="text-primary text-xl font-bold">授業レビュー・過去問</h3>
-              <p className="text-text-grey text-sm">効率的な学習をサポート</p>
-            </div>
-          </Link>
-        </section>
+        <DirectoryPreview universityCounts={home.universityCounts} />
+        <CategoryEntries categories={home.categoryCounts} />
 
         {/* 新入生ガイド */}
         <section className="flex flex-col gap-6 w-full">
