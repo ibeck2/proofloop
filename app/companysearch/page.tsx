@@ -42,7 +42,7 @@ export default function CompanySearchPage() {
         </nav>
         <div className="p-4 border-t border-white/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-300 bg-cover bg-center flex-shrink-0 no-rounded" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCX04UlULZp0ZW7zCjJ42HvjrTSLNLawJ7KBK6E8zIBkpM4UYOUEUPtQ7vWepo8ghrJuxW4NeSSrczNaE-Cml--ZoOOZpGdS_DRrP2WbS7DTyuXqrclDXDmGAirJSKr3tJRaI4hpyUOcosyoETDxiY45dkUY4foqpxm_ULtjbl6R1JzRzN6q-PJdHHzk16VXJ5I5IIe2acUmQl-Zxw6YPbXmWW7yexB97KuRL2K0-Qf2nnOovHPXNBl7FZTN_Ebdo7sLaaLYMBbPkM')" }} />
+            <div className="w-10 h-10 bg-gray-300 bg-cover bg-center flex-shrink-0" style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCX04UlULZp0ZW7zCjJ42HvjrTSLNLawJ7KBK6E8zIBkpM4UYOUEUPtQ7vWepo8ghrJuxW4NeSSrczNaE-Cml--ZoOOZpGdS_DRrP2WbS7DTyuXqrclDXDmGAirJSKr3tJRaI4hpyUOcosyoETDxiY45dkUY4foqpxm_ULtjbl6R1JzRzN6q-PJdHHzk16VXJ5I5IIe2acUmQl-Zxw6YPbXmWW7yexB97KuRL2K0-Qf2nnOovHPXNBl7FZTN_Ebdo7sLaaLYMBbPkM')" }} />
             <div className="flex flex-col">
               <span className="text-sm font-bold text-white leading-tight">田中 健太</span>
               <span className="text-xs text-white/60">株式会社NextStep</span>
@@ -75,7 +75,7 @@ export default function CompanySearchPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="relative">
                 <select
-                  className="w-full h-10 pl-3 pr-8 bg-white border border-gray-300 text-sm text-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer no-rounded shadow-sm"
+                  className="w-full h-10 pl-3 pr-8 bg-white border border-gray-300 text-sm text-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer shadow-sm"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
@@ -91,7 +91,7 @@ export default function CompanySearchPage() {
               </div>
               <div className="relative">
                 <select
-                  className="w-full h-10 pl-3 pr-8 bg-white border border-gray-300 text-sm text-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer no-rounded shadow-sm"
+                  className="w-full h-10 pl-3 pr-8 bg-white border border-gray-300 text-sm text-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer shadow-sm"
                   value={scale}
                   onChange={(e) => setScale(e.target.value)}
                 >
@@ -107,7 +107,7 @@ export default function CompanySearchPage() {
               </div>
               <div className="relative">
                 <select
-                  className="w-full h-10 pl-3 pr-8 bg-white border border-gray-300 text-sm text-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer no-rounded shadow-sm"
+                  className="w-full h-10 pl-3 pr-8 bg-white border border-gray-300 text-sm text-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer shadow-sm"
                   value={proofScore}
                   onChange={(e) => setProofScore(e.target.value)}
                 >
@@ -122,7 +122,7 @@ export default function CompanySearchPage() {
               </div>
               <div className="relative">
                 <select
-                  className="w-full h-10 pl-3 pr-8 bg-white border border-gray-300 text-sm text-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer no-rounded shadow-sm"
+                  className="w-full h-10 pl-3 pr-8 bg-white border border-gray-300 text-sm text-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer shadow-sm"
                   value={sponsorType}
                   onChange={(e) => setSponsorType(e.target.value)}
                 >
@@ -150,7 +150,7 @@ export default function CompanySearchPage() {
             ].map((item) => (
               <article key={item.name} className="flex flex-col md:flex-row items-center gap-6 py-6 hover:bg-gray-50 transition-colors px-4 -mx-4 group">
                 <div className="flex items-center gap-4 w-full md:w-1/3 min-w-[280px]">
-                  <div className="w-16 h-16 bg-gray-200 bg-cover bg-center flex-shrink-0 no-rounded shadow-sm" style={{ backgroundImage: `url('${item.image}')` }} />
+                  <div className="w-16 h-16 bg-gray-200 bg-cover bg-center flex-shrink-0 shadow-sm" style={{ backgroundImage: `url('${item.image}')` }} />
                   <div className="flex flex-col gap-1">
                     <h3 className="text-base font-bold text-primary leading-tight group-hover:underline cursor-pointer">{item.name}</h3>
                     <p className="text-sm text-secondary">{item.university}</p>
@@ -158,7 +158,7 @@ export default function CompanySearchPage() {
                 </div>
                 <div className="flex flex-wrap gap-2 w-full md:w-1/3">
                   {item.tags.map((tag) => (
-                    <span key={tag} className="inline-flex items-center px-3 py-1 bg-white border border-gray-300 text-xs font-medium text-secondary no-rounded">{tag}</span>
+                    <span key={tag} className="inline-flex items-center px-3 py-1 bg-white border border-gray-300 text-xs font-medium text-secondary">{tag}</span>
                   ))}
                 </div>
                 <div className="flex items-center justify-between md:justify-end gap-8 w-full md:w-1/3 pl-0 md:pl-4">
@@ -166,7 +166,7 @@ export default function CompanySearchPage() {
                     <span className="text-xs text-secondary font-medium uppercase tracking-wider">Proofスコア</span>
                     <span className="text-2xl font-bold text-accent">{item.score}</span>
                   </div>
-                  <button className="bg-primary hover:bg-primary-hover text-white text-sm font-bold py-2.5 px-6 transition-colors no-rounded shadow-sm whitespace-nowrap">オファーを作成</button>
+                  <button className="bg-primary hover:bg-primary-hover text-white text-sm font-bold py-2.5 px-6 transition-colors shadow-sm whitespace-nowrap">オファーを作成</button>
                 </div>
               </article>
             ))}

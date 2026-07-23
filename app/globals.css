@@ -17,7 +17,6 @@
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Inter", "Noto Sans JP", sans-serif;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -40,8 +39,4 @@ body {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #002b5c;
-}
-
-.no-rounded {
-  border-radius: 0 !important;
 }

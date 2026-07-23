@@ -17,7 +17,7 @@ export default function CompanymessagePage() {
   };
 
   return (
-    <div className="bg-background-message font-display text-slate-900 no-rounded flex h-screen w-full overflow-hidden">
+    <div className="bg-background-message font-display text-slate-900 flex h-screen w-full overflow-hidden">
       {/* Sidebar Navigation */}
       <aside className="w-64 bg-navy-custom flex flex-col justify-between p-6 shrink-0">
         <div className="flex flex-col gap-8">
