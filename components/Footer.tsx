@@ -11,8 +11,8 @@ const GUIDE_LINKS = [
   { href: "/guide/circle", label: "サークル" },
 ];
 
+// /for-students リンクは該当ページが存在しないため削除（404）。ページ実装時にここで復活させる。
 const ABOUT_LINKS = [
-  { href: "/for-students", label: "一般学生の方へ" },
   { href: "/for-clubs", label: "学生団体の方へ" },
 ];
 
