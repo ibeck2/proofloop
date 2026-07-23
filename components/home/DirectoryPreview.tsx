@@ -33,6 +33,7 @@ export default function DirectoryPreview({ universityCounts }: Props) {
               </span>
               <span className="ml-auto font-numeric tabular-nums text-sm text-graphite/70">
                 {item.count.toLocaleString("ja-JP")}
+                <span className="sr-only">件</span>
               </span>
               <ChevronRight
                 className="w-4 h-4 shrink-0 text-rule group-hover:text-ink transition-colors"

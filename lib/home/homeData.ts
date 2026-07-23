@@ -124,7 +124,9 @@ export async function getHomeData(): Promise<HomeData> {
     return {
       totalOrganizations: total,
       universityCounts,
-      categoryCounts: categoryRaw.filter((c) => c.count > 0),
+      categoryCounts: categoryRaw
+        .filter((c) => c.count > 0)
+        .sort((a, b) => b.count - a.count),
       heroOrganizations: selectHeroOrganizations(heroCandidates, 4),
     };
   } catch (error) {

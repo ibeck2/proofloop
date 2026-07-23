@@ -24,6 +24,7 @@ export default function CategoryEntries({ categories }: Props) {
             >
               <span className="font-numeric tabular-nums text-2xl text-ink font-bold">
                 {item.count.toLocaleString("ja-JP")}
+                <span className="sr-only">件</span>
               </span>
               <span className="font-body text-sm text-graphite">{item.label}</span>
             </Link>
