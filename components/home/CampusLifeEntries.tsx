@@ -7,22 +7,30 @@ const ENTRIES = [
   { href: "/guide/money", label: "お金・奨学金", note: "奨学金の種類と生活費" },
   { href: "/guide/living-alone", label: "一人暮らし", note: "家賃と生活の組み立て方" },
   { href: "/baito", label: "バイト・インターン", note: "授業と両立できる働き方" },
-  { href: "/guide/study-abroad", label: "留学", note: "12カ国から診断する" },
+  { href: "/guide/study-abroad", label: "留学", note: "種類・費用・時期から考える" },
 ];
 
 export default function CampusLifeEntries() {
   return (
     <section aria-labelledby="campus-life-heading" className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1.5">
-        <h2
-          id="campus-life-heading"
-          className="font-mincho font-bold text-ink text-2xl md:text-3xl"
+      <div className="flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <h2
+            id="campus-life-heading"
+            className="font-mincho font-bold text-ink text-2xl md:text-3xl"
+          >
+            大学生活の疑問も、ここで解く
+          </h2>
+          <p className="font-body text-sm text-graphite">
+            単位・お金・住まい・働き方。調べものから入っても構いません。
+          </p>
+        </div>
+        <Link
+          href="/guide"
+          className="font-body text-sm text-ink shrink-0 hover:underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
-          大学生活の疑問も、ここで解く
-        </h2>
-        <p className="font-body text-sm text-graphite">
-          単位・お金・住まい・働き方。調べものから入っても構いません。
-        </p>
+          ガイド一覧
+        </Link>
       </div>
 
       <ul className="grid grid-cols-1 md:grid-cols-2 gap-px bg-rule border border-rule">
