@@ -69,7 +69,7 @@ export default function Hero({
           name="q"
           type="search"
           placeholder="大学名・団体名で探す"
-          className="flex-1 min-w-0 px-4 py-3 font-body text-base text-graphite placeholder:text-graphite/50 bg-paper focus:outline-none focus:bg-mist"
+          className="flex-1 min-w-0 px-4 py-3 font-body text-base text-graphite placeholder:text-graphite/50 bg-paper focus:bg-mist focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink"
         />
         <button
           type="submit"

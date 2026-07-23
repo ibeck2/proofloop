@@ -67,3 +67,13 @@ body {
     animation: none;
   }
 }
+
+/* 印刷時はアニメーションが走らないブラウザがあるため、確定状態を明示する。
+   これが無いと印刷・PDF書き出しで団体4行が空白になる。 */
+@media print {
+  .pl-surface {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
