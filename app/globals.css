@@ -3,21 +3,17 @@
 @tailwind utilities;
 
 :root {
+  /* このサイトはライトテーマのみ。ページは常に白い面を描くので、
+     body の背景も白で固定する。OSのダークモード設定に連動したダーク上書きを
+     残すと、フッター上の余白などに黒い帯が出る。 */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Inter", "Noto Sans JP", sans-serif;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -42,6 +38,39 @@ body {
   background: #002b5c;
 }
 
-.no-rounded {
-  border-radius: 0 !important;
+/* ヒーローの「顕在化」演出。
+   仕様: docs/superpowers/specs/2026-07-23-ui-identity-design.md §6.2
+   読み込み時に1回だけ。ループしない。 */
+@keyframes pl-surface {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pl-surface {
+  opacity: 0;
+  animation: pl-surface 320ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-surface {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* 印刷時はアニメーションが走らないブラウザがあるため、確定状態を明示する。
+   これが無いと印刷・PDF書き出しで団体4行が空白になる。 */
+@media print {
+  .pl-surface {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }

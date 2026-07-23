@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, CalendarDays, ChevronRight, MapPin, Video } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -66,7 +67,7 @@ export default function UpcomingEvents() {
           <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
           <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
             全て見る
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
         </div>
         <div className="flex overflow-x-auto gap-6 pb-6 hide-scrollbar snap-x snap-mandatory">
@@ -88,7 +89,7 @@ export default function UpcomingEvents() {
           <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
           <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
             全て見る
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
         </div>
         <p className="text-text-grey py-8 text-center border border-dashed border-slate-200 rounded-lg">
@@ -104,7 +105,7 @@ export default function UpcomingEvents() {
         <h3 className="text-primary text-2xl font-black">直近のイベント</h3>
         <Link className="text-text-grey text-sm font-bold hover:text-primary flex items-center gap-1" href="/schedule">
           全て見る
-          <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          <ArrowRight className="w-4 h-4" aria-hidden="true" />
         </Link>
       </div>
       <div className="flex overflow-x-auto gap-6 pb-6 hide-scrollbar snap-x snap-mandatory">
@@ -115,9 +116,7 @@ export default function UpcomingEvents() {
             className="flex-none snap-start w-[320px] bg-white border border-[#f0f2f5] hover:border-text-grey/30 transition-colors rounded-lg overflow-hidden group"
           >
             <div className="h-32 bg-primary/5 flex items-center justify-center">
-              <span className="material-symbols-outlined text-5xl text-primary/30 group-hover:text-primary/50 transition-colors">
-                event
-              </span>
+              <CalendarDays className="w-12 h-12 text-primary/30 group-hover:text-primary/50 transition-colors" aria-hidden="true" />
             </div>
             <div className="p-6 flex flex-col gap-3">
               <span className="text-xs font-bold text-text-grey uppercase tracking-wider">
@@ -128,21 +127,19 @@ export default function UpcomingEvents() {
               </h4>
               <div className="flex flex-col gap-1 text-sm text-text-grey">
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[18px]">calendar_today</span>
+                  <CalendarDays className="w-[18px] h-[18px] shrink-0" aria-hidden="true" />
                   {formatEventDate(ev.event_date)}
                 </span>
                 {ev.location && (
                   <span className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px]">
-                      {ev.location.startsWith("http") ? "videocam" : "location_on"}
-                    </span>
+                    {ev.location.startsWith("http") ? <Video className="w-[18px] h-[18px] shrink-0" aria-hidden="true" /> : <MapPin className="w-[18px] h-[18px] shrink-0" aria-hidden="true" />}
                     {ev.location.length > 40 ? ev.location.slice(0, 40) + "…" : ev.location}
                   </span>
                 )}
               </div>
-              <span className="mt-2 text-accent text-sm font-bold flex items-center gap-1 group-hover:underline">
+              <span className="mt-2 text-ink text-sm font-bold flex items-center gap-1 group-hover:underline">
                 詳細を見る
-                <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                <ChevronRight className="w-4 h-4" aria-hidden="true" />
               </span>
             </div>
           </Link>

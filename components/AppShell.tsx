@@ -3,6 +3,18 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useCallback, useEffect } from "react";
+import {
+  CalendarDays,
+  Home,
+  Mail,
+  Menu,
+  Newspaper,
+  Search,
+  User,
+  Briefcase,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 const STUDENT_PATHS = [
@@ -21,14 +33,14 @@ function isStudentPath(pathname: string): boolean {
   return STUDENT_PATHS.some((p) => p !== "/" && pathname.startsWith(p));
 }
 
-const MOBILE_NAV_LINKS: Array<{ href: string; label: string; icon: string; loginOnly?: boolean }> = [
-  { href: "/", label: "ホーム", icon: "home" },
-  { href: "/search", label: "検索", icon: "search" },
-  { href: "/timeline", label: "新着", icon: "dynamic_feed" },
-  { href: "/schedule", label: "カレンダー", icon: "calendar_month" },
-  { href: "/baito", label: "バイト", icon: "work" },
-  { href: "/mypage/messages", label: "メッセージ", icon: "mail", loginOnly: true },
-  { href: "/mypage", label: "マイページ", icon: "person" },
+const MOBILE_NAV_LINKS: Array<{ href: string; label: string; Icon: LucideIcon; loginOnly?: boolean }> = [
+  { href: "/", label: "ホーム", Icon: Home },
+  { href: "/search", label: "検索", Icon: Search },
+  { href: "/timeline", label: "新着", Icon: Newspaper },
+  { href: "/schedule", label: "カレンダー", Icon: CalendarDays },
+  { href: "/baito", label: "バイト", Icon: Briefcase },
+  { href: "/mypage/messages", label: "メッセージ", Icon: Mail, loginOnly: true },
+  { href: "/mypage", label: "マイページ", Icon: User },
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -95,41 +107,46 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* 共通ヘッダー: ロゴ + 学生向けナビ（学生パスのみ） */}
       <header className="sticky top-0 z-[100] w-full bg-white border-b border-slate-200 shrink-0">
         <div className="px-4 md:px-6 h-14 flex items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2 text-primary hover:opacity-90 transition-opacity">
-            <span className="material-symbols-outlined text-2xl md:text-3xl">loop</span>
-            <span className="font-display font-bold text-xl md:text-2xl tracking-tight">ProofLoop</span>
+          <Link
+            href="/"
+            className="flex items-center text-ink hover:opacity-90 transition-opacity"
+            aria-label="ProofLoop ホーム"
+          >
+            <span className="font-numeric font-black text-xl md:text-2xl tracking-[-0.03em]">
+              ProofLoop
+            </span>
           </Link>
           {showStudentNav && (
             <>
-              <nav className="hidden md:flex items-center gap-6 md:gap-8 text-text-grey font-bold text-sm shrink-0">
-                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/">
-                  <span className="material-symbols-outlined text-[20px]">home</span>
+              <nav className="hidden md:flex items-center gap-6 md:gap-8 text-graphite font-bold text-sm shrink-0">
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/">
+                  <Home className="w-5 h-5" aria-hidden="true" />
                   ホーム
                 </Link>
-                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/search">
-                  <span className="material-symbols-outlined text-[20px]">search</span>
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/search">
+                  <Search className="w-5 h-5" aria-hidden="true" />
                   検索
                 </Link>
-                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/timeline">
-                  <span className="material-symbols-outlined text-[20px]">dynamic_feed</span>
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/timeline">
+                  <Newspaper className="w-5 h-5" aria-hidden="true" />
                   新着情報
                 </Link>
-                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/schedule">
-                  <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/schedule">
+                  <CalendarDays className="w-5 h-5" aria-hidden="true" />
                   カレンダー
                 </Link>
-                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/baito">
-                  <span className="material-symbols-outlined text-[20px]">work</span>
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/baito">
+                  <Briefcase className="w-5 h-5" aria-hidden="true" />
                   バイト・インターン
                 </Link>
                 {session && (
-                  <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/mypage/messages">
-                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                  <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage/messages">
+                    <Mail className="w-5 h-5" aria-hidden="true" />
                     メッセージ
                   </Link>
                 )}
-                <Link className="flex items-center gap-2 hover:text-primary transition-colors" href="/mypage">
-                  <span className="material-symbols-outlined text-[20px]">person</span>
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage">
+                  <User className="w-5 h-5" aria-hidden="true" />
                   マイページ
                 </Link>
               </nav>
@@ -152,13 +169,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <>
                       <Link
                         href="/login"
-                        className="inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        className="inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors px-6 h-10 font-bold text-sm rounded-none"
                       >
                         ログイン
                       </Link>
                       <Link
                         href="/signup"
-                        className="inline-flex items-center justify-center bg-accent text-white hover:bg-[#600000] transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        className="inline-flex items-center justify-center bg-seal text-paper hover:bg-[#600000] transition-colors px-6 h-10 font-bold text-sm rounded-none"
                       >
                         新規登録
                       </Link>
@@ -173,9 +190,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   className="md:hidden p-2 -mr-2 text-text-grey hover:text-primary transition-colors"
                   onClick={() => setIsMenuOpen((prev) => !prev)}
                 >
-                  <span className="material-symbols-outlined text-[28px]">
-                    {isMenuOpen ? "close" : "menu"}
-                  </span>
+                  {isMenuOpen ? (
+                    <X className="w-7 h-7" aria-hidden="true" />
+                  ) : (
+                    <Menu className="w-7 h-7" aria-hidden="true" />
+                  )}
                 </button>
               </div>
             </>
@@ -206,18 +225,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="font-display font-bold text-primary text-lg">メニュー</span>
               </div>
               <nav className="flex-1 px-2 py-4 flex flex-col gap-1">
-                {MOBILE_NAV_LINKS.filter((link) => !link.loginOnly || session).map(({ href, label, icon }) => (
+                {MOBILE_NAV_LINKS.filter((link) => !link.loginOnly || session).map(({ href, label, Icon }) => (
                   <Link
                     key={href}
                     href={href}
                     onClick={closeMenu}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg font-bold text-sm transition-colors ${
+                    className={`flex items-center gap-3 px-4 py-3 font-bold text-sm transition-colors ${
                       pathname === href || (href !== "/" && pathname?.startsWith(href))
-                        ? "bg-primary/10 text-primary"
-                        : "text-text-grey hover:bg-slate-50 hover:text-primary"
+                        ? "bg-mist text-ink"
+                        : "text-graphite hover:bg-mist hover:text-ink"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[22px]">{icon}</span>
+                    <Icon className="w-5 h-5" aria-hidden="true" />
                     {label}
                   </Link>
                 ))}
@@ -230,7 +249,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       onClick={closeMenu}
                       className="flex items-center gap-2 px-4 py-3 rounded-lg font-bold text-sm text-primary bg-primary/10"
                     >
-                      <span className="material-symbols-outlined text-[20px]">person</span>
+                      <User className="w-5 h-5" aria-hidden="true" />
                       マイページ
                     </Link>
                     <div className="flex items-center gap-2 text-text-grey text-sm font-medium px-2 py-2">
@@ -249,14 +268,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/login"
                       onClick={closeMenu}
-                      className="w-full inline-flex items-center justify-center bg-white border border-accent text-accent hover:bg-accent hover:text-white transition-colors py-3 font-bold text-sm rounded-none"
+                      className="w-full inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors py-3 font-bold text-sm rounded-none"
                     >
                       ログイン
                     </Link>
                     <Link
                       href="/signup"
                       onClick={closeMenu}
-                      className="w-full inline-flex items-center justify-center bg-accent text-white hover:bg-[#600000] transition-colors py-3 font-bold text-sm rounded-none"
+                      className="w-full inline-flex items-center justify-center bg-seal text-paper hover:bg-[#600000] transition-colors py-3 font-bold text-sm rounded-none"
                     >
                       新規登録
                     </Link>
@@ -270,44 +289,44 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {children}
       {/* 学生向けモバイルフッター */}
       {showStudentNav && (
-        <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-[#f0f2f5] flex justify-around py-3 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-          <Link className="flex flex-col items-center gap-1 text-primary" href="/">
-            <span className="material-symbols-outlined">home</span>
+        <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-rule flex justify-around py-3 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+          <Link className="flex flex-col items-center gap-1 text-ink" href="/">
+            <Home className="w-6 h-6" aria-hidden="true" />
             <span className="text-[10px] font-bold">ホーム</span>
           </Link>
-          <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/search">
-            <span className="material-symbols-outlined">search</span>
+          <Link className="flex flex-col items-center gap-1 text-graphite hover:text-ink" href="/search">
+            <Search className="w-6 h-6" aria-hidden="true" />
             <span className="text-[10px] font-bold">検索</span>
           </Link>
           <Link
-            className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/timeline") ? "text-primary" : "text-text-grey hover:text-primary"}`}
+            className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/timeline") ? "text-ink" : "text-graphite hover:text-ink"}`}
             href="/timeline"
           >
-            <span className="material-symbols-outlined">dynamic_feed</span>
+            <Newspaper className="w-6 h-6" aria-hidden="true" />
             <span className="text-[10px] font-bold">新着</span>
           </Link>
-          <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/schedule">
-            <span className="material-symbols-outlined">calendar_month</span>
+          <Link className="flex flex-col items-center gap-1 text-graphite hover:text-ink" href="/schedule">
+            <CalendarDays className="w-6 h-6" aria-hidden="true" />
             <span className="text-[10px] font-bold">カレンダー</span>
           </Link>
           <Link
-            className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/baito") ? "text-primary" : "text-text-grey hover:text-primary"}`}
+            className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/baito") ? "text-ink" : "text-graphite hover:text-ink"}`}
             href="/baito"
           >
-            <span className="material-symbols-outlined">work</span>
+            <Briefcase className="w-6 h-6" aria-hidden="true" />
             <span className="text-[10px] font-bold">バイト</span>
           </Link>
           {session && (
             <Link
-              className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/mypage/messages") ? "text-primary" : "text-text-grey hover:text-primary"}`}
+              className={`flex flex-col items-center gap-1 ${pathname?.startsWith("/mypage/messages") ? "text-ink" : "text-graphite hover:text-ink"}`}
               href="/mypage/messages"
             >
-              <span className="material-symbols-outlined">mail</span>
+              <Mail className="w-6 h-6" aria-hidden="true" />
               <span className="text-[10px] font-bold">メッセージ</span>
             </Link>
           )}
-          <Link className="flex flex-col items-center gap-1 text-text-grey hover:text-primary" href="/mypage">
-            <span className="material-symbols-outlined">person</span>
+          <Link className="flex flex-col items-center gap-1 text-graphite hover:text-ink" href="/mypage">
+            <User className="w-6 h-6" aria-hidden="true" />
             <span className="text-[10px] font-bold">マイページ</span>
           </Link>
         </nav>
