@@ -37,9 +37,15 @@ export type OrgSearchRow = {
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const initialQ = searchParams.get("q") ?? "";
+  const initialUniversity = searchParams.get("university");
+  const initialCategory = searchParams.get("category");
   const [keyword, setKeyword] = useState(initialQ);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    initialCategory ? [initialCategory] : []
+  );
+  const [selectedUniversities, setSelectedUniversities] = useState<string[]>(
+    initialUniversity ? [initialUniversity] : []
+  );
   const [orgs, setOrgs] = useState<OrgSearchRow[]>([]);
   const [loading, setLoading] = useState(true);
   const { savedOrgIds, toggle: toggleSavedOrg } = useSavedOrganizations();
