@@ -120,21 +120,40 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (supabaseUrl && supabaseAnonKey) {
     try {
       const supabase = createClient(supabaseUrl, supabaseAnonKey);
-      const { data: orgs } = await supabase
-        .from("organizations")
-        .select("id, created_at")
-        .eq("is_approved", true)
-        .order("created_at", { ascending: false })
-        .limit(1000);
 
-      if (orgs) {
-        orgPages = orgs.map((org) => ({
-          url: `${SITE_URL}/organizations/${org.id}`,
-          lastModified: new Date(org.created_at ?? new Date()),
-          changeFrequency: "weekly" as const,
-          priority: 0.7,
-        }));
+      // PostgREST は1リクエスト1,000行が上限。以前は .limit(1000) だったため、
+      // 承認済み1,958団体のうち958件がsitemapから漏れていた。
+      // sitemap 1ファイルあたりの上限は50,000 URL なので、全件を1ファイルに入れて問題ない。
+      const PAGE_SIZE = 1000;
+      const MAX_ROWS = 50000;
+      const orgs: Array<{ id: string; created_at: string | null }> = [];
+
+      for (let from = 0; from < MAX_ROWS; from += PAGE_SIZE) {
+        const { data, error } = await supabase
+          .from("organizations")
+          .select("id, created_at")
+          .eq("is_approved", true)
+          .order("created_at", { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) {
+          // 途中で失敗した場合、それまでに取れたぶんは活かす。
+          // 全部落とすより、一部でも送信できたほうがましなため。
+          console.error("sitemap: organizations fetch failed", error);
+          break;
+        }
+
+        const page = data ?? [];
+        orgs.push(...page);
+        if (page.length < PAGE_SIZE) break;
       }
+
+      orgPages = orgs.map((org) => ({
+        url: `${SITE_URL}/organizations/${org.id}`,
+        lastModified: new Date(org.created_at ?? new Date()),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }));
     } catch {
       // 取得失敗時は静的ページのみ返す
       console.error("sitemap: organizations fetch failed");
