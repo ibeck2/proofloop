@@ -81,10 +81,23 @@ Chrome で `http://localhost:3000` を開く → DevTools → Lighthouse → Mod
 
 **Largest Contentful Paint の秒数をこの計画ファイルの下記に書き込む。**
 
-```
-改修前 LCP（モバイル）: ____ 秒
-計測日: 2026-__-__
-```
+**実測（2026-07-23・Windows Chrome / localhost:3000 / 本番ビルド）**
+
+Lighthouse ではなく Performance API（`PerformanceObserver` の `largest-contentful-paint`）で計測した。
+再現手順が固定でき、改修後に同じ方法で比較できるため。
+
+| 指標 | 改修前 |
+| --- | --- |
+| LCP（初回・フォント未キャッシュ） | **3,640 ms** |
+| LCP（リロード・キャッシュあり） | **436 ms** |
+| FCP（リロード） | 436 ms |
+| LCP要素 | `<h2>`（ヒーロー見出し） |
+| Google Fonts のリクエスト数 | 23 |
+| Google Fonts の合計サイズ（decoded） | **784 KB** |
+
+**改修後の判定に使うのは「LCP（リロード）」と「Google Fonts 合計サイズ」の2つ。**
+`display=swap` を付けているためフォントはテキスト描画をブロックしない（フォールバックで即描画される）が、
+初回訪問時の転送量は増える。フォント合計が **1,200 KB を超えた場合**も §5.2 のフォールバック検討対象とする。
 
 - [ ] **Step 3: 既存テストが通ることを確認する**
 
