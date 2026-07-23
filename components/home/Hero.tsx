@@ -49,16 +49,18 @@ export default function Hero({
         </ul>
       )}
 
-      <p className="font-body text-sm text-graphite">
-        <span className="font-numeric tabular-nums text-ink font-bold">
-          {universityCount}
-        </span>
-        大学{" "}
-        <span className="font-numeric tabular-nums text-ink font-bold">
-          {totalOrganizations.toLocaleString("ja-JP")}
-        </span>
-        団体を掲載しています。
-      </p>
+      {totalOrganizations > 0 && (
+        <p className="font-body text-sm text-graphite">
+          <span className="font-numeric tabular-nums text-ink font-bold">
+            {universityCount}
+          </span>
+          大学{" "}
+          <span className="font-numeric tabular-nums text-ink font-bold">
+            {totalOrganizations.toLocaleString("ja-JP")}
+          </span>
+          団体を掲載しています。
+        </p>
+      )}
 
       <form action="/search" method="get" className="flex border border-ink">
         <label htmlFor="hero-search" className="sr-only">
@@ -69,11 +71,11 @@ export default function Hero({
           name="q"
           type="search"
           placeholder="大学名・団体名で探す"
-          className="flex-1 min-w-0 px-4 py-3 font-body text-base text-graphite placeholder:text-graphite/50 bg-paper focus:bg-mist focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink"
+          className="flex-1 min-w-0 px-4 py-3 font-body text-base text-graphite placeholder:text-graphite/70 bg-paper focus:bg-mist focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink"
         />
         <button
           type="submit"
-          className="bg-ink text-paper px-6 py-3 font-body font-bold text-sm shrink-0 hover:bg-ink/90 transition-colors"
+          className="bg-ink text-paper px-6 py-3 font-body font-bold text-sm shrink-0 hover:bg-ink/90 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         >
           探す
         </button>

@@ -2,8 +2,9 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 /**
- * このページで seal（深紅）を静止状態で使う唯一の箇所。
- * 仕様 §5.1「1画面2箇所まで」。他の箇所に seal を足す前にここを確認すること。
+ * seal（深紅）は静止状態で1画面2箇所まで、という制約がある。
+ * この左帯が1つ目、ヘッダーの「新規登録」ボタンが2つ目で、すでに上限。
+ * このページに seal を足すときは、どちらかを他の色に変えること。
  */
 export default function ForClubsCallout() {
   return (

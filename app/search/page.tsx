@@ -56,12 +56,18 @@ export default function SearchPage() {
 
     let query = supabase
       .from("organizations")
-      .select("id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process");
+      .select("id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process")
+      // トップページの件数は承認済みのみを数えている。ここで揃えないと、
+      // 「440件」と書いたリンクの先で違う件数が出る。
+      .eq("is_approved", true);
 
     if (trimmedKeyword) {
       const escaped = trimmedKeyword.replace(/'/g, "''");
       const pattern = `%${escaped}%`;
-      query = query.or(`name.ilike.${pattern},description.ilike.${pattern}`);
+      // トップの検索ボックスは「大学名・団体名で探す」と書いてあるので、大学名も対象に含める。
+      query = query.or(
+        `name.ilike.${pattern},description.ilike.${pattern},university.ilike.${pattern}`
+      );
     }
     if (selectedCategories.length > 0) {
       query = query.in("category", selectedCategories);

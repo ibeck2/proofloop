@@ -9,10 +9,21 @@ import { getHomeData } from "@/lib/home/homeData";
 
 export const revalidate = 3600;
 
+const PAGE_TITLE = "学生団体を探す｜大学別・分野別に見つかる";
+const PAGE_DESCRIPTION =
+  "全国の大学の学生団体を大学別・分野別に掲載。サークル・研究会・学祭実行委員会を探せます。GPA計算機や単位・お金のガイドも。";
+
 export const metadata: Metadata = {
-  title: "学生団体を探す｜大学別・分野別に見つかる",
-  description:
-    "全国の大学の学生団体を大学別・分野別に掲載。サークル・研究会・学祭実行委員会を探せます。GPA計算機や単位・お金のガイドも。",
+  title: PAGE_TITLE,
+  description: PAGE_DESCRIPTION,
+  openGraph: {
+    title: PAGE_TITLE,
+    description: PAGE_DESCRIPTION,
+  },
+  twitter: {
+    title: PAGE_TITLE,
+    description: PAGE_DESCRIPTION,
+  },
 };
 
 export default async function Page() {

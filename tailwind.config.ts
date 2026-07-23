@@ -40,6 +40,9 @@ const config: Config = {
         "background-message": "#f8f5f5",
       },
       fontFamily: {
+        // Tailwind の既定 sans を上書きして、サイト全体の基準フォントを固定する。
+        // globals.css の body 指定を外したので、これが無いと OS の UI フォントになる。
+        sans: ["Inter", "Noto Sans JP", "sans-serif"],
         mincho: [...FONT_FAMILIES.mincho],
         body: [...FONT_FAMILIES.body],
         numeric: [...FONT_FAMILIES.numeric],

@@ -38,7 +38,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h2 className="font-mincho text-sm mb-4 text-paper">大学生活ガイド</h2>
+            <h2 className="font-body font-bold text-sm mb-4 text-paper">大学生活ガイド</h2>
             <ul className="space-y-2.5 text-sm font-body">
               {GUIDE_LINKS.map(({ href, label }) => (
                 <li key={href}>
@@ -54,7 +54,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h2 className="font-mincho text-sm mb-4 text-paper">ProofLoopについて</h2>
+            <h2 className="font-body font-bold text-sm mb-4 text-paper">ProofLoopについて</h2>
             <ul className="space-y-2.5 text-sm font-body">
               {ABOUT_LINKS.map(({ href, label }) => (
                 <li key={href}>
@@ -70,7 +70,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h2 className="font-mincho text-sm mb-4 text-paper">お問い合わせ</h2>
+            <h2 className="font-body font-bold text-sm mb-4 text-paper">お問い合わせ</h2>
             <a
               href={CONTACT_URL}
               target="_blank"

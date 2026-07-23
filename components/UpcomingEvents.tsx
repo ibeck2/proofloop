@@ -137,7 +137,7 @@ export default function UpcomingEvents() {
                   </span>
                 )}
               </div>
-              <span className="mt-2 text-accent text-sm font-bold flex items-center gap-1 group-hover:underline">
+              <span className="mt-2 text-ink text-sm font-bold flex items-center gap-1 group-hover:underline">
                 詳細を見る
                 <ChevronRight className="w-4 h-4" aria-hidden="true" />
               </span>
