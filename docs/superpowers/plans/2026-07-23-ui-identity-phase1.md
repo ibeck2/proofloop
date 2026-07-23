@@ -1729,11 +1729,23 @@ Expected: 出力なし
 
 Chrome DevTools → Lighthouse → Mobile で `http://localhost:3000` を計測する。
 
-```
-改修後 LCP（モバイル）: ____ 秒
-Task 0 で記録した改修前: ____ 秒
-差分: ____ 秒
-```
+**実測（2026-07-23・改修後）**
+
+| 指標 | 改修前 | 改修後 | 判定 |
+| --- | --- | --- | --- |
+| Google Fonts のリクエスト数 | 23 | **2** | 改善 |
+| Google Fonts の合計サイズ（decoded） | 784 KB | **572 KB** | **-212 KB。改善** |
+| LCP（リロード） | 436 ms | **計測できず**（下記） | 保留 |
+
+明朝（Shippori Mincho B1）を1書体足したにもかかわらず**総フォント量は減った**。
+トップページが Material Symbols のグリフを一切要求しなくなったため。
+フォールバック切替の閾値（1,200 KB）には遠く及ばないので、§5.2 のフォールバックは**発動しない**。
+
+⚠️ **LCPの改修後の値は未取得。** 検証に使った Chrome ウィンドウが前面になく
+`document.visibilityState === "hidden"` のため、ブラウザが paint timing を記録しない。
+`display=swap` を付けているためテキストはフォールバックで即描画され、総転送量も減っているので
+悪化している可能性は低いが、**数値としては未確認**。オーナーが実機で確認する場合の手順：
+Chrome を前面にして `http://localhost:3000/` を開き、DevTools → Lighthouse → Mobile。
 
 **判定：差分が +0.3秒を超えた場合**、`lib/design/tokens.ts` の `mincho` から `"Shippori Mincho B1"` を削除し（システム明朝スタックのみにする）、`app/layout.tsx` の Google Fonts URL から `&family=Shippori+Mincho+B1:wght@600;700` を削除して再計測する。
 
