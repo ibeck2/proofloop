@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { UNIVERSITY_OPTIONS } from "@/constants/universities";
-import { selectHeroOrganizations, type HeroOrg, type HeroOrgRow } from "./heroOrganizations";
+import { pickHeroOrganizations, type HeroOrg, type HeroOrgRow } from "./heroOrganizations";
 import {
   buildOrganizationField,
   type FieldCluster,
@@ -26,6 +26,13 @@ const DISPLAY_CATEGORIES: Array<{ category: string; label: string }> = [
   { category: "学術・研究（ゼミ・研究会・勉強会）", label: "学術・研究" },
   { category: "趣味・その他", label: "趣味・その他" },
 ];
+
+/**
+ * ヒーローに出さない団体。
+ * `4003e084-…` は「ProofLoop運営事務局」（自社の窓口用アカウント）。
+ * 名前で除外すると「一橋祭運営委員会」のような正当な団体まで消えるため、IDで指定する。
+ */
+const HERO_EXCLUDED_IDS = ["4003e084-8da8-4315-b0dc-3dcce3da42d0"] as const;
 
 const EMPTY: HomeData = {
   totalOrganizations: 0,
@@ -103,53 +110,29 @@ export async function getHomeData(): Promise<HomeData> {
       .filter((u) => u.count > 0)
       .sort((a, b) => b.count - a.count);
 
-    // ヒーローの4行は「掲載の新しい順」では選べない。
-    // 団体は一括投入されており created_at が固まっているため、
-    // 直近60件を取ると2大学しか含まれない（本番で確認済み）。
-    // 掲載数の多い上位4大学から1件ずつ拾う形にして、4行を必ず埋める。
-    const heroCandidates = (
-      await Promise.all(
-        universityCounts.slice(0, 4).map(async ({ university }) => {
-          const { data, error } = await supabase
-            .from("organizations")
-            .select("id, name, university, category")
-            .eq("is_approved", true)
-            .eq("university", university)
-            .order("name", { ascending: true })
-            .limit(5);
-
-          if (error) {
-            throw new Error(
-              `hero query failed (${university}): ${error.message}`
-            );
-          }
-
-          return (data ?? []) as HeroOrgRow[];
-        })
-      )
-    ).flat();
-
-    // 図に描くのは1団体1マーク。集計はJS側で行うので、
-    // 大学×分野の組み合わせぶんクエリを撃つ必要はなく、
-    // (university, category) を全件1回引いて数えるほうが軽い。
+    // 掲載団体を1回だけ全件引き、図とヒーローの両方に使う。
+    // 図は1団体1マークなので全件が要る。ヒーローもここからランダムに選ぶので、
+    // 大学ごとに別クエリを撃つ必要はない。
     // PostgREST は1リクエスト1,000行が上限なのでページングする。
     const PAGE_SIZE = 1000;
     const MAX_ROWS = 5000;
-    const fieldRows: FieldRow[] = [];
+    const allRows: Array<HeroOrgRow & FieldRow> = [];
 
     for (let from = 0; from < MAX_ROWS; from += PAGE_SIZE) {
       const { data, error } = await supabase
         .from("organizations")
-        .select("university, category")
+        .select("id, name, university, category")
         .eq("is_approved", true)
         .range(from, from + PAGE_SIZE - 1);
 
       if (error) {
-        throw new Error(`field query failed (from=${from}): ${error.message}`);
+        throw new Error(
+          `organizations query failed (from=${from}): ${error.message}`
+        );
       }
 
-      const page = (data ?? []) as FieldRow[];
-      fieldRows.push(...page);
+      const page = (data ?? []) as Array<HeroOrgRow & FieldRow>;
+      allRows.push(...page);
       if (page.length < PAGE_SIZE) break;
     }
 
@@ -159,8 +142,11 @@ export async function getHomeData(): Promise<HomeData> {
       categoryCounts: categoryRaw
         .filter((c) => c.count > 0)
         .sort((a, b) => b.count - a.count),
-      heroOrganizations: selectHeroOrganizations(heroCandidates, 4),
-      organizationField: buildOrganizationField(fieldRows),
+      heroOrganizations: pickHeroOrganizations(allRows, {
+        limit: 4,
+        excludeIds: HERO_EXCLUDED_IDS,
+      }),
+      organizationField: buildOrganizationField(allRows),
     };
   } catch (error) {
     console.error("getHomeData: 取得に失敗しました", error);

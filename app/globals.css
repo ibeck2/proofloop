@@ -54,11 +54,28 @@ body {
 
 .pl-surface {
   opacity: 0;
-  animation: pl-surface 320ms ease-out forwards;
+  animation: pl-surface 420ms ease-out forwards;
+}
+
+/* 掲載団体の図。左の列から順に現れて、最後に全体が揃う。
+   1列ぶんずつなので、マークが少しずつ増えていくように見える。 */
+@keyframes pl-mark {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pl-mark {
+  opacity: 0;
+  animation: pl-mark 260ms ease-out forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pl-surface {
+  .pl-surface,
+  .pl-mark {
     opacity: 1;
     transform: none;
     animation: none;
@@ -66,9 +83,10 @@ body {
 }
 
 /* 印刷時はアニメーションが走らないブラウザがあるため、確定状態を明示する。
-   これが無いと印刷・PDF書き出しで団体4行が空白になる。 */
+   これが無いと印刷・PDF書き出しで団体4行と図が空白になる。 */
 @media print {
-  .pl-surface {
+  .pl-surface,
+  .pl-mark {
     opacity: 1;
     transform: none;
     animation: none;

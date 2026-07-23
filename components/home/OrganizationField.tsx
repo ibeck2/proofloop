@@ -48,6 +48,11 @@ const CELL = 5;
 /** 大学と大学のあいだ */
 const CLUSTER_GAP = 12;
 
+/** 図が現れ始めるまで（ヒーローの4行と少し重ねる） */
+const ANIMATION_START = 300;
+/** 1列進むごとの遅れ。列数は150前後なので、全体で1秒強になる */
+const COLUMN_STEP = 6;
+
 /** 紺の4階調。分野の違いを色相ではなく濃さで表す */
 const TONES: Record<CategoryKey, string> = {
   sports: "#002B5C",
@@ -68,18 +73,14 @@ export default function OrganizationField({
   if (clusters.length === 0) return null;
 
   let cursorX = 0;
+  let columnCursor = 0;
 
   const groups = clusters.map((cluster) => {
-    const subpaths: Record<CategoryKey, string[]> = {
-      sports: [],
-      culture: [],
-      academic: [],
-      other: [],
-    };
-
     // マークを1個ずつ矩形で書き出すと、1,958個ぶんのパスでHTMLが250KB増える。
     // 縦一列は等間隔に並ぶので、破線（dasharray）を引いた1本の線で同じ絵になる。
     // 1列＝1本になるので、書き出す量が2桁減る。
+    const segments: Array<{ key: CategoryKey; d: string; column: number }> = [];
+
     let index = 0;
     for (const key of CATEGORY_KEYS) {
       let remaining = cluster.counts[key];
@@ -91,7 +92,12 @@ export default function OrganizationField({
         const x = cursorX + column * CELL + MARK / 2;
         const top = row * CELL;
         const bottom = top + (run - 1) * CELL + MARK;
-        subpaths[key].push(`M${x} ${top}V${bottom}`);
+
+        segments.push({
+          key,
+          d: `M${x} ${top}V${bottom}`,
+          column: columnCursor + column,
+        });
 
         index += run;
         remaining -= run;
@@ -100,10 +106,16 @@ export default function OrganizationField({
 
     const columns = Math.ceil(cluster.total / ROWS);
     const labelX = cursorX + (columns * CELL - (CELL - MARK)) / 2;
-    cursorX += columns * CELL + CLUSTER_GAP;
+    const labelColumn = columnCursor + columns - 1;
 
-    return { cluster, subpaths, labelX };
+    cursorX += columns * CELL + CLUSTER_GAP;
+    columnCursor += columns;
+
+    return { cluster, segments, labelX, labelColumn };
   });
+
+  /** 左の列から順に現れるまでの間隔。全体で約1秒に収める */
+  const delayOf = (column: number) => `${ANIMATION_START + column * COLUMN_STEP}ms`;
 
   const width = cursorX - CLUSTER_GAP - (CELL - MARK);
   const markHeight = ROWS * CELL - (CELL - MARK);
@@ -120,24 +132,26 @@ export default function OrganizationField({
           "ja-JP"
         )}団体を、大学ごとに束ねて分野別に色分けした図`}
       >
-        {groups.map(({ cluster, subpaths, labelX }) => (
+        {groups.map(({ cluster, segments, labelX, labelColumn }) => (
           <g key={cluster.university}>
             <title>
               {cluster.university} {cluster.total.toLocaleString("ja-JP")}団体
             </title>
-            {CATEGORY_KEYS.map((key) =>
-              subpaths[key].length === 0 ? null : (
-                <path
-                  key={key}
-                  fill="none"
-                  stroke={TONES[key]}
-                  strokeWidth={MARK}
-                  strokeDasharray={`${MARK} ${CELL - MARK}`}
-                  d={subpaths[key].join("")}
-                />
-              )
-            )}
+            {segments.map((segment, i) => (
+              <path
+                key={i}
+                className="pl-mark"
+                style={{ animationDelay: delayOf(segment.column) }}
+                fill="none"
+                stroke={TONES[segment.key]}
+                strokeWidth={MARK}
+                strokeDasharray={`${MARK} ${CELL - MARK}`}
+                d={segment.d}
+              />
+            ))}
             <text
+              className="pl-mark"
+              style={{ animationDelay: delayOf(labelColumn) }}
               x={labelX}
               y={markHeight + LABEL_SIZE + 3}
               textAnchor="middle"

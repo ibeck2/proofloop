@@ -20,13 +20,13 @@ export default function Hero({
   return (
     <section className="flex flex-col gap-8 md:gap-10">
       <div className="flex flex-col gap-5 md:gap-6">
-        <h1 className="font-mincho font-bold text-ink text-[2rem] leading-[1.4] md:text-5xl md:leading-[1.35] tracking-tight">
-          見えていなかった力を、
+        <h1 className="font-mincho font-bold text-ink text-[1.75rem] leading-[1.45] md:text-[2.75rem] md:leading-[1.4] tracking-tight">
+          全ての大学生・学生団体の
           <br />
-          100%に。
+          ポテンシャルを引き出す。
         </h1>
         <p className="font-body text-sm md:text-base text-graphite leading-relaxed max-w-[42rem]">
-          全国の学生団体を、大学と分野から探せます。活動の内容も、新歓の選考の流れも、団体のページにまとまっています。
+          全国の学生団体を、大学と分野から探せます。単位・お金・住まいのガイドや、GPA計算機・留学先診断などのツールも揃えました。
           団体を運営する側には、メンバー管理・新歓・イベント・タスクの機能があります。
         </p>
       </div>
@@ -37,7 +37,7 @@ export default function Hero({
             <li
               key={org.id}
               className="pl-surface border-b border-rule"
-              style={{ animationDelay: `${index * 80}ms` }}
+              style={{ animationDelay: `${index * 220}ms` }}
             >
               <Link
                 href={`/organizations/${org.id}`}

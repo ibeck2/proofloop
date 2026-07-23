@@ -25,6 +25,33 @@ function isGarbled(...values: Array<string | null>): boolean {
   return values.some((v) => v != null && v.includes("�"));
 }
 
+/**
+ * 掲載団体からランダムに選ぶ。
+ *
+ * 並び順に意味を持たせない（名前順だと毎回同じ4件が出て、掲載が増えても画面が変わらない）。
+ * `random` を差し替えられるようにしてあるのはテストのため。
+ * 実際に選び直されるのは ISR の再生成時なので、1時間に1回程度。
+ */
+export function pickHeroOrganizations(
+  rows: HeroOrgRow[],
+  options: {
+    limit?: number;
+    excludeIds?: readonly string[];
+    random?: () => number;
+  } = {}
+): HeroOrg[] {
+  const { limit = 4, excludeIds = [], random = Math.random } = options;
+  const excluded = new Set(excludeIds);
+
+  const shuffled = rows.filter((row) => !excluded.has(row.id));
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return selectHeroOrganizations(shuffled, limit);
+}
+
 export function selectHeroOrganizations(
   rows: HeroOrgRow[],
   limit = 4

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { selectHeroOrganizations, type HeroOrgRow } from "./heroOrganizations";
+import {
+  pickHeroOrganizations,
+  selectHeroOrganizations,
+  type HeroOrgRow,
+} from "./heroOrganizations";
 
 function row(over: Partial<HeroOrgRow> = {}): HeroOrgRow {
   return {
@@ -81,5 +85,80 @@ describe("selectHeroOrganizations", () => {
 
   it("空配列を渡されたら空配列を返す", () => {
     expect(selectHeroOrganizations([])).toEqual([]);
+  });
+});
+
+describe("pickHeroOrganizations", () => {
+  /** 常に末尾の要素を選ぶ乱数。シャッフルの結果を固定してテストする */
+  const alwaysLast = () => 0.999999;
+
+  it("除外IDの団体は選ばない", () => {
+    const result = pickHeroOrganizations(
+      [
+        row({ id: "office", name: "ProofLoop運営事務局", university: "東京大学" }),
+        row({ id: "a", name: "A会", university: "京都大学" }),
+      ],
+      { excludeIds: ["office"], random: alwaysLast }
+    );
+
+    expect(result.map((o) => o.id)).toEqual(["a"]);
+  });
+
+  it("除外しても大学の重複は許さない", () => {
+    const result = pickHeroOrganizations(
+      [
+        row({ id: "a", university: "京都大学", name: "A会" }),
+        row({ id: "b", university: "京都大学", name: "B会" }),
+        row({ id: "c", university: "上智大学", name: "C会" }),
+      ],
+      { random: alwaysLast }
+    );
+
+    expect(result).toHaveLength(2);
+    expect(new Set(result.map((o) => o.university)).size).toBe(2);
+  });
+
+  it("使えない行（文字化け・名前なし）は選ばない", () => {
+    const result = pickHeroOrganizations(
+      [
+        row({ id: "broken", university: "京都大学", category: "運動系（アウトド�ア）" }),
+        row({ id: "noname", university: "上智大学", name: "" }),
+        row({ id: "ok", university: "一橋大学", name: "OK会" }),
+      ],
+      { random: alwaysLast }
+    );
+
+    expect(result.map((o) => o.id)).toEqual(["ok"]);
+  });
+
+  it("乱数を差し替えると選ばれる団体が変わる", () => {
+    const rows = [
+      row({ id: "a", university: "京都大学", name: "A会" }),
+      row({ id: "b", university: "上智大学", name: "B会" }),
+      row({ id: "c", university: "一橋大学", name: "C会" }),
+    ];
+
+    const first = pickHeroOrganizations(rows, { limit: 1, random: () => 0 });
+    const second = pickHeroOrganizations(rows, { limit: 1, random: alwaysLast });
+
+    expect(first).toHaveLength(1);
+    expect(second).toHaveLength(1);
+    expect(first[0].id).not.toBe(second[0].id);
+  });
+
+  it("元の配列を書き換えない", () => {
+    const rows = [
+      row({ id: "a", university: "京都大学" }),
+      row({ id: "b", university: "上智大学" }),
+    ];
+    const before = rows.map((r) => r.id);
+
+    pickHeroOrganizations(rows, { random: alwaysLast });
+
+    expect(rows.map((r) => r.id)).toEqual(before);
+  });
+
+  it("空配列を渡されたら空配列を返す", () => {
+    expect(pickHeroOrganizations([])).toEqual([]);
   });
 });
