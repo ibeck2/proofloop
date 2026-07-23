@@ -23,48 +23,48 @@ export default function MetricResultPanel({
       : "交換留学の出願要件を満たしている可能性があります";
 
   return (
-    <section className="mt-8 border border-primary p-6">
-      <p className="font-display text-sm font-bold text-text-grey">
+    <section className="mt-8 border border-ink p-6">
+      <p className="font-body text-sm font-bold text-graphite">
         あなたの{scale.metricLabel}
       </p>
-      <p className="mt-2 font-display text-5xl font-bold text-primary">
+      <p className="mt-2 font-numeric tabular-nums text-5xl font-bold text-ink">
         {result.value.toFixed(2)}
         {scale.unitSuffix ?? ""}
-        <span className="ml-2 text-lg text-text-grey">
+        <span className="ml-2 text-lg text-graphite">
           / {scale.maxValue.toFixed(scale.maxValue >= 100 ? 0 : 1)}
           {scale.unitSuffix ?? ""}
         </span>
       </p>
-      <p className="mt-2 text-sm text-text-grey">
+      <p className="mt-2 text-sm text-graphite">
         算入科目：{result.countedCourses}科目／合計 {result.totalCredits} 単位
       </p>
       {scale.unitSuffix ? (
-        <p className="mt-1 text-xs text-text-grey">
+        <p className="mt-1 text-xs text-graphite">
           小数第2位に四捨五入した参考値です。大学が公表する値は小数第3位以下まで算出されます。
         </p>
       ) : null}
 
       {/* 方式の ctaPolicy に応じた次アクション。就活系の導線は置かない */}
-      <div className="mt-6 border-t border-border-grey pt-6">
+      <div className="mt-6 border-t border-rule pt-6">
         {showStudyAbroad ? (
           <div>
-            <p className="font-display text-base font-bold text-primary">
+            <p className="font-body text-base font-bold text-ink">
               {studyAbroadHeading}
             </p>
-            <p className="mt-2 text-sm text-text-grey">
+            <p className="mt-2 text-sm text-graphite">
               多くの大学の交換留学プログラムはGPAを出願要件に置いています。必要なGPAの目安と、
               留学先の選び方を確認してみてください。
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href="/guide/study-abroad"
-                className="bg-primary px-5 py-3 text-sm font-bold text-white"
+                className="bg-ink px-5 py-3 text-sm font-bold text-paper"
               >
                 留学ガイドを読む
               </Link>
               <Link
                 href="/guide/study-abroad/recommend"
-                className="border border-primary px-5 py-3 text-sm font-bold text-primary"
+                className="border border-ink px-5 py-3 text-sm font-bold text-ink"
               >
                 留学先を診断する
               </Link>
@@ -72,16 +72,16 @@ export default function MetricResultPanel({
           </div>
         ) : (
           <div>
-            <p className="font-display text-base font-bold text-primary">
+            <p className="font-body text-base font-bold text-ink">
               {scale.metricLabel}は履修設計で変えられます
             </p>
-            <p className="mt-2 text-sm text-text-grey">
+            <p className="mt-2 text-sm text-graphite">
               単位の取り方・必修と選択のバランス・成績評価の仕組みを理解すると、{scale.metricLabel}は戦略的に上げられます。
             </p>
             <div className="mt-4">
               <Link
                 href="/guide/credits"
-                className="bg-primary px-5 py-3 text-sm font-bold text-white"
+                className="bg-ink px-5 py-3 text-sm font-bold text-paper"
               >
                 履修・単位ガイドを読む
               </Link>
@@ -90,11 +90,11 @@ export default function MetricResultPanel({
         )}
       </div>
 
-      <div className="mt-6 border-t border-border-grey pt-6">
-        <p className="text-sm text-text-grey">
+      <div className="mt-6 border-t border-rule pt-6">
+        <p className="text-sm text-graphite">
           学外の活動（学生団体・インターン・プロジェクト）は成績には出ませんが、実績として蓄積できます。
         </p>
-        <Link href="/signup" className="mt-3 inline-block text-sm font-bold text-accent underline">
+        <Link href="/signup" className="mt-3 inline-block text-sm font-bold text-ink underline">
           ProofLoopで活動を記録する
         </Link>
       </div>

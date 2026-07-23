@@ -3,9 +3,11 @@ import { type HTMLAttributes } from "react";
 type BadgeVariant = "default" | "primary" | "accent";
 
 const variantClasses: Record<BadgeVariant, string> = {
-  default: "border border-grey-custom text-grey-custom",
-  primary: "border border-primary text-primary bg-primary/5",
-  accent: "border border-accent text-accent bg-accent/5",
+  default: "border border-rule text-graphite",
+  // primary と accent を同じにすると、2種類あるはずのバリアントが見分けられなくなる。
+  // 元の色（primary=紺 / accent=深紅）をトークンに置き換えるだけにとどめる。
+  primary: "border border-ink text-ink bg-ink/5",
+  accent: "border border-seal text-seal bg-seal/5",
 };
 
 export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {

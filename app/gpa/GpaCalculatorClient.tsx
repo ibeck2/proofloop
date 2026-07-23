@@ -215,24 +215,24 @@ export default function GpaCalculatorClient() {
       <form
         noValidate
         onSubmit={handleSubmit(onSubmit)}
-        className="border border-border-grey p-6"
+        className="border border-rule p-6"
       >
         {/* ── 大学選択 ───────────────────────── */}
         <div className="mb-6">
           <label
             htmlFor="universityId"
-            className="block font-display text-sm font-bold text-primary"
+            className="block font-body text-sm font-bold text-ink"
           >
             大学を選ぶ
           </label>
-          <p className="mt-1 text-xs text-text-grey">
+          <p className="mt-1 text-xs text-graphite">
             大学によってGPAの換算方式が異なります。一覧にない場合は「その他の大学」を選び、
             お使いの大学の履修要項で評語とGPの対応をご確認ください。
           </p>
           <select
             id="universityId"
             {...register("universityId")}
-            className="mt-2 w-full border border-border-grey bg-white p-3 text-primary"
+            className="mt-2 w-full border border-rule bg-paper p-3 text-ink"
           >
             {UNIVERSITIES.map((u) => (
               <option key={u.id} value={u.id}>
@@ -247,8 +247,8 @@ export default function GpaCalculatorClient() {
 
         {/* ── 科目入力 ───────────────────────── */}
         <div>
-          <p className="font-display text-sm font-bold text-primary">履修科目</p>
-          <p className="mt-1 text-xs text-text-grey">
+          <p className="font-body text-sm font-bold text-ink">履修科目</p>
+          <p className="mt-1 text-xs text-graphite">
             {scale.metricLabel}に算入される科目のみ入力してください（認定単位・履修中の科目は除きます）。
           </p>
 
@@ -264,8 +264,8 @@ export default function GpaCalculatorClient() {
                 aria-pressed={inputMode === "per-course"}
                 className={`border px-4 py-2 text-sm font-bold ${
                   inputMode === "per-course"
-                    ? "border-primary bg-primary text-white"
-                    : "border-border-grey text-text-grey"
+                    ? "border-ink bg-ink text-paper"
+                    : "border-rule text-graphite"
                 }`}
               >
                 科目ごとに入力
@@ -280,8 +280,8 @@ export default function GpaCalculatorClient() {
                 aria-pressed={inputMode === "by-grade"}
                 className={`border px-4 py-2 text-sm font-bold ${
                   inputMode === "by-grade"
-                    ? "border-primary bg-primary text-white"
-                    : "border-border-grey text-text-grey"
+                    ? "border-ink bg-ink text-paper"
+                    : "border-rule text-graphite"
                 }`}
               >
                 成績ごとにまとめて入力
@@ -295,18 +295,18 @@ export default function GpaCalculatorClient() {
             {fields.map((field, index) => (
               <div key={field.id} className="flex flex-wrap items-end gap-2">
                 <div className="min-w-[8rem] flex-1">
-                  <label htmlFor={`${fieldIdPrefix}-course-${index}-name`} className="block text-xs text-text-grey">科目名（任意）</label>
+                  <label htmlFor={`${fieldIdPrefix}-course-${index}-name`} className="block text-xs text-graphite">科目名（任意）</label>
                   <input
                     id={`${fieldIdPrefix}-course-${index}-name`}
                     type="text"
                     {...register(`courses.${index}.name`)}
-                    className="mt-1 w-full border border-border-grey p-2 text-primary"
+                    className="mt-1 w-full border border-rule p-2 text-ink"
                     placeholder="微分積分"
                   />
                 </div>
 
                 <div className="w-24">
-                  <label htmlFor={`${fieldIdPrefix}-course-${index}-credits`} className="block text-xs text-text-grey">単位数</label>
+                  <label htmlFor={`${fieldIdPrefix}-course-${index}-credits`} className="block text-xs text-graphite">単位数</label>
                   <input
                     id={`${fieldIdPrefix}-course-${index}-credits`}
                     type="number"
@@ -314,18 +314,18 @@ export default function GpaCalculatorClient() {
                     step={1}
                     inputMode="numeric"
                     {...register(`courses.${index}.credits`)}
-                    className="mt-1 w-full border border-border-grey p-2 text-primary"
+                    className="mt-1 w-full border border-rule p-2 text-ink"
                     placeholder="2"
                   />
                 </div>
 
                 {scale.method === "grade" ? (
                   <div className="w-32">
-                    <label htmlFor={`${fieldIdPrefix}-course-${index}-grade`} className="block text-xs text-text-grey">成績</label>
+                    <label htmlFor={`${fieldIdPrefix}-course-${index}-grade`} className="block text-xs text-graphite">成績</label>
                     <select
                       id={`${fieldIdPrefix}-course-${index}-grade`}
                       {...register(`courses.${index}.grade`)}
-                      className="mt-1 w-full border border-border-grey bg-white p-2 text-primary"
+                      className="mt-1 w-full border border-rule bg-paper p-2 text-ink"
                     >
                       <option value="">選択</option>
                       {scale.grades?.map((g) => (
@@ -337,7 +337,7 @@ export default function GpaCalculatorClient() {
                   </div>
                 ) : (
                   <div className="w-32">
-                    <label htmlFor={`${fieldIdPrefix}-course-${index}-score`} className="block text-xs text-text-grey">
+                    <label htmlFor={`${fieldIdPrefix}-course-${index}-score`} className="block text-xs text-graphite">
                       {scale.method === "raw" ? "評点（0〜100）" : "素点（0〜100）"}
                     </label>
                     <input
@@ -347,7 +347,7 @@ export default function GpaCalculatorClient() {
                       max={100}
                       inputMode="numeric"
                       {...register(`courses.${index}.score`)}
-                      className="mt-1 w-full border border-border-grey p-2 text-primary"
+                      className="mt-1 w-full border border-rule p-2 text-ink"
                       placeholder="85"
                     />
                   </div>
@@ -357,14 +357,14 @@ export default function GpaCalculatorClient() {
                   <div className="w-28">
                     <label
                       htmlFor={`${fieldIdPrefix}-course-${index}-weight`}
-                      className="block text-xs text-text-grey"
+                      className="block text-xs text-graphite"
                     >
                       重率
                     </label>
                     <select
                       id={`${fieldIdPrefix}-course-${index}-weight`}
                       {...register(`courses.${index}.weight`)}
-                      className="mt-1 w-full border border-border-grey bg-white p-2 text-primary"
+                      className="mt-1 w-full border border-rule bg-paper p-2 text-ink"
                     >
                       <option value="1">1</option>
                       <option value="0.1">0.1</option>
@@ -377,7 +377,7 @@ export default function GpaCalculatorClient() {
                   type="button"
                   onClick={() => remove(index)}
                   disabled={fields.length <= 1}
-                  className="border border-border-grey px-3 py-2 text-xs text-text-grey disabled:opacity-40"
+                  className="border border-rule px-3 py-2 text-xs text-graphite disabled:opacity-40"
                   aria-label={`${index + 1}行目を削除`}
                 >
                   削除
@@ -389,7 +389,7 @@ export default function GpaCalculatorClient() {
           <button
             type="button"
             onClick={() => append({ ...EMPTY_COURSE })}
-            className="mt-3 border border-primary px-4 py-2 text-sm font-bold text-primary"
+            className="mt-3 border border-ink px-4 py-2 text-sm font-bold text-ink"
           >
             ＋ 科目を追加
           </button>
@@ -406,8 +406,8 @@ export default function GpaCalculatorClient() {
           )}
 
           {scale.failExclusionToggle ? (
-            <div className="mt-4 border-l-4 border-primary bg-neutral-light p-3">
-              <label className="flex items-start gap-2 text-sm text-primary">
+            <div className="mt-4 border border-rule border-l-4 border-l-ink bg-mist p-3">
+              <label className="flex items-start gap-2 text-sm text-ink">
                 <input
                   type="checkbox"
                   checked={excludeFail}
@@ -422,7 +422,7 @@ export default function GpaCalculatorClient() {
                   <span className="font-bold">
                     不可（{scale.failExclusionToggle.failLabels.join("・")}）の科目を計算から除外する
                   </span>
-                  <span className="mt-1 block text-xs text-text-grey">
+                  <span className="mt-1 block text-xs text-graphite">
                     {scale.failExclusionToggle.note}
                   </span>
                 </span>
@@ -432,14 +432,14 @@ export default function GpaCalculatorClient() {
         </div>
 
         {formError ? (
-          <p role="alert" className="mt-4 border-l-4 border-accent bg-neutral-light p-3 text-sm text-accent">
+          <p role="alert" className="mt-4 border border-rule border-l-4 border-l-seal bg-mist p-3 text-sm text-ink">
             {formError}
           </p>
         ) : null}
 
         <button
           type="submit"
-          className="mt-6 w-full bg-primary px-6 py-4 font-display text-base font-bold text-white"
+          className="mt-6 w-full bg-ink px-6 py-4 font-body text-base font-bold text-paper"
         >
           {scale.metricLabel}を計算する
         </button>
