@@ -4,7 +4,21 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { MessageCircle } from "lucide-react";
+import {
+  MessageCircle,
+  Heart,
+  Send,
+  CheckCircle2,
+  Camera,
+  Globe,
+  Link as LinkIcon,
+  Clock,
+  CalendarDays,
+  MapPin,
+  ChevronRight,
+  Star,
+  X,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { fetchOrganizationOwnerUserId } from "@/lib/organizationMembers";
 import { Button } from "@/components/ui";
@@ -396,72 +410,76 @@ export default function OrganizationDetailClient({
     : null;
 
   return (
-    <div className="min-h-screen bg-white text-slate-900 font-display">
+    <div className="min-h-screen bg-paper text-graphite font-body">
       <OrganizationPageViewTracker organizationId={org.id} />
       <main className="max-w-4xl mx-auto px-4 py-8 pb-20 md:pb-12">
         <Link
           href="/search"
-          className="text-accent text-sm font-bold mb-6 inline-flex items-center gap-1 hover:underline"
+          className="text-ink text-sm font-bold mb-6 inline-flex items-center gap-1 hover:underline underline-offset-4"
         >
           ← 検索に戻る
         </Link>
 
         {/* ヘッダーエリア */}
-        <header className="flex flex-col sm:flex-row gap-6 items-start pb-8 border-b border-slate-200">
+        <header className="flex flex-col sm:flex-row gap-6 items-start pb-8 border-b border-rule">
           <div className="flex-shrink-0">
             {org.logo_url ? (
               <img
                 src={org.logo_url}
                 alt={`${name}のロゴ`}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-contain bg-slate-50 border border-slate-200"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full object-contain bg-mist border border-rule"
               />
             ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
-                <span className="material-symbols-outlined text-4xl sm:text-5xl">groups</span>
+              <div
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-ink border border-ink flex items-center justify-center text-paper"
+                aria-hidden="true"
+              >
+                <span className="font-mincho text-4xl sm:text-5xl">
+                  {name.trim().charAt(0) || "◯"}
+                </span>
               </div>
             )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-start gap-3 mb-2">
-              <h1 className="text-2xl sm:text-3xl font-bold text-navy">{name}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold font-mincho text-ink">{name}</h1>
               <button
                 type="button"
                 onClick={() => toggleSavedOrg(org.id)}
                 disabled={togglingId === org.id}
                 aria-label={isSavedOrg ? "お気に入りから削除" : "お気に入りに追加"}
-                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full border border-slate-200 bg-white hover:bg-slate-50 transition-colors disabled:opacity-50"
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full border border-rule bg-paper hover:bg-mist transition-colors disabled:opacity-50"
               >
-                <span
-                  className={`material-symbols-outlined text-2xl ${isSavedOrg ? "text-rose-500" : "text-slate-400"}`}
-                  style={isSavedOrg ? { fontVariationSettings: '"FILL" 1' } : undefined}
-                >
-                  favorite
-                </span>
+                <Heart
+                  className={`w-6 h-6 ${isSavedOrg ? "text-ink" : "text-graphite/70"}`}
+                  fill={isSavedOrg ? "currentColor" : "none"}
+                  aria-hidden="true"
+                />
               </button>
             </div>
             <div className="flex flex-wrap gap-2 mt-0">
               {org.university && (
-                <span className="text-sm px-2.5 py-0.5 border border-slate-300 text-slate-700 bg-slate-50 rounded">
+                <span className="text-sm px-2.5 py-0.5 border border-rule text-graphite bg-mist rounded">
                   {org.university}
                 </span>
               )}
               {org.category && (
-                <span className="text-sm px-2.5 py-0.5 border border-accent text-accent bg-accent/5 rounded">
+                <span className="text-sm px-2.5 py-0.5 border border-ink text-ink bg-mist rounded">
                   {org.category}
                 </span>
               )}
               {org.is_intercollege !== null && org.is_intercollege !== undefined && (
-                <span className="text-xs px-2.5 py-0.5 font-medium border border-blue-500/60 text-blue-700 bg-blue-50 rounded">
+                <span className="text-xs px-2.5 py-0.5 font-medium border border-rule text-ink bg-mist rounded">
                   {org.is_intercollege ? "インカレ" : "学内団体"}
                 </span>
               )}
               {getTargetGradesDisplay(org.target_grades) && (
-                <span className="text-xs px-2.5 py-0.5 font-medium border border-emerald-500/60 text-emerald-700 bg-emerald-50 rounded">
+                <span className="text-xs px-2.5 py-0.5 font-medium border border-rule text-ink bg-mist rounded">
                   {getTargetGradesDisplay(org.target_grades)}
                 </span>
               )}
               {org.selection_process && (
-                <span className="text-xs px-2.5 py-0.5 font-medium border border-orange-500/60 text-orange-700 bg-orange-50 rounded">
+                <span className="text-xs px-2.5 py-0.5 font-medium border border-rule text-ink bg-mist rounded">
                   {org.selection_process}
                 </span>
               )}
@@ -470,12 +488,12 @@ export default function OrganizationDetailClient({
         </header>
 
         {/* エントリーCTA */}
-        <div className="py-4 border-b border-slate-200">
+        <div className="py-4 border-b border-rule">
           {session ? (
             application ? (
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <span className="material-symbols-outlined text-2xl text-emerald-600">check_circle</span>
+                <div className="flex items-center gap-2 text-graphite">
+                  <CheckCircle2 className="w-6 h-6 text-ink" aria-hidden="true" />
                   <span className="font-bold">
                     エントリー済み（現在：{application.current_step || "—"}ステップ）
                   </span>
@@ -505,16 +523,16 @@ export default function OrganizationDetailClient({
                   type="button"
                   onClick={() => setEntryModalOpen(true)}
                   disabled={!entryCheckDone}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 bg-ink text-paper font-bold rounded-lg hover:bg-ink/90 transition-colors disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined">send</span>
+                  <Send className="w-5 h-5" aria-hidden="true" />
                   この団体にエントリーする
                 </button>
               </div>
             )
           ) : (
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <p className="text-slate-600 text-sm">
+              <p className="text-graphite text-sm">
                 メッセージを送るにはログインが必要です。
               </p>
               <Button
@@ -533,7 +551,7 @@ export default function OrganizationDetailClient({
         {/* タブナビ */}
         <nav
           role="tablist"
-          className="flex gap-0 border-b border-slate-200 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0"
+          className="flex gap-0 border-b border-rule overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0"
         >
           {TABS.map((tab) => (
             <button
@@ -543,8 +561,8 @@ export default function OrganizationDetailClient({
               onClick={() => setActiveTab(tab.id)}
               className={`flex-shrink-0 px-4 py-3 text-sm font-bold transition-colors border-b-2 -mb-px ${
                 activeTab === tab.id
-                  ? "border-accent text-accent"
-                  : "border-transparent text-slate-500 hover:text-slate-800"
+                  ? "border-seal text-seal"
+                  : "border-transparent text-graphite/70 hover:text-ink"
               }`}
             >
               {tab.label}
@@ -560,25 +578,25 @@ export default function OrganizationDetailClient({
               key="overview"
               className="transition-opacity duration-200"
             >
-              <h2 className="text-lg font-bold text-navy mb-4">理念・活動内容</h2>
+              <h2 className="text-lg font-bold font-mincho text-ink mb-4">理念・活動内容</h2>
               {org.description ? (
-                <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">
+                <p className="text-graphite whitespace-pre-wrap leading-relaxed">
                   {org.description}
                 </p>
               ) : (
-                <p className="text-slate-500 italic">活動内容は未登録です。</p>
+                <p className="text-graphite/70 italic">活動内容は未登録です。</p>
               )}
               <div className="mt-8">
-                <h3 className="text-base font-bold text-navy mb-3">公式SNS・連絡先</h3>
+                <h3 className="text-base font-bold font-mincho text-ink mb-3">公式SNS・連絡先</h3>
                 <div className="flex flex-wrap gap-4">
                   {xUrl && (
                     <a
                       href={xUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-rule hover:border-ink/30 hover:bg-mist transition-colors"
                     >
-                      <span className="text-xl">𝕏</span>
+                      <span className="text-xl" aria-hidden="true">𝕏</span>
                       <span className="text-sm font-medium">X (Twitter)</span>
                     </a>
                   )}
@@ -587,9 +605,9 @@ export default function OrganizationDetailClient({
                       href={instaUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-rule hover:border-ink/30 hover:bg-mist transition-colors"
                     >
-                      <span className="material-symbols-outlined text-xl">photo_camera</span>
+                      <Camera className="w-5 h-5" aria-hidden="true" />
                       <span className="text-sm font-medium">Instagram</span>
                     </a>
                   )}
@@ -598,9 +616,9 @@ export default function OrganizationDetailClient({
                       href={org.line_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-green-200 hover:border-green-300 hover:bg-green-50 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-rule hover:border-ink/30 hover:bg-mist transition-colors"
                     >
-                      <span className="text-green-600 font-bold text-sm">LINE</span>
+                      <span className="text-ink font-bold text-sm">LINE</span>
                       <span className="text-sm font-medium">公式LINE</span>
                     </a>
                   )}
@@ -609,14 +627,14 @@ export default function OrganizationDetailClient({
                       href={org.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-rule hover:border-ink/30 hover:bg-mist transition-colors"
                     >
-                      <span className="material-symbols-outlined text-xl">language</span>
+                      <Globe className="w-5 h-5" aria-hidden="true" />
                       <span className="text-sm font-medium">Webサイト</span>
                     </a>
                   )}
                   {!xUrl && !instaUrl && !org.line_url && !org.website_url && (
-                    <p className="text-slate-500 text-sm">SNS・連絡先は未登録です。</p>
+                    <p className="text-graphite/70 text-sm">SNS・連絡先は未登録です。</p>
                   )}
                 </div>
               </div>
@@ -630,8 +648,8 @@ export default function OrganizationDetailClient({
               className="animate-in fade-in duration-200 space-y-8"
             >
               <div>
-                <h2 className="text-lg font-bold text-navy mb-3">メンバー構成</h2>
-                <dl className="space-y-2 text-slate-700">
+                <h2 className="text-lg font-bold font-mincho text-ink mb-3">メンバー構成</h2>
+                <dl className="space-y-2 text-graphite">
                   {org.member_count && (
                     <div className="flex gap-2">
                       <dt className="font-medium w-28">総人数</dt>
@@ -651,13 +669,13 @@ export default function OrganizationDetailClient({
                     </div>
                   )}
                   {!org.member_count && !org.gender_ratio && !org.grade_composition && (
-                    <p className="text-slate-500 italic">メンバー情報は未登録です。</p>
+                    <p className="text-graphite/70 italic">メンバー情報は未登録です。</p>
                   )}
                 </dl>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-navy mb-3">活動のベース</h2>
-                <dl className="space-y-2 text-slate-700">
+                <h2 className="text-lg font-bold font-mincho text-ink mb-3">活動のベース</h2>
+                <dl className="space-y-2 text-graphite">
                   {org.activity_frequency && (
                     <div className="flex gap-2">
                       <dt className="font-medium w-28">活動頻度</dt>
@@ -671,13 +689,13 @@ export default function OrganizationDetailClient({
                     </div>
                   )}
                   {!org.activity_frequency && !org.location_detail && (
-                    <p className="text-slate-500 italic">活動のベース情報は未登録です。</p>
+                    <p className="text-graphite/70 italic">活動のベース情報は未登録です。</p>
                   )}
                 </dl>
               </div>
               <div>
-                <h2 className="text-lg font-bold text-navy mb-3">費用</h2>
-                <dl className="space-y-2 text-slate-700">
+                <h2 className="text-lg font-bold font-mincho text-ink mb-3">費用</h2>
+                <dl className="space-y-2 text-graphite">
                   {org.fee_entry && (
                     <div className="flex gap-2">
                       <dt className="font-medium w-28">初期費用</dt>
@@ -691,7 +709,7 @@ export default function OrganizationDetailClient({
                     </div>
                   )}
                   {!org.fee_entry && !org.fee_annual && (
-                    <p className="text-slate-500 italic">費用情報は未登録です。</p>
+                    <p className="text-graphite/70 italic">費用情報は未登録です。</p>
                   )}
                 </dl>
               </div>
@@ -707,51 +725,51 @@ export default function OrganizationDetailClient({
               <div className="space-y-4 mb-6">
                 {getTargetGradesDisplay(org.target_grades) && (
                   <div>
-                    <h3 className="text-sm font-bold text-slate-600 mb-1">対象学年</h3>
-                    <p className="text-slate-700">{getTargetGradesDisplay(org.target_grades)}</p>
+                    <h3 className="text-sm font-bold text-graphite mb-1">対象学年</h3>
+                    <p className="text-graphite">{getTargetGradesDisplay(org.target_grades)}</p>
                   </div>
                 )}
                 {org.selection_process && (
                   <div>
-                    <h3 className="text-sm font-bold text-slate-600 mb-1">選考</h3>
-                    <p className="text-slate-700">{org.selection_process}</p>
+                    <h3 className="text-sm font-bold text-graphite mb-1">選考</h3>
+                    <p className="text-graphite">{org.selection_process}</p>
                   </div>
                 )}
               </div>
               {org.selection_process === "選考あり" && org.selection_flow && Array.isArray(org.selection_flow) && org.selection_flow.length > 0 && (
                 <div className="mb-8">
-                  <h3 className="text-base font-bold text-navy mb-4">選考フロー</h3>
+                  <h3 className="text-base font-bold font-mincho text-ink mb-4">選考フロー</h3>
                   <div className="relative">
                     {org.selection_flow.map((step, index) => (
                       <div key={index} className="flex gap-4">
                         <div className="flex flex-col items-center shrink-0">
-                          <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-ink text-paper flex items-center justify-center text-sm font-bold shrink-0">
                             {index + 1}
                           </div>
                           {index < org.selection_flow!.length - 1 && (
-                            <div className="w-0.5 flex-1 min-h-[24px] bg-slate-200 my-1" />
+                            <div className="w-0.5 flex-1 min-h-[24px] bg-rule my-1" />
                           )}
                         </div>
                         <div className="pb-6 flex-1 min-w-0">
-                          <div className="p-4 rounded-lg border border-slate-200 bg-slate-50/50">
-                            <h4 className="font-bold text-navy mb-1">{step.name || "（ステップ名）"}</h4>
+                          <div className="p-4 rounded-lg border border-rule bg-mist/50">
+                            <h4 className="font-bold text-ink mb-1">{step.name || "（ステップ名）"}</h4>
                             {formatStepDate(step) && (
-                              <p className="text-sm text-slate-600 flex items-center gap-1 mb-2">
-                                <span className="material-symbols-outlined text-[16px]">schedule</span>
+                              <p className="text-sm text-graphite flex items-center gap-1 mb-2">
+                                <Clock className="w-4 h-4" aria-hidden="true" />
                                 {formatStepDate(step)}
                               </p>
                             )}
                             {step.description && (
-                              <p className="text-sm text-slate-700 whitespace-pre-wrap mb-2">{step.description}</p>
+                              <p className="text-sm text-graphite whitespace-pre-wrap mb-2">{step.description}</p>
                             )}
                             {step.url && (
                               <a
                                 href={step.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-sm font-bold text-accent hover:underline"
+                                className="inline-flex items-center gap-1 text-sm font-bold text-ink hover:underline underline-offset-4"
                               >
-                                <span className="material-symbols-outlined text-[18px]">link</span>
+                                <LinkIcon className="w-[18px] h-[18px]" aria-hidden="true" />
                                 関連リンクを開く
                               </a>
                             )}
@@ -763,9 +781,9 @@ export default function OrganizationDetailClient({
                 </div>
               )}
               <div className="mb-6">
-                <h3 className="text-base font-bold text-navy mb-3">予定イベント</h3>
+                <h3 className="text-base font-bold font-mincho text-ink mb-3">予定イベント</h3>
                 {events.length === 0 ? (
-                  <p className="text-slate-500 py-8 text-center border border-dashed border-slate-300 rounded-lg bg-slate-50">
+                  <p className="text-graphite/70 py-8 text-center border border-dashed border-rule rounded-lg bg-mist">
                     現在予定されているイベントはありません
                   </p>
                 ) : (
@@ -774,27 +792,27 @@ export default function OrganizationDetailClient({
                       <Link
                         key={ev.id}
                         href={`/events/${ev.id}`}
-                        className="block p-4 rounded-lg border border-slate-200 bg-white hover:border-accent/30 transition-colors"
+                        className="block p-4 rounded-lg border border-rule bg-paper hover:border-ink/30 transition-colors"
                       >
-                        <h4 className="font-bold text-navy mb-2">{ev.title ?? "（タイトルなし）"}</h4>
-                        <div className="flex flex-wrap gap-3 text-sm text-slate-600">
+                        <h4 className="font-bold text-ink mb-2">{ev.title ?? "（タイトルなし）"}</h4>
+                        <div className="flex flex-wrap gap-3 text-sm text-graphite">
                           <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[16px]">calendar_today</span>
+                            <CalendarDays className="w-4 h-4" aria-hidden="true" />
                             {formatEventDate(ev.event_date)}
                           </span>
                           {ev.location && (
                             <span className="flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[16px]">location_on</span>
+                              <MapPin className="w-4 h-4" aria-hidden="true" />
                               {ev.location}
                             </span>
                           )}
                         </div>
                         {ev.description && (
-                          <p className="text-slate-600 text-sm mt-2 line-clamp-2">{ev.description}</p>
+                          <p className="text-graphite text-sm mt-2 line-clamp-2">{ev.description}</p>
                         )}
-                        <span className="text-accent text-sm font-bold mt-2 inline-flex items-center gap-1">
+                        <span className="text-ink text-sm font-bold mt-2 inline-flex items-center gap-1">
                           詳細を見る
-                          <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                          <ChevronRight className="w-4 h-4" aria-hidden="true" />
                         </span>
                       </Link>
                     ))}
@@ -811,9 +829,9 @@ export default function OrganizationDetailClient({
               className="transition-opacity duration-200 space-y-10"
             >
               <div>
-                <h3 className="text-base font-bold text-navy mb-3">フォトギャラリー</h3>
+                <h3 className="text-base font-bold font-mincho text-ink mb-3">フォトギャラリー</h3>
                 {photos.length === 0 ? (
-                  <p className="text-slate-500 py-8 text-center border border-dashed border-slate-300 rounded-lg bg-slate-50">
+                  <p className="text-graphite/70 py-8 text-center border border-dashed border-rule rounded-lg bg-mist">
                     まだ写真がありません
                   </p>
                 ) : (
@@ -821,7 +839,7 @@ export default function OrganizationDetailClient({
                     {photos.map((photo) => (
                       <div
                         key={photo.id}
-                        className="aspect-square rounded-lg overflow-hidden bg-slate-100 border border-slate-200"
+                        className="aspect-square rounded-lg overflow-hidden bg-mist border border-rule"
                       >
                         <img
                           src={photo.photo_url}
@@ -835,9 +853,9 @@ export default function OrganizationDetailClient({
               </div>
 
               <div>
-                <h3 className="text-base font-bold text-navy mb-3">口コミ</h3>
+                <h3 className="text-base font-bold font-mincho text-ink mb-3">口コミ</h3>
                 {approvedReviews.length === 0 ? (
-                  <p className="text-slate-500 py-6 text-center border border-dashed border-slate-300 rounded-lg bg-slate-50 text-sm">
+                  <p className="text-graphite/70 py-6 text-center border border-dashed border-rule rounded-lg bg-mist text-sm">
                     まだ口コミはありません
                   </p>
                 ) : (
@@ -845,35 +863,30 @@ export default function OrganizationDetailClient({
                     {approvedReviews.map((r) => (
                       <li
                         key={r.id}
-                        className="p-4 rounded-lg border border-slate-200 bg-white"
+                        className="p-4 rounded-lg border border-rule bg-paper"
                       >
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="flex text-amber-500" aria-label={`${r.rating}点`}>
+                          <span className="flex text-ink" aria-label={`${r.rating}点`}>
                             {[1, 2, 3, 4, 5].map((star) => (
-                              <span
+                              <Star
                                 key={star}
-                                className={`material-symbols-outlined text-lg ${star <= r.rating ? "opacity-100" : "opacity-30"}`}
-                                style={
-                                  star <= r.rating
-                                    ? { fontVariationSettings: "'FILL' 1" }
-                                    : undefined
-                                }
-                              >
-                                star
-                              </span>
+                                className={`w-[18px] h-[18px] ${star <= r.rating ? "opacity-100" : "opacity-30"}`}
+                                fill={star <= r.rating ? "currentColor" : "none"}
+                                aria-hidden="true"
+                              />
                             ))}
                           </span>
-                          <span className="text-slate-500 text-sm">
+                          <span className="text-graphite/70 text-sm">
                             {formatReviewDate(r.created_at)}
                           </span>
                         </div>
                         {r.content && (
-                          <p className="text-slate-700 text-sm whitespace-pre-wrap">{r.content}</p>
+                          <p className="text-graphite text-sm whitespace-pre-wrap">{r.content}</p>
                         )}
                         {r.club_reply && r.club_reply.trim() && (
-                          <div className="mt-3 pt-3 border-t border-slate-200 bg-slate-100 rounded-lg p-3">
-                            <p className="text-xs font-bold text-slate-600 mb-1">団体からの返信</p>
-                            <p className="text-slate-700 text-sm whitespace-pre-wrap">{r.club_reply}</p>
+                          <div className="mt-3 pt-3 border-t border-rule bg-mist rounded-lg p-3">
+                            <p className="text-xs font-bold text-graphite mb-1">団体からの返信</p>
+                            <p className="text-graphite text-sm whitespace-pre-wrap">{r.club_reply}</p>
                           </div>
                         )}
                       </li>
@@ -882,14 +895,14 @@ export default function OrganizationDetailClient({
                 )}
 
                 {session && (
-                  <form onSubmit={handleSubmitReview} className="mt-6 p-5 rounded-lg border border-slate-200 bg-slate-50">
-                    <h4 className="text-sm font-bold text-navy mb-3">口コミを投稿する</h4>
+                  <form onSubmit={handleSubmitReview} className="mt-6 p-5 rounded-lg border border-rule bg-mist">
+                    <h4 className="text-sm font-bold text-ink mb-3">口コミを投稿する</h4>
                     <div className="mb-3">
-                      <span className="text-slate-600 text-sm mr-2">評価</span>
+                      <span className="text-graphite text-sm mr-2">評価</span>
                       <select
                         value={reviewRating}
                         onChange={(e) => setReviewRating(Number(e.target.value))}
-                        className="border border-slate-300 rounded px-2 py-1.5 text-sm"
+                        className="border border-rule rounded px-2 py-1.5 text-sm"
                       >
                         {[5, 4, 3, 2, 1].map((n) => (
                           <option key={n} value={n}>
@@ -899,7 +912,7 @@ export default function OrganizationDetailClient({
                       </select>
                     </div>
                     <div className="mb-3">
-                      <label htmlFor="review-comment" className="block text-slate-600 text-sm mb-1">
+                      <label htmlFor="review-comment" className="block text-graphite text-sm mb-1">
                         コメント
                       </label>
                       <textarea
@@ -909,7 +922,7 @@ export default function OrganizationDetailClient({
                         placeholder="体験や感想を入力してください"
                         rows={3}
                         required
-                        className="w-full border border-slate-300 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-primary focus:border-primary"
+                        className="w-full border border-rule rounded px-3 py-2 text-sm focus:ring-1 focus:ring-ink focus:border-ink"
                       />
                     </div>
                     <Button
@@ -923,7 +936,7 @@ export default function OrganizationDetailClient({
                   </form>
                 )}
                 {!session && (
-                  <p className="text-slate-500 text-sm mt-4">口コミを投稿するにはログインしてください。</p>
+                  <p className="text-graphite/70 text-sm mt-4">口コミを投稿するにはログインしてください。</p>
                 )}
               </div>
             </section>
@@ -943,10 +956,10 @@ export default function OrganizationDetailClient({
               role="dialog"
               aria-modal="true"
               aria-labelledby="entry-modal-title"
-              className="fixed left-1/2 top-1/2 z-[210] w-[min(480px,90vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded-xl shadow-xl p-6 overflow-y-auto"
+              className="fixed left-1/2 top-1/2 z-[210] w-[min(480px,90vw)] max-h-[90vh] -translate-x-1/2 -translate-y-1/2 bg-paper border border-rule rounded-xl shadow-xl p-6 overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 id="entry-modal-title" className="text-navy dark:text-white text-lg font-bold">
+                <h3 id="entry-modal-title" className="font-mincho text-ink text-lg font-bold">
                   この団体にエントリーする
                 </h3>
                 <button
@@ -954,26 +967,26 @@ export default function OrganizationDetailClient({
                   aria-label="閉じる"
                   onClick={() => !entrySubmitting && setEntryModalOpen(false)}
                   disabled={entrySubmitting}
-                  className="p-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors disabled:opacity-50"
+                  className="p-2 text-graphite/70 hover:text-ink transition-colors disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined">close</span>
+                  <X className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
               <form onSubmit={handleEntrySubmit} className="space-y-6">
                 <div>
-                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
+                  <h4 className="text-sm font-bold text-graphite mb-2">
                     送信されるプロフィール情報
                   </h4>
-                  <div className="rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 p-4 space-y-2 text-sm">
-                    <p><span className="text-slate-500 dark:text-slate-400 font-medium">氏名</span> {profileForEntry?.display_name ?? "—"}</p>
-                    <p><span className="text-slate-500 dark:text-slate-400 font-medium">大学名</span> {profileForEntry?.university ?? "—"}</p>
-                    <p><span className="text-slate-500 dark:text-slate-400 font-medium">学部・学科</span> {profileForEntry?.faculty ?? "—"}</p>
-                    <p><span className="text-slate-500 dark:text-slate-400 font-medium">入学年度</span> {profileForEntry?.enrollment_year ?? "—"}</p>
+                  <div className="rounded-lg border border-rule bg-mist p-4 space-y-2 text-sm">
+                    <p><span className="text-graphite/70 font-medium">氏名</span> {profileForEntry?.display_name ?? "—"}</p>
+                    <p><span className="text-graphite/70 font-medium">大学名</span> {profileForEntry?.university ?? "—"}</p>
+                    <p><span className="text-graphite/70 font-medium">学部・学科</span> {profileForEntry?.faculty ?? "—"}</p>
+                    <p><span className="text-graphite/70 font-medium">入学年度</span> {profileForEntry?.enrollment_year ?? "—"}</p>
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="applicant-message" className="block text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">
-                    志望動機 / 自己PR <span className="text-slate-400 font-normal">（任意）</span>
+                  <label htmlFor="applicant-message" className="block text-sm font-bold text-graphite mb-2">
+                    志望動機 / 自己PR <span className="text-graphite/70 font-normal">（任意）</span>
                   </label>
                   <textarea
                     id="applicant-message"
@@ -981,7 +994,7 @@ export default function OrganizationDetailClient({
                     onChange={(e) => setApplicantMessage(e.target.value)}
                     placeholder="志望動機や自己PRを入力してください"
                     rows={4}
-                    className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100 bg-white dark:bg-slate-700 focus:ring-1 focus:ring-primary focus:border-primary resize-y"
+                    className="w-full border border-rule rounded-lg px-3 py-2 text-graphite bg-paper focus:ring-1 focus:ring-ink focus:border-ink resize-y"
                   />
                 </div>
                 <div className="flex gap-3 justify-end">

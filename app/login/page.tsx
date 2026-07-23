@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { MessageSquare, Repeat } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 
@@ -122,28 +123,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
-      <div className="w-full max-w-[420px] bg-white border border-slate-200 shadow-sm">
+    <div className="min-h-screen bg-mist flex items-center justify-center p-4">
+      <div className="w-full max-w-[420px] bg-paper border border-rule shadow-sm">
         <div className="p-8">
           <div className="text-center mb-8">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-primary font-display font-bold text-xl tracking-tight"
+              className="inline-flex items-center gap-2 text-ink font-numeric font-bold text-xl tracking-tight"
             >
-              <span className="material-symbols-outlined text-2xl">loop</span>
+              <Repeat className="w-6 h-6" aria-hidden="true" />
               ProofLoop
             </Link>
-            <p className="text-text-grey text-sm mt-2">ログイン</p>
+            <p className="text-graphite text-sm mt-2">ログイン</p>
           </div>
 
-          <div className="flex border-b border-slate-200 mb-8">
+          <div className="flex border-b border-rule mb-8">
             <button
               type="button"
               onClick={() => setTab("student")}
               className={`flex-1 py-3 text-center text-sm font-bold transition-colors ${
                 tab === "student"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-grey-custom hover:text-primary"
+                  ? "text-ink border-b-2 border-ink"
+                  : "text-graphite hover:text-ink"
               }`}
             >
               学生・団体の方
@@ -153,8 +154,8 @@ export default function LoginPage() {
               onClick={() => setTab("company")}
               className={`flex-1 py-3 text-center text-sm font-bold transition-colors ${
                 tab === "company"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-grey-custom hover:text-primary"
+                  ? "text-ink border-b-2 border-ink"
+                  : "text-graphite hover:text-ink"
               }`}
             >
               企業の方
@@ -167,22 +168,22 @@ export default function LoginPage() {
                 type="button"
                 className="w-full py-4 px-4 flex items-center justify-center gap-2 bg-[#2d5a3d] text-white font-bold text-sm hover:bg-[#244a32] transition-colors"
               >
-                <span className="material-symbols-outlined text-xl">chat</span>
+                <MessageSquare className="w-5 h-5" aria-hidden="true" />
                 LINEでログイン
               </button>
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-slate-200" />
+                  <span className="w-full border-t border-rule" />
                 </div>
                 <div className="relative flex justify-center text-xs">
-                  <span className="bg-white px-2 text-grey-custom">または</span>
+                  <span className="bg-paper px-2 text-graphite">または</span>
                 </div>
               </div>
               <div className="space-y-5">
                 <div>
                   <label
                     htmlFor="student-email"
-                    className="block text-primary font-bold text-sm mb-2"
+                    className="block text-ink font-bold text-sm mb-2"
                   >
                     大学のメールアドレス（.ac.jp）でログイン
                   </label>
@@ -199,7 +200,7 @@ export default function LoginPage() {
                 <div>
                   <label
                     htmlFor="student-password"
-                    className="block text-primary font-bold text-sm mb-2"
+                    className="block text-ink font-bold text-sm mb-2"
                   >
                     パスワード
                   </label>
@@ -210,12 +211,12 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="パスワードを入力"
                     disabled={isLoading}
-                    className="w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 bg-white placeholder-gray-400 rounded-none px-3 py-2"
+                    className="w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper placeholder-graphite/50 rounded-none px-3 py-2"
                   />
                 </div>
               </div>
               {errorMessage && tab === "student" && (
-                <p className="text-sm text-red-600" role="alert">
+                <p className="text-sm text-seal" role="alert">
                   {errorMessage}
                 </p>
               )}
@@ -227,9 +228,9 @@ export default function LoginPage() {
               >
                 {isLoading ? "処理中..." : "ログイン"}
               </Button>
-              <p className="text-center text-sm text-grey-custom mt-4">
+              <p className="text-center text-sm text-graphite mt-4">
                 アカウントをお持ちでない方
-                <Link href="/signup" className="text-primary font-bold hover:underline ml-1">
+                <Link href="/signup" className="text-ink font-bold hover:underline ml-1">
                   はこちら
                 </Link>
               </p>
@@ -239,7 +240,7 @@ export default function LoginPage() {
           {tab === "company" && (
             <form className="space-y-5" onSubmit={handleCompanySubmit}>
               <div>
-                <label className="block text-primary font-bold text-sm mb-2">
+                <label className="block text-ink font-bold text-sm mb-2">
                   法人メールアドレス
                 </label>
                 <Input
@@ -251,7 +252,7 @@ export default function LoginPage() {
                 />
               </div>
               <div>
-                <label className="block text-primary font-bold text-sm mb-2">
+                <label className="block text-ink font-bold text-sm mb-2">
                   パスワード
                 </label>
                 <Input
@@ -265,13 +266,13 @@ export default function LoginPage() {
               <div className="text-right">
                 <Link
                   href="#"
-                  className="text-sm text-grey-custom hover:text-primary hover:underline"
+                  className="text-sm text-graphite hover:text-ink hover:underline"
                 >
                   パスワードを忘れた場合
                 </Link>
               </div>
               {errorMessage && tab === "company" && (
-                <p className="text-sm text-red-600" role="alert">
+                <p className="text-sm text-seal" role="alert">
                   {errorMessage}
                 </p>
               )}

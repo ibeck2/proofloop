@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Heart, Users, ChevronRight } from "lucide-react";
 import Badge from "./ui/Badge";
 
 export type ClubCardProps = {
@@ -26,7 +27,7 @@ export default function ClubCard({
   onFavoriteClick,
 }: ClubCardProps) {
   return (
-    <article className="bg-white border border-grey-custom/10 hover:border-accent/30 transition-colors group relative">
+    <article className="bg-paper border border-rule hover:border-ink/30 transition-colors group relative">
       {onFavoriteClick && (
         <button
           type="button"
@@ -36,19 +37,18 @@ export default function ClubCard({
             e.stopPropagation();
             onFavoriteClick();
           }}
-          className={`absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center bg-white/90 transition-colors ${
-            isFavorite ? "text-accent" : "text-grey-custom hover:text-accent"
+          className={`absolute top-3 right-3 z-10 w-9 h-9 flex items-center justify-center bg-paper/90 transition-colors ${
+            isFavorite ? "text-ink" : "text-graphite hover:text-ink"
           }`}
         >
-          <span
-            className="material-symbols-outlined text-xl"
-            style={isFavorite ? { fontVariationSettings: "'FILL' 1" } : undefined}
-          >
-            favorite
-          </span>
+          <Heart
+            className="w-5 h-5"
+            fill={isFavorite ? "currentColor" : "none"}
+            aria-hidden="true"
+          />
         </button>
       )}
-      <div className="aspect-video bg-background-light overflow-hidden">
+      <div className="aspect-video bg-mist overflow-hidden">
         <img
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           alt={imageAlt}
@@ -60,17 +60,17 @@ export default function ClubCard({
           <Badge>{category}</Badge>
           <Badge>{university}</Badge>
         </div>
-        <h3 className="text-navy text-lg font-bold mb-2">{name}</h3>
-        <div className="flex items-center gap-2 text-grey-custom text-xs mb-4">
-          <span className="material-symbols-outlined text-sm">group</span>
+        <h3 className="text-ink text-lg font-bold mb-2">{name}</h3>
+        <div className="flex items-center gap-2 text-graphite text-xs mb-4">
+          <Users className="w-4 h-4" aria-hidden="true" />
           <span>メンバー数 {memberCount}名</span>
         </div>
         <Link
-          className="text-accent text-sm font-bold flex items-center gap-1 hover:underline decoration-2 underline-offset-4"
+          className="text-ink text-sm font-bold flex items-center gap-1 hover:underline decoration-2 underline-offset-4"
           href={detailHref}
         >
           詳細を見る
-          <span className="material-symbols-outlined text-sm">chevron_right</span>
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
         </Link>
       </div>
     </article>

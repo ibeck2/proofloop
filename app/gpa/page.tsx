@@ -90,7 +90,7 @@ export default function GpaPage() {
   };
 
   return (
-    <div className="bg-white text-primary min-h-screen font-body">
+    <div className="bg-paper text-ink min-h-screen font-body">
       <main className="mx-auto w-full max-w-3xl px-6 py-12 md:py-20">
         <script
           type="application/ld+json"
@@ -101,10 +101,10 @@ export default function GpaPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(appJsonLd) }}
         />
 
-        <h1 className="font-display text-3xl font-bold text-primary sm:text-4xl">
+        <h1 className="font-mincho text-3xl font-bold text-ink sm:text-4xl">
           GPA計算機｜大学別の換算方式に対応
         </h1>
-        <p className="mt-4 text-base leading-relaxed text-text-grey">
+        <p className="mt-4 text-base leading-relaxed text-graphite">
           日本の大学は、成績評語とグレードポイントの対応が大学ごとに定められています。
           このGPA計算機は、各大学の公式資料を出典として換算方式を登録しており、
           単位数で加重した正確なGPAを計算できます。
@@ -118,20 +118,20 @@ export default function GpaPage() {
 
         {/* ── 解説：換算方式が大学ごとに違う理由 ───────── */}
         <section className="mt-16">
-          <h2 className="font-display text-2xl font-bold text-primary">
+          <h2 className="font-mincho text-2xl font-bold text-ink">
             なぜ大学ごとにGPAの計算方法が違うのか
           </h2>
-          <p className="mt-4 leading-relaxed text-text-grey">
+          <p className="mt-4 leading-relaxed text-graphite">
             GPA（Grade Point Average）は、履修した科目の成績をグレードポイントに換算し、
             単位数で加重平均した指標です。ただし日本の大学では、この「換算」の基準が
             全国で統一されていません。各大学が学則や成績評価に関する規程で独自に定めています。
           </p>
-          <p className="mt-4 leading-relaxed text-text-grey">
+          <p className="mt-4 leading-relaxed text-graphite">
             違いは主に3点に表れます。第一に、評語の表記（秀・優・良・可／S・A・B・C など）。
             第二に、評語に対応するグレードポイントの値。第三に、素点から直接グレードポイントを
             算出する方式を採る大学が存在すること。さらに、満点が4.0の大学もあれば、それ以外の大学もあります。
           </p>
-          <p className="mt-4 leading-relaxed text-text-grey">
+          <p className="mt-4 leading-relaxed text-graphite">
             このため、一般的なGPA計算ツールが用いる固定の換算表では、自分の大学の正確なGPAは求められません。
             この計算機が大学の選択を求めているのは、この差を吸収するためです。
           </p>
@@ -139,10 +139,10 @@ export default function GpaPage() {
 
         {/* ── 対応大学と出典 ───────────────────── */}
         <section className="mt-12">
-          <h2 className="font-display text-2xl font-bold text-primary">
+          <h2 className="font-mincho text-2xl font-bold text-ink">
             対応している大学と出典
           </h2>
-          <p className="mt-4 leading-relaxed text-text-grey">
+          <p className="mt-4 leading-relaxed text-graphite">
             以下の大学については、公式サイトに掲載された履修要項・成績評価に関する規程を確認し、
             その内容にもとづいて換算方式を登録しています。出典が確認できなかった大学は
             一覧に含めず、一般的な方式で計算する扱いにしています。
@@ -152,49 +152,49 @@ export default function GpaPage() {
             <div className="mt-6 overflow-x-auto">
               <table className="w-full border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-border-grey text-left">
-                    <th className="py-3 pr-4 font-display text-primary">大学</th>
-                    <th className="py-3 pr-4 font-display text-primary">出典</th>
-                    <th className="py-3 font-display text-primary">確認日</th>
+                  <tr className="border-b border-rule text-left">
+                    <th className="py-3 pr-4 font-body font-bold text-ink">大学</th>
+                    <th className="py-3 pr-4 font-body font-bold text-ink">出典</th>
+                    <th className="py-3 font-body font-bold text-ink">確認日</th>
                   </tr>
                 </thead>
                 <tbody>
                   {UNIVERSITIES.map((university) => (
-                    <tr key={university.id} className="border-b border-border-grey">
-                      <td className="py-3 pr-4 text-primary">{university.name}</td>
+                    <tr key={university.id} className="border-b border-rule">
+                      <td className="py-3 pr-4 text-ink">{university.name}</td>
                       <td className="py-3 pr-4">
                         <a
                           href={university.sourceUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-accent underline"
+                          className="text-ink underline"
                         >
                           公式資料
                         </a>
                       </td>
-                      <td className="py-3 text-text-grey">{university.verifiedAt}</td>
+                      <td className="py-3 text-graphite font-numeric tabular-nums">{university.verifiedAt}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <p className="mt-6 border-l-4 border-accent bg-neutral-light p-4 text-sm text-text-grey">
+            <p className="mt-6 border border-rule border-l-4 border-l-ink bg-mist p-4 text-sm text-graphite">
               現在、出典を確認済みの大学はありません。一般的な換算方式で計算しています。
             </p>
           )}
 
-          <p className="mt-4 text-sm leading-relaxed text-text-grey">
-            <strong className="text-primary">東京大学</strong>は、全学の公式な案内で
+          <p className="mt-4 text-sm leading-relaxed text-graphite">
+            <strong className="text-ink">東京大学</strong>は、全学の公式な案内で
             「東京大学ではGPAを算出していません」と明示しており、全学共通のGP換算表は存在しません。
-            ただし実際には、進学選択で用いる<strong className="text-primary">基本平均点</strong>と、
-            奨学金・交換留学の選抜で用いる<strong className="text-primary">成績評価係数</strong>という
+            ただし実際には、進学選択で用いる<strong className="text-ink">基本平均点</strong>と、
+            奨学金・交換留学の選抜で用いる<strong className="text-ink">成績評価係数</strong>という
             2つの指標があり、この計算機は両方に対応しています。
             2つは対象範囲も算出方法も異なるため、用途に応じて選んでください。
             いずれもGPAそのものではないため、GPAの提出を求められている場合は提出先にご確認ください。
           </p>
 
-          <p className="mt-4 text-xs text-text-grey">
+          <p className="mt-4 text-xs text-graphite">
             各大学の制度は改定されることがあります。正確な取り扱いは、必ず所属大学の最新の履修要項をご確認ください。
             学部により方式が異なる大学、および公式資料に記載のない点がある大学については、大学を選択した際に注意書きを表示しています。
           </p>
@@ -202,35 +202,35 @@ export default function GpaPage() {
 
         {/* ── FAQ ───────────────────────────── */}
         <section className="mt-12">
-          <h2 className="font-display text-2xl font-bold text-primary">よくある質問</h2>
+          <h2 className="font-mincho text-2xl font-bold text-ink">よくある質問</h2>
           <dl className="mt-6 space-y-6">
             {FAQ_ITEMS.map((item) => (
-              <div key={item.question} className="border-l-4 border-primary pl-4">
-                <dt className="font-display text-base font-bold text-primary">
+              <div key={item.question} className="border-l-4 border-ink pl-4">
+                <dt className="font-body text-base font-bold text-ink">
                   {item.question}
                 </dt>
-                <dd className="mt-2 leading-relaxed text-text-grey">{item.answer}</dd>
+                <dd className="mt-2 leading-relaxed text-graphite">{item.answer}</dd>
               </div>
             ))}
           </dl>
         </section>
 
         {/* ── 関連ページ ───────────────────────── */}
-        <section className="mt-12 border-t border-border-grey pt-8">
-          <h2 className="font-display text-xl font-bold text-primary">関連ページ</h2>
+        <section className="mt-12 border-t border-rule pt-8">
+          <h2 className="font-mincho text-xl font-bold text-ink">関連ページ</h2>
           <ul className="mt-4 space-y-3">
             <li>
-              <Link href="/guide/credits" className="text-accent underline">
+              <Link href="/guide/credits" className="text-ink underline">
                 単位どうする？履修・GPA・卒業要件で失敗しないための完全ガイド
               </Link>
             </li>
             <li>
-              <Link href="/guide/study-abroad" className="text-accent underline">
+              <Link href="/guide/study-abroad" className="text-ink underline">
                 留学どうする？交換留学の選び方と出願の進め方
               </Link>
             </li>
             <li>
-              <Link href="/guide" className="text-accent underline">
+              <Link href="/guide" className="text-ink underline">
                 大学生活ガイド（トップ）
               </Link>
             </li>

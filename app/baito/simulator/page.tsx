@@ -2,6 +2,17 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import Link from "next/link";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  TrendingUp,
+  SlidersHorizontal,
+  Share2,
+  Loader2,
+  Download,
+  RefreshCw,
+} from "lucide-react";
 
 // ─────────────────────────────────────────────
 // 型・定数
@@ -303,8 +314,8 @@ function DonutChart({ data }: { data: { label: string; hours: number; color: str
         {data.map((d, i) => (
           <div key={i} className="flex items-center gap-2 text-xs">
             <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
-            <span className="text-text-grey">{d.label}</span>
-            <span className="font-bold text-primary ml-auto">{d.hours}h</span>
+            <span className="text-graphite">{d.label}</span>
+            <span className="font-bold text-ink ml-auto">{d.hours}h</span>
           </div>
         ))}
       </div>
@@ -324,17 +335,17 @@ function Slider({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-primary">{label}</span>
-        <span className="text-accent font-black text-lg">{value}{unit}</span>
+        <span className="text-sm font-bold text-ink">{label}</span>
+        <span className="text-ink font-black text-lg">{value}{unit}</span>
       </div>
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-2 appearance-none bg-slate-200 accent-accent cursor-pointer"
+        className="w-full h-2 appearance-none bg-mist accent-ink cursor-pointer"
       />
-      <div className="flex justify-between text-xs text-text-grey">
+      <div className="flex justify-between text-xs text-graphite">
         <span>{min}{unit}</span>
-        {hint && <span className="text-primary font-bold">{hint}</span>}
+        {hint && <span className="text-ink font-bold">{hint}</span>}
         <span>{max}{unit}</span>
       </div>
     </div>
@@ -350,18 +361,18 @@ function QuestionCard({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <span className="w-8 h-8 bg-accent text-white font-black text-sm flex items-center justify-center shrink-0">
+        <span className="w-8 h-8 bg-ink text-paper font-black text-sm flex items-center justify-center shrink-0">
           {step}
         </span>
-        <div className="flex-1 h-1 bg-slate-100 relative">
+        <div className="flex-1 h-1 bg-mist relative">
           <div
-            className="absolute inset-y-0 left-0 bg-accent transition-all duration-500"
+            className="absolute inset-y-0 left-0 bg-ink transition-all duration-500"
             style={{ width: `${(step / total) * 100}%` }}
           />
         </div>
-        <span className="text-xs text-text-grey">{step}/{total}</span>
+        <span className="text-xs text-graphite">{step}/{total}</span>
       </div>
-      <h2 className="text-primary text-xl md:text-2xl font-black leading-snug">{title}</h2>
+      <h2 className="text-ink text-xl md:text-2xl font-black leading-snug">{title}</h2>
       {children}
     </div>
   );
@@ -444,13 +455,13 @@ export default function SimulatorPage() {
   // 年収ゲージ（160万上限）
   const annualMax = 1_600_000;
   const wallMarkers = [
-    { val: 1_230_000, label: "123万", color: "#f59e0b" },
-    { val: 1_300_000, label: "130万", color: "#f97316" },
-    { val: 1_500_000, label: "150万", color: "#ef4444" },
+    { val: 1_230_000, label: "123万" },
+    { val: 1_300_000, label: "130万" },
+    { val: 1_500_000, label: "150万" },
   ];
 
   return (
-    <div className="bg-white text-primary min-h-screen font-body pb-20 md:pb-0">
+    <div className="bg-paper text-ink min-h-screen font-body pb-20 md:pb-0">
       {/* 非表示Canvas（画像生成用） */}
       <canvas ref={canvasRef} className="hidden" />
 
@@ -458,12 +469,12 @@ export default function SimulatorPage() {
 
         {/* ── ヘッダー ── */}
         <div className="flex items-center gap-3 mb-10">
-          <Link href="/baito" className="text-text-grey hover:text-primary transition-colors text-sm flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm">arrow_back</span>
+          <Link href="/baito" className="text-graphite hover:text-ink transition-colors text-sm flex items-center gap-1">
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             バイト・インターン
           </Link>
-          <span className="text-slate-200">/</span>
-          <span className="text-sm text-primary font-bold">大学生活シミュレーター</span>
+          <span className="text-rule">/</span>
+          <span className="text-sm text-ink font-bold">大学生活シミュレーター</span>
         </div>
 
         {/* ────────── STEP1: 授業コマ数 ────────── */}
@@ -489,25 +500,25 @@ export default function SimulatorPage() {
                   ].map((p) => (
                     <button key={p.label} onClick={() => setCredits(p.val)}
                       className={`p-3 border text-left transition-colors ${
-                        credits === p.val ? "border-accent bg-accent/5" : "border-[#f0f2f5] hover:border-accent/50"
+                        credits === p.val ? "border-ink bg-mist" : "border-rule bg-paper hover:border-ink/50"
                       }`}>
-                      <p className="text-xs font-bold text-primary">{p.label}</p>
-                      <p className="text-lg font-black text-accent">{p.val}コマ</p>
-                      <p className="text-xs text-text-grey">{p.desc}</p>
+                      <p className="text-xs font-bold text-ink">{p.label}</p>
+                      <p className="text-lg font-black text-ink">{p.val}コマ</p>
+                      <p className="text-xs text-graphite">{p.desc}</p>
                     </button>
                   ))}
                 </div>
-                <div className="bg-primary/5 px-4 py-3 text-sm text-text-grey">
-                  <strong className="text-primary">{credits}コマ</strong> の場合、
-                  授業・課題で週 <strong className="text-primary">{(credits * 2).toFixed(0)}時間</strong> ほど使います
+                <div className="bg-mist px-4 py-3 text-sm text-graphite">
+                  <strong className="text-ink">{credits}コマ</strong> の場合、
+                  授業・課題で週 <strong className="text-ink">{(credits * 2).toFixed(0)}時間</strong> ほど使います
                   （1コマ90分＋課題30分換算）
                 </div>
               </div>
             </QuestionCard>
             <button onClick={() => setPhase("q2")}
-              className="w-full bg-primary text-white font-black text-base py-4 hover:bg-primary-hover transition-colors flex items-center justify-center gap-2">
+              className="w-full bg-ink text-paper font-black text-base py-4 hover:bg-ink/90 transition-colors flex items-center justify-center gap-2">
               次へ
-              <span className="material-symbols-outlined">arrow_forward</span>
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )}
@@ -520,11 +531,11 @@ export default function SimulatorPage() {
                 {(Object.keys(CIRCLE_LABELS) as CircleLevel[]).map((level) => (
                   <button key={level} onClick={() => setCircleLevel(level)}
                     className={`w-full p-4 border text-left flex items-center justify-between transition-colors ${
-                      circleLevel === level ? "border-accent bg-accent/5" : "border-[#f0f2f5] hover:border-accent/50"
+                      circleLevel === level ? "border-ink bg-mist" : "border-rule bg-paper hover:border-ink/50"
                     }`}>
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-bold text-primary text-sm">{CIRCLE_LABELS[level]}</span>
-                      <span className="text-xs text-text-grey">
+                      <span className="font-bold text-ink text-sm">{CIRCLE_LABELS[level]}</span>
+                      <span className="text-xs text-graphite">
                         {level === "none" && "バイトや勉強に全集中したい人向け"}
                         {level === "light" && "友達作り・趣味程度に楽しみたい人向け"}
                         {level === "normal" && "サークルもしっかり楽しみたい人向け"}
@@ -532,9 +543,9 @@ export default function SimulatorPage() {
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-sm font-bold text-accent">{CIRCLE_HOURS[level]}h/週</span>
+                      <span className="text-sm font-bold text-ink">{CIRCLE_HOURS[level]}h/週</span>
                       {circleLevel === level && (
-                        <span className="material-symbols-outlined text-accent text-xl">check_circle</span>
+                        <CheckCircle2 className="w-5 h-5 text-ink" aria-hidden="true" />
                       )}
                     </div>
                   </button>
@@ -543,13 +554,13 @@ export default function SimulatorPage() {
             </QuestionCard>
             <div className="flex gap-3">
               <button onClick={() => setPhase("q1")}
-                className="flex-1 border border-slate-200 text-slate-600 font-bold py-4 hover:bg-slate-50 transition-colors">
+                className="flex-1 border border-rule bg-paper text-graphite font-bold py-4 hover:bg-mist transition-colors">
                 戻る
               </button>
               <button onClick={() => setPhase("q3")}
-                className="flex-[3] bg-primary text-white font-black text-base py-4 hover:bg-primary-hover transition-colors flex items-center justify-center gap-2">
+                className="flex-[3] bg-ink text-paper font-black text-base py-4 hover:bg-ink/90 transition-colors flex items-center justify-center gap-2">
                 次へ
-                <span className="material-symbols-outlined">arrow_forward</span>
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -578,30 +589,30 @@ export default function SimulatorPage() {
                   ].map((p) => (
                     <button key={p.label} onClick={() => setTargetIncome(p.val)}
                       className={`p-3 border text-left transition-colors ${
-                        targetIncome === p.val ? "border-accent bg-accent/5" : "border-[#f0f2f5] hover:border-accent/50"
+                        targetIncome === p.val ? "border-ink bg-mist" : "border-rule bg-paper hover:border-ink/50"
                       }`}>
-                      <p className="text-xs text-text-grey">{p.label}</p>
-                      <p className="text-base font-black text-accent">¥{p.val.toLocaleString()}</p>
-                      <p className="text-xs text-text-grey">{p.desc}</p>
+                      <p className="text-xs text-graphite">{p.label}</p>
+                      <p className="text-base font-black text-ink">¥{p.val.toLocaleString()}</p>
+                      <p className="text-xs text-graphite">{p.desc}</p>
                     </button>
                   ))}
                 </div>
-                <div className="bg-primary/5 px-4 py-3 text-sm text-text-grey">
+                <div className="bg-mist px-4 py-3 text-sm text-graphite">
                   時給1,100円の場合、月
-                  <strong className="text-primary"> {Math.ceil(targetIncome / 1100 / 4.3 * 10) / 10}時間/週</strong>
+                  <strong className="text-ink"> {Math.ceil(targetIncome / 1100 / 4.3 * 10) / 10}時間/週</strong>
                   のバイトが必要です
                 </div>
               </div>
             </QuestionCard>
             <div className="flex gap-3">
               <button onClick={() => setPhase("q2")}
-                className="flex-1 border border-slate-200 text-slate-600 font-bold py-4 hover:bg-slate-50 transition-colors">
+                className="flex-1 border border-rule bg-paper text-graphite font-bold py-4 hover:bg-mist transition-colors">
                 戻る
               </button>
               <button onClick={() => setPhase("result")}
-                className="flex-[3] bg-accent text-white font-black text-base py-4 hover:bg-[#600000] transition-colors flex items-center justify-center gap-2">
+                className="flex-[3] bg-seal text-paper font-black text-base py-4 hover:bg-seal/90 transition-colors flex items-center justify-center gap-2">
                 シミュレート開始
-                <span className="material-symbols-outlined">auto_graph</span>
+                <TrendingUp className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -615,16 +626,12 @@ export default function SimulatorPage() {
             <div className="flex flex-col gap-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-text-grey text-sm mb-1">あなたの大学生活充実度スコア</p>
+                  <p className="text-graphite text-sm mb-1">あなたの大学生活充実度スコア</p>
                   <div className="flex items-end gap-2">
-                    <span className="text-primary font-black text-7xl leading-none">{result.score}</span>
-                    <span className="text-text-grey text-lg mb-2">/ 100</span>
+                    <span className="text-ink font-black text-7xl leading-none">{result.score}</span>
+                    <span className="text-graphite text-lg mb-2">/ 100</span>
                   </div>
-                  <p className={`font-bold text-lg mt-1 ${
-                    result.score >= 80 ? "text-emerald-600" :
-                    result.score >= 60 ? "text-primary" :
-                    result.score >= 40 ? "text-amber-600" : "text-accent"
-                  }`}>{result.scoreLabel}</p>
+                  <p className="font-bold text-lg mt-1 text-ink">{result.scoreLabel}</p>
                 </div>
                 {/* ドーナツチャート */}
                 <DonutChart data={donutData} />
@@ -633,20 +640,20 @@ export default function SimulatorPage() {
 
             {/* 3指標カード */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="border border-[#f0f2f5] p-4 flex flex-col gap-1">
-                <p className="text-xs text-text-grey">自由時間</p>
-                <p className="text-2xl font-black text-emerald-600">{result.freeHours}<span className="text-sm font-bold">h</span></p>
-                <p className="text-xs text-text-grey">週あたり</p>
+              <div className="border border-rule p-4 flex flex-col gap-1">
+                <p className="text-xs text-graphite">自由時間</p>
+                <p className="text-2xl font-black text-ink">{result.freeHours}<span className="text-sm font-bold">h</span></p>
+                <p className="text-xs text-graphite">週あたり</p>
               </div>
-              <div className="border border-[#f0f2f5] p-4 flex flex-col gap-1">
-                <p className="text-xs text-text-grey">月収見込み</p>
-                <p className="text-xl font-black text-accent">¥{result.actualMonthlyIncome.toLocaleString()}</p>
-                <p className="text-xs text-text-grey">バイト{result.baitoHours}h/週</p>
+              <div className="border border-rule p-4 flex flex-col gap-1">
+                <p className="text-xs text-graphite">月収見込み</p>
+                <p className="text-xl font-black text-ink">¥{result.actualMonthlyIncome.toLocaleString()}</p>
+                <p className="text-xs text-graphite">バイト{result.baitoHours}h/週</p>
               </div>
-              <div className="border border-[#f0f2f5] p-4 flex flex-col gap-1">
-                <p className="text-xs text-text-grey">年収見込み</p>
-                <p className="text-xl font-black text-primary">¥{Math.round(result.annualIncome / 10000)}万</p>
-                <p className={`text-xs font-bold ${result.wallStatus === "safe" ? "text-emerald-600" : "text-amber-600"}`}>
+              <div className="border border-rule p-4 flex flex-col gap-1">
+                <p className="text-xs text-graphite">年収見込み</p>
+                <p className="text-xl font-black text-ink">¥{Math.round(result.annualIncome / 10000)}万</p>
+                <p className="text-xs font-bold text-ink">
                   {result.wallStatus === "safe" ? "✅ 扶養内" : "⚠️ 要確認"}
                 </p>
               </div>
@@ -654,46 +661,44 @@ export default function SimulatorPage() {
 
             {/* 年収ゲージ */}
             <div className="flex flex-col gap-3">
-              <p className="text-sm font-bold text-primary">年収の壁チェック</p>
-              <div className="relative h-8 bg-slate-100 overflow-visible">
+              <p className="text-sm font-bold text-ink">年収の壁チェック</p>
+              <div className="relative h-8 bg-mist overflow-visible">
                 {/* ゲージ */}
                 <div
                   className={`absolute inset-y-0 left-0 transition-all duration-700 ${
-                    result.wallStatus === "safe" ? "bg-emerald-500" :
-                    result.wallStatus === "warn" ? "bg-amber-500" : "bg-red-500"
+                    result.wallStatus === "safe" ? "bg-ink" : "bg-seal"
                   }`}
                   style={{ width: `${Math.min((result.annualIncome / annualMax) * 100, 100)}%` }}
                 />
                 {/* 壁マーカー */}
                 {wallMarkers.map((m) => (
                   <div key={m.val}
-                    className="absolute top-0 bottom-0 w-0.5 flex flex-col items-center"
-                    style={{ left: `${(m.val / annualMax) * 100}%`, backgroundColor: m.color }}>
-                    <span className="absolute -top-5 text-[10px] font-bold whitespace-nowrap"
-                      style={{ color: m.color }}>{m.label}</span>
+                    className="absolute top-0 bottom-0 w-0.5 bg-graphite/40 flex flex-col items-center"
+                    style={{ left: `${(m.val / annualMax) * 100}%` }}>
+                    <span className="absolute -top-5 text-[10px] font-bold text-graphite whitespace-nowrap">{m.label}</span>
                   </div>
                 ))}
               </div>
-              <p className={`text-sm font-bold ${result.wallStatus === "safe" ? "text-emerald-600" : "text-amber-600"}`}>
+              <p className={`text-sm font-bold ${result.wallStatus === "safe" ? "text-ink" : "text-seal"}`}>
                 {result.wallLabel}
               </p>
             </div>
 
             {/* 詳細調整パネル */}
-            <div className="border border-[#f0f2f5] p-6 flex flex-col gap-6">
+            <div className="border border-rule p-6 flex flex-col gap-6">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary text-lg">tune</span>
-                <h3 className="font-black text-primary">詳細パラメータを調整する</h3>
+                <SlidersHorizontal className="w-[18px] h-[18px] text-ink" aria-hidden="true" />
+                <h3 className="font-black text-ink">詳細パラメータを調整する</h3>
               </div>
               <Slider label="週の授業コマ数" value={credits} min={0} max={20} step={1}
                 unit="コマ" onChange={setCredits} hint="平均10〜14コマ" />
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-bold text-primary">サークル頻度</p>
+                <p className="text-sm font-bold text-ink">サークル頻度</p>
                 <div className="grid grid-cols-2 gap-2">
                   {(Object.keys(CIRCLE_LABELS) as CircleLevel[]).map((level) => (
                     <button key={level} onClick={() => setCircleLevel(level)}
                       className={`px-3 py-2 text-xs font-bold border transition-colors ${
-                        circleLevel === level ? "border-accent bg-accent text-white" : "border-slate-200 text-text-grey hover:border-accent"
+                        circleLevel === level ? "border-ink bg-ink text-paper" : "border-rule bg-paper text-graphite hover:border-ink"
                       }`}>
                       {CIRCLE_LABELS[level]}
                     </button>
@@ -703,12 +708,12 @@ export default function SimulatorPage() {
               <Slider label="月収目標" value={targetIncome} min={0} max={150000} step={5000}
                 unit="円" onChange={setTargetIncome} />
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-bold text-primary">通学時間（片道）</p>
+                <p className="text-sm font-bold text-ink">通学時間（片道）</p>
                 <div className="grid grid-cols-4 gap-2">
                   {([15, 30, 60, 90] as CommuteMins[]).map((m) => (
                     <button key={m} onClick={() => setCommuteMins(m)}
                       className={`px-2 py-2 text-xs font-bold border transition-colors ${
-                        commuteMins === m ? "border-accent bg-accent text-white" : "border-slate-200 text-text-grey hover:border-accent"
+                        commuteMins === m ? "border-ink bg-ink text-paper" : "border-rule bg-paper text-graphite hover:border-ink"
                       }`}>
                       {COMMUTE_LABELS[m]}
                     </button>
@@ -720,43 +725,43 @@ export default function SimulatorPage() {
             </div>
 
             {/* 合うバイトを見る */}
-            <div className="border border-primary p-6 flex flex-col md:flex-row items-center gap-4 justify-between">
+            <div className="border border-ink p-6 flex flex-col md:flex-row items-center gap-4 justify-between">
               <div>
-                <p className="font-black text-primary">このバランスに合うバイトを探す</p>
-                <p className="text-text-grey text-sm mt-1">
+                <p className="font-black text-ink">このバランスに合うバイトを探す</p>
+                <p className="text-graphite text-sm mt-1">
                   週{result.baitoHours}h・月収¥{result.actualMonthlyIncome.toLocaleString()}に合う案件を表示します
                 </p>
               </div>
               <Link href={`/baito?${baitoSearchParams.toString()}`}
-                className="shrink-0 bg-primary text-white font-bold px-8 py-3 hover:bg-primary-hover transition-colors flex items-center gap-2">
+                className="shrink-0 bg-ink text-paper font-bold px-8 py-3 hover:bg-ink/90 transition-colors flex items-center gap-2">
                 バイトを探す
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </Link>
             </div>
 
             {/* シェアセクション */}
             <div className="flex flex-col gap-4">
-              <h3 className="font-black text-primary flex items-center gap-2">
-                <span className="material-symbols-outlined text-accent">share</span>
+              <h3 className="font-black text-ink flex items-center gap-2">
+                <Share2 className="w-5 h-5 text-ink" aria-hidden="true" />
                 結果をシェアする
               </h3>
 
               {/* プレビュー画像 */}
               {shareImageUrl && (
-                <div className="border border-[#f0f2f5] overflow-hidden">
+                <div className="border border-rule overflow-hidden">
                   <img src={shareImageUrl} alt="シミュレーター結果" className="w-full" />
                 </div>
               )}
               {imageGenerating && (
-                <div className="border border-[#f0f2f5] h-32 flex items-center justify-center gap-2 text-text-grey text-sm">
-                  <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                <div className="border border-rule h-32 flex items-center justify-center gap-2 text-graphite text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                   画像を生成中...
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <button onClick={() => handleShare("x")}
-                  className="flex items-center justify-center gap-2 bg-black text-white font-bold py-3 hover:bg-slate-800 transition-colors">
+                  className="flex items-center justify-center gap-2 bg-black text-white font-bold py-3 hover:bg-graphite transition-colors">
                   <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.258 5.63 5.906-5.63zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
                   X（Twitter）でシェア
                 </button>
@@ -767,8 +772,8 @@ export default function SimulatorPage() {
                   LINEでシェア
                 </button>
                 <button onClick={handleDownloadImage} disabled={!shareImageUrl}
-                  className="flex items-center justify-center gap-2 border border-slate-200 text-slate-600 font-bold py-3 hover:bg-slate-50 transition-colors disabled:opacity-40">
-                  <span className="material-symbols-outlined text-sm">download</span>
+                  className="flex items-center justify-center gap-2 border border-rule bg-paper text-graphite font-bold py-3 hover:bg-mist transition-colors disabled:opacity-40">
+                  <Download className="w-4 h-4" aria-hidden="true" />
                   画像を保存
                 </button>
               </div>
@@ -776,8 +781,8 @@ export default function SimulatorPage() {
 
             {/* やり直し */}
             <button onClick={() => setPhase("q1")}
-              className="w-full border border-slate-200 text-slate-500 font-bold py-3 hover:bg-slate-50 transition-colors text-sm flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-sm">refresh</span>
+              className="w-full border border-rule bg-paper text-graphite/70 font-bold py-3 hover:bg-mist transition-colors text-sm flex items-center justify-center gap-2">
+              <RefreshCw className="w-4 h-4" aria-hidden="true" />
               最初からやり直す
             </button>
           </div>

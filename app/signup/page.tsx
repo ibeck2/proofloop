@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Mail, Repeat } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import {
@@ -223,17 +224,17 @@ export default function SignupPage() {
 
   if (tab === "student" && signupSuccess) {
     return (
-      <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
-        <div className="w-full max-w-[520px] bg-white border border-slate-200 shadow-sm">
+      <div className="min-h-screen bg-mist flex items-center justify-center p-4">
+        <div className="w-full max-w-[520px] bg-paper border border-rule shadow-sm">
           <div className="p-10">
             <div className="text-center">
-              <span className="material-symbols-outlined text-5xl text-primary inline-block">mail</span>
-              <h2 className="mt-4 text-primary text-xl font-bold">確認リンクを送信しました</h2>
-              <p className="text-slate-600 text-sm mt-3">
+              <Mail className="w-12 h-12 text-ink inline-block" aria-hidden="true" />
+              <h2 className="mt-4 text-ink text-xl font-bold">確認リンクを送信しました</h2>
+              <p className="text-graphite text-sm mt-3">
                 本人確認のため、入力された大学のメールアドレス（{sentEmail}）に確認リンクを送信しました。リンクをクリックして本登録を完了してください。
               </p>
               <div className="mt-8">
-                <Link href="/login" className="text-primary font-bold hover:underline">
+                <Link href="/login" className="text-ink font-bold hover:underline">
                   ログインへ
                 </Link>
               </div>
@@ -245,24 +246,24 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-4">
-      <div className="w-full max-w-[520px] bg-white border border-slate-200 shadow-sm">
+    <div className="min-h-screen bg-mist flex items-center justify-center p-4">
+      <div className="w-full max-w-[520px] bg-paper border border-rule shadow-sm">
         <div className="p-8">
           <div className="text-center mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 text-primary font-display font-bold text-xl tracking-tight">
-              <span className="material-symbols-outlined text-2xl">loop</span>
+            <Link href="/" className="inline-flex items-center gap-2 text-ink font-numeric font-bold text-xl tracking-tight">
+              <Repeat className="w-6 h-6" aria-hidden="true" />
               ProofLoop
             </Link>
-            <p className="text-text-grey text-sm mt-2">新規登録</p>
+            <p className="text-graphite text-sm mt-2">新規登録</p>
           </div>
 
           {/* タブ: 学生・団体 / 企業 */}
-          <div className="flex border-b border-slate-200 mb-8">
+          <div className="flex border-b border-rule mb-8">
             <button
               type="button"
               onClick={() => setTab("student")}
               className={`flex-1 py-3 text-center text-sm font-bold transition-colors ${
-                tab === "student" ? "text-primary border-b-2 border-primary" : "text-grey-custom hover:text-primary"
+                tab === "student" ? "text-ink border-b-2 border-ink" : "text-graphite hover:text-ink"
               }`}
             >
               学生・団体の方
@@ -271,7 +272,7 @@ export default function SignupPage() {
               type="button"
               onClick={() => setTab("company")}
               className={`flex-1 py-3 text-center text-sm font-bold transition-colors ${
-                tab === "company" ? "text-primary border-b-2 border-primary" : "text-grey-custom hover:text-primary"
+                tab === "company" ? "text-ink border-b-2 border-ink" : "text-graphite hover:text-ink"
               }`}
             >
               企業の方
@@ -281,7 +282,7 @@ export default function SignupPage() {
           {tab === "student" && (
             <form className="space-y-6" onSubmit={handleStudentSubmit}>
               <div>
-                <label htmlFor="university-email" className="block text-primary font-bold text-sm mb-2">
+                <label htmlFor="university-email" className="block text-ink font-bold text-sm mb-2">
                   大学のメールアドレス（認証用）
                 </label>
                 <Input
@@ -293,13 +294,13 @@ export default function SignupPage() {
                   disabled={isLoading}
                   className="w-full"
                 />
-                <p className="text-slate-500 text-xs mt-2">
+                <p className="text-graphite/70 text-xs mt-2">
                   ※本人確認のため、大学発行のメールアドレスのみ有効です
                 </p>
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-primary font-bold text-sm mb-2">
+                <label htmlFor="password" className="block text-ink font-bold text-sm mb-2">
                   パスワード
                 </label>
                 <input
@@ -309,12 +310,12 @@ export default function SignupPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="8文字以上"
                   disabled={isLoading}
-                  className="w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 bg-white placeholder-gray-400 rounded-none px-3 py-2"
+                  className="w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper placeholder-graphite/50 rounded-none px-3 py-2"
                 />
               </div>
 
               <div>
-                <label htmlFor="full-name" className="block text-primary font-bold text-sm mb-2">
+                <label htmlFor="full-name" className="block text-ink font-bold text-sm mb-2">
                   氏名
                 </label>
                 <Input
@@ -328,7 +329,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label htmlFor="contact-email" className="block text-primary font-bold text-sm mb-2">
+                <label htmlFor="contact-email" className="block text-ink font-bold text-sm mb-2">
                   よく確認する連絡先メールアドレス（連絡用）
                 </label>
                 <Input
@@ -339,13 +340,13 @@ export default function SignupPage() {
                   placeholder="Gmail等"
                   disabled={isLoading}
                 />
-                <p className="text-slate-500 text-xs mt-2">
+                <p className="text-graphite/70 text-xs mt-2">
                   ※選考の案内等はこちらに届きます
                 </p>
               </div>
 
               <div>
-                <label htmlFor="university" className="block text-primary font-bold text-sm mb-2">
+                <label htmlFor="university" className="block text-ink font-bold text-sm mb-2">
                   大学名
                 </label>
                 <select
@@ -357,7 +358,7 @@ export default function SignupPage() {
                     if (v !== UNIVERSITY_OTHER) setUniversityOther("");
                   }}
                   disabled={isLoading}
-                  className="w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 bg-white px-3 py-2"
+                  className="w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper px-3 py-2"
                 >
                   <option value="">選択してください</option>
                   {UNIVERSITY_OPTIONS.map((u) => (
@@ -380,7 +381,7 @@ export default function SignupPage() {
               </div>
 
               <div>
-                <label htmlFor="faculty" className="block text-primary font-bold text-sm mb-2">
+                <label htmlFor="faculty" className="block text-ink font-bold text-sm mb-2">
                   学部・学科
                 </label>
                 <Input
@@ -395,7 +396,7 @@ export default function SignupPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="admission-year" className="block text-primary font-bold text-sm mb-2">
+                  <label htmlFor="admission-year" className="block text-ink font-bold text-sm mb-2">
                     入学年度
                   </label>
                   <select
@@ -403,7 +404,7 @@ export default function SignupPage() {
                     value={admissionYear}
                     onChange={(e) => setAdmissionYear(e.target.value)}
                     disabled={isLoading}
-                    className="w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 bg-white px-3 py-2"
+                    className="w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper px-3 py-2"
                   >
                     {ADMISSION_YEARS.map((y) => (
                       <option key={y} value={y}>
@@ -413,7 +414,7 @@ export default function SignupPage() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="graduation-year" className="block text-primary font-bold text-sm mb-2">
+                  <label htmlFor="graduation-year" className="block text-ink font-bold text-sm mb-2">
                     卒業予定年度
                   </label>
                   <select
@@ -421,7 +422,7 @@ export default function SignupPage() {
                     value={graduationYear}
                     onChange={(e) => setGraduationYear(e.target.value)}
                     disabled={isLoading}
-                    className="w-full border border-slate-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none text-slate-900 bg-white px-3 py-2"
+                    className="w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper px-3 py-2"
                   >
                     {GRADUATION_YEARS.map((y) => (
                       <option key={y} value={y}>
@@ -433,7 +434,7 @@ export default function SignupPage() {
               </div>
 
               {submitError && (
-                <p className="text-sm text-red-600" role="alert">
+                <p className="text-sm text-seal" role="alert">
                   {submitError}
                 </p>
               )}
@@ -452,42 +453,42 @@ export default function SignupPage() {
               })}
             >
               <div>
-                <label className="block text-primary font-bold text-sm mb-2">法人メールアドレス</label>
+                <label className="block text-ink font-bold text-sm mb-2">法人メールアドレス</label>
                 <Input
                   type="email"
                   placeholder="メールアドレスを入力"
                   {...register("companyEmail")}
                   disabled={isLoading}
-                  className={errors.companyEmail ? "border-accent" : ""}
+                  className={errors.companyEmail ? "border-seal" : ""}
                 />
-                {errors.companyEmail && <p className="mt-1 text-red-600 text-xs">{errors.companyEmail.message}</p>}
+                {errors.companyEmail && <p className="mt-1 text-seal text-xs">{errors.companyEmail.message}</p>}
               </div>
               <div>
-                <label className="block text-primary font-bold text-sm mb-2">パスワード</label>
+                <label className="block text-ink font-bold text-sm mb-2">パスワード</label>
                 <Input
                   type="password"
                   placeholder="パスワードを入力（6文字以上）"
                   {...register("password")}
                   disabled={isLoading}
-                  className={errors.password ? "border-accent" : ""}
+                  className={errors.password ? "border-seal" : ""}
                 />
-                {errors.password && <p className="mt-1 text-red-600 text-xs">{errors.password.message}</p>}
+                {errors.password && <p className="mt-1 text-seal text-xs">{errors.password.message}</p>}
               </div>
               <div className="text-right">
-                <Link href="/login" className="text-sm text-grey-custom hover:text-primary hover:underline">
+                <Link href="/login" className="text-sm text-graphite hover:text-ink hover:underline">
                   パスワードを忘れた場合
                 </Link>
               </div>
-              {submitError && <p className="text-sm text-red-600" role="alert">{submitError}</p>}
+              {submitError && <p className="text-sm text-seal" role="alert">{submitError}</p>}
               <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
                 {isLoading ? "処理中..." : "登録"}
               </Button>
             </form>
           )}
 
-          <p className="text-center text-grey-custom text-sm mt-8">
+          <p className="text-center text-graphite text-sm mt-8">
             すでにアカウントをお持ちの方は
-            <Link href="/login" className="text-primary font-bold hover:underline ml-1">
+            <Link href="/login" className="text-ink font-bold hover:underline ml-1">
               ログイン
             </Link>
           </p>

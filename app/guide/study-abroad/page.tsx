@@ -2,6 +2,25 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import FaqAccordion from "./FaqAccordion";
 import { SITE_URL } from "@/lib/site-url";
+import {
+  ChevronRight,
+  Plane,
+  PlaneTakeoff,
+  ArrowLeftRight,
+  BadgeCheck,
+  CalendarDays,
+  AlertTriangle,
+  Search,
+  ClipboardEdit,
+  ExternalLink,
+  Info,
+  Brain,
+  HelpCircle,
+  Briefcase,
+  Users,
+  BookOpen,
+  ArrowRight,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "留学どうする？大学生の留学完全ガイド2025 | ProofLoop",
@@ -23,10 +42,7 @@ export const metadata: Metadata = {
 const RYUGAKU_TYPES = [
   {
     name: "交換留学",
-    icon: "swap_horiz",
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    border: "border-blue-200",
+    Icon: ArrowLeftRight,
     cost: "安い",
     costDetail: "日本の授業料のみ（留学先免除）",
     unit: "◎ 認定されやすい",
@@ -37,10 +53,7 @@ const RYUGAKU_TYPES = [
   },
   {
     name: "認定留学",
-    icon: "verified",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
-    border: "border-emerald-200",
+    Icon: BadgeCheck,
     cost: "中〜高",
     costDetail: "日本の授業料＋留学先の学費",
     unit: "△ 条件付き（専攻関連・上限30単位等）",
@@ -51,10 +64,7 @@ const RYUGAKU_TYPES = [
   },
   {
     name: "休学留学",
-    icon: "flight_takeoff",
-    color: "text-violet-600",
-    bg: "bg-violet-50",
-    border: "border-violet-200",
+    Icon: PlaneTakeoff,
     cost: "高い",
     costDetail: "留学先の学費＋生活費（国立大は休学中授業料免除）",
     unit: "✕ 原則認定されない",
@@ -65,10 +75,7 @@ const RYUGAKU_TYPES = [
   },
   {
     name: "短期留学",
-    icon: "calendar_month",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-    border: "border-amber-200",
+    Icon: CalendarDays,
     cost: "低〜中",
     costDetail: "2週間〜3ヶ月程度。渡航費込みで30〜150万円目安",
     unit: "✕ 基本的に認定されない",
@@ -87,10 +94,10 @@ const COST_TABLE = [
 ] as const;
 
 const TIMELINE = [
-  { year: "1年生", icon: "search", color: "bg-primary", events: ["海外・留学への関心を育てる", "英語学習を本格的に開始（TOEIC・英会話）", "夏休みに短期留学（語学学校・サマープログラム）を体験", "どの種類の留学を目指すかを大まかに決める"] },
-  { year: "2年生", icon: "edit_note", color: "bg-emerald-600", events: ["TOEFL・IELTSの準備を開始（交換・認定留学を目指す場合）", "大学の国際交流センターへ相談に行く", "GPAを意識して授業に取り組む（交換留学は学内選考あり）", "奨学金の情報収集を始める"] },
-  { year: "3年前半", icon: "flight", color: "bg-accent", events: ["留学実行のベストタイミング（就活解禁前に帰国できる）", "交換・認定留学なら3年秋〜4年春が最も人気", "休学留学なら2年秋〜3年春が理想", "留学中も就活情報はこまめにチェック"] },
-  { year: "3年後半〜4年", icon: "warning", color: "bg-amber-500", events: ["就活と重なるリスクが高い時期", "この時期の長期留学は相当な覚悟が必要", "3年秋以降に帰国するスケジュールは就活に影響が出やすい", "短期留学・サマープログラムは問題なし"] },
+  { year: "1年生", Icon: Search, events: ["海外・留学への関心を育てる", "英語学習を本格的に開始（TOEIC・英会話）", "夏休みに短期留学（語学学校・サマープログラム）を体験", "どの種類の留学を目指すかを大まかに決める"] },
+  { year: "2年生", Icon: ClipboardEdit, events: ["TOEFL・IELTSの準備を開始（交換・認定留学を目指す場合）", "大学の国際交流センターへ相談に行く", "GPAを意識して授業に取り組む（交換留学は学内選考あり）", "奨学金の情報収集を始める"] },
+  { year: "3年前半", Icon: Plane, events: ["留学実行のベストタイミング（就活解禁前に帰国できる）", "交換・認定留学なら3年秋〜4年春が最も人気", "休学留学なら2年秋〜3年春が理想", "留学中も就活情報はこまめにチェック"] },
+  { year: "3年後半〜4年", Icon: AlertTriangle, events: ["就活と重なるリスクが高い時期", "この時期の長期留学は相当な覚悟が必要", "3年秋以降に帰国するスケジュールは就活に影響が出やすい", "短期留学・サマープログラムは問題なし"] },
 ] as const;
 
 const UNIVERSITY_LINKS = [
@@ -131,28 +138,28 @@ const FAQ_ITEMS = [
 
 export default function StudyAbroadPage() {
   return (
-    <div className="bg-white text-primary min-h-screen font-body pb-20 md:pb-0">
+    <div className="bg-paper text-ink min-h-screen font-body pb-20 md:pb-0">
       <main className="w-full max-w-[1200px] mx-auto px-6 py-12 md:py-20 flex flex-col gap-16">
 
         {/* パンくず */}
-        <nav className="flex items-center gap-2 text-xs text-text-grey -mb-10">
-          <Link href="/" className="hover:text-primary transition-colors">ホーム</Link>
-          <span className="material-symbols-outlined text-sm">chevron_right</span>
-          <Link href="/guide" className="hover:text-primary transition-colors">新入生ガイド</Link>
-          <span className="material-symbols-outlined text-sm">chevron_right</span>
-          <span className="text-primary font-bold">留学どうする？</span>
+        <nav className="flex items-center gap-2 text-xs text-graphite -mb-10">
+          <Link href="/" className="hover:text-ink transition-colors">ホーム</Link>
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+          <Link href="/guide" className="hover:text-ink transition-colors">新入生ガイド</Link>
+          <ChevronRight className="w-4 h-4" aria-hidden="true" />
+          <span className="text-ink font-bold">留学どうする？</span>
         </nav>
 
         {/* Hero */}
         <section className="flex flex-col gap-6 max-w-3xl">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-accent text-2xl">flight</span>
-            <span className="text-accent text-sm font-bold tracking-widest uppercase">Study Abroad Guide</span>
+            <Plane className="w-6 h-6 text-ink" aria-hidden="true" />
+            <span className="text-ink text-sm font-bold tracking-widest uppercase">Study Abroad Guide</span>
           </div>
-          <h1 className="text-primary text-3xl md:text-5xl font-black leading-tight tracking-tight">
+          <h1 className="font-mincho text-ink text-3xl md:text-5xl font-black leading-tight tracking-tight">
             留学、どうする？
           </h1>
-          <p className="text-text-grey text-base md:text-lg leading-relaxed">
+          <p className="text-graphite text-base md:text-lg leading-relaxed">
             交換・認定・休学留学の違い、費用の目安、いつ行くべきか、単位はどうなるか——
             大学生の留学に関する疑問をこのページ1枚でまとめて解決します。
           </p>
@@ -167,19 +174,19 @@ export default function StudyAbroadPage() {
               { label: "FAQ", href: "#faq" },
             ].map(item => (
               <a key={item.href} href={item.href}
-                className="text-xs px-3 py-1.5 border border-primary/20 text-primary hover:bg-primary hover:text-white transition-colors font-bold">
+                className="text-xs px-3 py-1.5 border border-ink/20 text-ink hover:bg-ink hover:text-paper transition-colors font-bold">
                 {item.label}
               </a>
             ))}
           </div>
         </section>
 
-        {/* 重要注意ボックス */}
-        <div className="border border-amber-200 bg-amber-50 p-5 flex gap-3">
-          <span className="material-symbols-outlined text-amber-600 text-lg shrink-0 mt-0.5">warning</span>
+        {/* 重要注意ボックス（注意・警告） */}
+        <div className="border border-rule border-l-4 border-l-seal bg-mist p-5 flex gap-3">
+          <AlertTriangle className="w-[18px] h-[18px] text-ink shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <p className="text-amber-800 font-bold text-sm">「交換・認定留学なら卒業が遅れない」は半分ウソです</p>
-            <p className="text-amber-700 text-xs leading-relaxed mt-1">
+            <p className="text-ink font-bold text-sm">「交換・認定留学なら卒業が遅れない」は半分ウソです</p>
+            <p className="text-graphite text-xs leading-relaxed mt-1">
               制度上は4年で卒業できる建前ですが、<strong>単位認定の条件が大学・学部によって異なり、思ったより単位が認められないケースが頻発しています。</strong>
               留学を決める前に必ず在籍大学の国際交流センターに相談し、「何単位・どの科目が認定されるか」を確認してください。
             </p>
@@ -189,17 +196,17 @@ export default function StudyAbroadPage() {
         {/* 留学の4種類 */}
         <section id="types" className="flex flex-col gap-6 scroll-mt-20">
           <div className="flex flex-col gap-1">
-            <h2 className="text-primary text-xl md:text-2xl font-black">まず知るべき：留学の4種類と違い</h2>
-            <p className="text-text-grey text-sm">種類によって費用・単位・卒業への影響が大きく異なります。</p>
+            <h2 className="font-mincho text-ink text-xl md:text-2xl font-black">まず知るべき：留学の4種類と違い</h2>
+            <p className="text-graphite text-sm">種類によって費用・単位・卒業への影響が大きく異なります。</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {RYUGAKU_TYPES.map((type, i) => (
-              <div key={i} className={`border ${type.border} p-5 flex flex-col gap-4`}>
+              <div key={i} className="border border-rule p-5 flex flex-col gap-4">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 ${type.bg} flex items-center justify-center shrink-0`}>
-                    <span className={`material-symbols-outlined text-xl ${type.color}`}>{type.icon}</span>
+                  <div className="w-10 h-10 bg-mist flex items-center justify-center shrink-0">
+                    <type.Icon className="w-5 h-5 text-ink" aria-hidden="true" />
                   </div>
-                  <h3 className="font-black text-primary text-lg">{type.name}</h3>
+                  <h3 className="font-black text-ink text-lg">{type.name}</h3>
                 </div>
                 <div className="flex flex-col gap-2 text-xs">
                   {[
@@ -210,12 +217,12 @@ export default function StudyAbroadPage() {
                     { label: "向いている人", value: type.suit },
                   ].map(row => (
                     <div key={row.label} className="flex gap-2">
-                      <span className="text-text-grey font-bold shrink-0 w-20">{row.label}</span>
-                      <span className="text-text-grey leading-relaxed">{row.value}</span>
+                      <span className="text-graphite font-bold shrink-0 w-20">{row.label}</span>
+                      <span className="text-graphite leading-relaxed">{row.value}</span>
                     </div>
                   ))}
                 </div>
-                <div className="bg-slate-50 px-3 py-2 text-xs text-text-grey leading-relaxed border-l-2 border-slate-300">
+                <div className="bg-mist px-3 py-2 text-xs text-graphite leading-relaxed border-l-2 border-l-ink">
                   ⚠️ {type.caution}
                 </div>
               </div>
@@ -226,13 +233,13 @@ export default function StudyAbroadPage() {
         {/* 費用の目安 */}
         <section id="cost" className="flex flex-col gap-4 scroll-mt-20">
           <div className="flex flex-col gap-1">
-            <h2 className="text-primary text-xl md:text-2xl font-black">費用の目安（渡航費・学費・生活費の合計）</h2>
-            <p className="text-text-grey text-sm">語学学校＋学生寮を想定した目安です。交換留学は留学先授業料が免除されるためこれより安くなります。</p>
+            <h2 className="font-mincho text-ink text-xl md:text-2xl font-black">費用の目安（渡航費・学費・生活費の合計）</h2>
+            <p className="text-graphite text-sm">語学学校＋学生寮を想定した目安です。交換留学は留学先授業料が免除されるためこれより安くなります。</p>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs border border-[#f0f2f5] min-w-[700px]">
+            <table className="w-full text-xs border border-rule min-w-[700px]">
               <thead>
-                <tr className="bg-primary text-white">
+                <tr className="bg-ink text-paper">
                   <th className="px-3 py-3 text-left font-bold whitespace-nowrap">期間</th>
                   <th className="px-3 py-3 text-left font-bold whitespace-nowrap">アメリカ</th>
                   <th className="px-3 py-3 text-left font-bold whitespace-nowrap">イギリス</th>
@@ -245,45 +252,45 @@ export default function StudyAbroadPage() {
                   <th className="px-3 py-3 text-left font-bold whitespace-nowrap">シンガポール</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="font-numeric tabular-nums">
                 {COST_TABLE.map((row, i) => (
-                  <tr key={i} className={`border-t border-[#f0f2f5] ${i % 2 === 0 ? "bg-white" : "bg-slate-50/50"}`}>
-                    <td className="px-3 py-3 font-bold text-primary whitespace-nowrap">{row.period}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.us}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.uk}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.au}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.ca}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.ph}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.eu}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.kr}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.cn}</td>
-                    <td className="px-3 py-3 text-text-grey whitespace-nowrap">{row.sg}</td>
+                  <tr key={i} className={`border-t border-rule ${i % 2 === 0 ? "bg-paper" : "bg-mist/50"}`}>
+                    <td className="px-3 py-3 font-bold text-ink whitespace-nowrap">{row.period}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.us}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.uk}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.au}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.ca}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.ph}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.eu}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.kr}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.cn}</td>
+                    <td className="px-3 py-3 text-graphite whitespace-nowrap">{row.sg}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-text-grey">※渡航費・保険料込みの概算。交換留学は留学先授業料が免除されるため実際の費用はより安い。為替レートにより変動します。</p>
+          <p className="text-xs text-graphite">※渡航費・保険料込みの概算。交換留学は留学先授業料が免除されるため実際の費用はより安い。為替レートにより変動します。</p>
         </section>
 
         {/* 学年別タイムライン */}
         <section id="timeline" className="flex flex-col gap-6 scroll-mt-20">
-          <h2 className="text-primary text-xl md:text-2xl font-black">いつ行くべき？学年別タイムライン</h2>
+          <h2 className="font-mincho text-ink text-xl md:text-2xl font-black">いつ行くべき？学年別タイムライン</h2>
           <div className="flex flex-col gap-0">
             {TIMELINE.map((item, i) => (
               <div key={i} className="flex gap-4">
                 <div className="flex flex-col items-center shrink-0">
-                  <div className={`w-10 h-10 ${item.color} flex items-center justify-center shrink-0`}>
-                    <span className="material-symbols-outlined text-white text-sm">{item.icon}</span>
+                  <div className="w-10 h-10 bg-ink flex items-center justify-center shrink-0">
+                    <item.Icon className="w-4 h-4 text-paper" aria-hidden="true" />
                   </div>
-                  {i < TIMELINE.length - 1 && <div className="w-0.5 bg-slate-200 flex-1 my-1" />}
+                  {i < TIMELINE.length - 1 && <div className="w-0.5 bg-rule flex-1 my-1" />}
                 </div>
                 <div className="flex flex-col gap-2 pb-8 pt-2 flex-1">
-                  <h3 className="font-black text-primary text-base">{item.year}</h3>
+                  <h3 className="font-black text-ink text-base">{item.year}</h3>
                   <ul className="flex flex-col gap-1">
                     {item.events.map((ev, j) => (
-                      <li key={j} className="text-text-grey text-sm flex items-start gap-2">
-                        <span className="text-accent shrink-0 mt-0.5">▸</span>
+                      <li key={j} className="text-graphite text-sm flex items-start gap-2">
+                        <span className="text-ink shrink-0 mt-0.5">▸</span>
                         {ev}
                       </li>
                     ))}
@@ -297,8 +304,8 @@ export default function StudyAbroadPage() {
         {/* 協定校リンク集 */}
         <section id="universities" className="flex flex-col gap-6 scroll-mt-20">
           <div className="flex flex-col gap-2">
-            <h2 className="text-primary text-xl md:text-2xl font-black">大学別・交換留学 協定校を調べる</h2>
-            <p className="text-text-grey text-sm leading-relaxed">
+            <h2 className="font-mincho text-ink text-xl md:text-2xl font-black">大学別・交換留学 協定校を調べる</h2>
+            <p className="text-graphite text-sm leading-relaxed">
               各大学の公式ページで最新の協定校情報を確認できます。
               協定校は毎年更新されるため、必ず公式情報をご確認ください。
             </p>
@@ -306,18 +313,18 @@ export default function StudyAbroadPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {UNIVERSITY_LINKS.map((univ) => (
               <a key={univ.name} href={univ.url} target="_blank" rel="noopener noreferrer"
-                className="group border border-[#f0f2f5] hover:border-accent/40 hover:shadow-sm transition-all p-4 flex items-center justify-between gap-3">
+                className="group border border-rule hover:border-ink/40 hover:shadow-sm transition-all p-4 flex items-center justify-between gap-3">
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-bold text-primary text-sm group-hover:text-accent transition-colors">{univ.name}</span>
-                  <span className="text-text-grey text-xs">{univ.note}</span>
+                  <span className="font-bold text-ink text-sm group-hover:text-ink transition-colors">{univ.name}</span>
+                  <span className="text-graphite text-xs">{univ.note}</span>
                 </div>
-                <span className="material-symbols-outlined text-text-grey text-sm shrink-0">open_in_new</span>
+                <ExternalLink className="w-4 h-4 text-graphite shrink-0" aria-hidden="true" />
               </a>
             ))}
           </div>
-          <div className="bg-primary/5 px-5 py-4 flex gap-3">
-            <span className="material-symbols-outlined text-primary text-lg shrink-0 mt-0.5">info</span>
-            <p className="text-sm text-primary leading-relaxed">
+          <div className="bg-mist px-5 py-4 flex gap-3">
+            <Info className="w-[18px] h-[18px] text-ink shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-sm text-ink leading-relaxed">
               上記以外の大学に在籍している場合は、大学名＋「交換留学 協定校」で検索するか、
               在籍大学の国際交流センター・留学センターに直接お問い合わせください。
             </p>
@@ -326,25 +333,25 @@ export default function StudyAbroadPage() {
 
         {/* 奨学金 */}
         <section id="scholarship" className="flex flex-col gap-6 scroll-mt-20">
-          <h2 className="text-primary text-xl md:text-2xl font-black">留学を支援する奨学金</h2>
+          <h2 className="font-mincho text-ink text-xl md:text-2xl font-black">留学を支援する奨学金</h2>
           <div className="flex flex-col gap-3">
             {SCHOLARSHIPS.map((s, i) => (
-              <div key={i} className="border border-[#f0f2f5] p-5 flex flex-col md:flex-row md:items-center gap-3 justify-between">
+              <div key={i} className="border border-rule p-5 flex flex-col md:flex-row md:items-center gap-3 justify-between">
                 <div className="flex flex-col gap-1 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-primary text-sm">{s.name}</span>
-                    <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">{s.type}</span>
+                    <span className="font-bold text-ink text-sm">{s.name}</span>
+                    <span className="text-[10px] px-2 py-0.5 bg-mist text-ink border border-rule font-bold">{s.type}</span>
                   </div>
-                  <div className="flex gap-4 text-xs text-text-grey flex-wrap">
+                  <div className="flex gap-4 text-xs text-graphite flex-wrap font-numeric tabular-nums">
                     <span>金額：{s.amount}</span>
                     <span>期間：{s.period}</span>
                   </div>
-                  <p className="text-xs text-text-grey">{s.note}</p>
+                  <p className="text-xs text-graphite">{s.note}</p>
                 </div>
                 {s.url && (
                   <a href={s.url} target="_blank" rel="noopener noreferrer"
-                    className="shrink-0 flex items-center gap-1 text-accent text-xs font-bold hover:underline">
-                    公式サイト<span className="material-symbols-outlined text-sm">open_in_new</span>
+                    className="shrink-0 flex items-center gap-1 text-ink text-xs font-bold hover:underline">
+                    公式サイト<ExternalLink className="w-4 h-4" aria-hidden="true" />
                   </a>
                 )}
               </div>
@@ -354,24 +361,24 @@ export default function StudyAbroadPage() {
 
         {/* 留学先診断（アキネーター）への導線 */}
         <section id="recommend" className="flex flex-col gap-4 scroll-mt-20">
-          <div style={{ backgroundColor: "#002b5c" }} className="p-8 flex flex-col md:flex-row items-center gap-6 justify-between">
+          <div className="bg-ink p-8 flex flex-col md:flex-row items-center gap-6 justify-between">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-xl" style={{ color: "#8B0000" }}>psychology</span>
-                <span className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.7)" }}>診断ツール</span>
+                <Brain className="w-5 h-5 text-paper" aria-hidden="true" />
+                <span className="text-sm font-bold text-paper/70">診断ツール</span>
               </div>
-              <h2 className="font-black text-xl md:text-2xl" style={{ color: "#ffffff" }}>
+              <h2 className="font-mincho font-black text-xl md:text-2xl text-paper">
                 あなたに合った留学先を診断
               </h2>
-              <p className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+              <p className="text-sm text-paper/70">
                 目的・期間・予算・英語力を選ぶだけで、最適な留学先をレコメンド。
                 英語圏だけでなく欧州・アジア・中国・韓国・シンガポールも対象。
               </p>
             </div>
             <Link href="/guide/study-abroad/recommend"
-              className="shrink-0 inline-flex items-center gap-2 bg-accent text-white hover:bg-[#600000] transition-colors px-8 py-4 font-black text-base whitespace-nowrap">
+              className="shrink-0 inline-flex items-center gap-2 bg-seal text-paper hover:bg-[#600000] transition-colors px-8 py-4 font-black text-base whitespace-nowrap">
               診断してみる
-              <span className="material-symbols-outlined">arrow_forward</span>
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </Link>
           </div>
         </section>
@@ -379,24 +386,24 @@ export default function StudyAbroadPage() {
         {/* FAQ */}
         <section id="faq" className="flex flex-col gap-6 scroll-mt-20">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-accent text-xl">help</span>
-            <h2 className="text-primary text-xl md:text-2xl font-black">よくある質問</h2>
+            <HelpCircle className="w-5 h-5 text-ink" aria-hidden="true" />
+            <h2 className="font-mincho text-ink text-xl md:text-2xl font-black">よくある質問</h2>
           </div>
           <FaqAccordion items={[...FAQ_ITEMS]} />
         </section>
 
         {/* 他のガイドへ */}
-        <section className="border border-[#f0f2f5] p-6 flex flex-col gap-4">
-          <h3 className="text-primary font-black text-base">他のガイドも読む</h3>
+        <section className="border border-rule p-6 flex flex-col gap-4">
+          <h3 className="text-ink font-black text-base">他のガイドも読む</h3>
           <div className="flex flex-wrap gap-3">
-            <Link href="/baito" className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors">
-              <span className="material-symbols-outlined text-sm">work</span>バイト・インターンどうする？
+            <Link href="/baito" className="flex items-center gap-2 px-4 py-2 border border-rule hover:border-ink/40 text-sm font-bold text-ink hover:text-ink transition-colors">
+              <Briefcase className="w-4 h-4" aria-hidden="true" />バイト・インターンどうする？
             </Link>
-            <Link href="/guide/circle" className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors">
-              <span className="material-symbols-outlined text-sm">groups</span>サークルどうする？
+            <Link href="/guide/circle" className="flex items-center gap-2 px-4 py-2 border border-rule hover:border-ink/40 text-sm font-bold text-ink hover:text-ink transition-colors">
+              <Users className="w-4 h-4" aria-hidden="true" />サークルどうする？
             </Link>
-            <Link href="/guide" className="flex items-center gap-2 px-4 py-2 border border-[#f0f2f5] hover:border-accent/40 text-sm font-bold text-primary hover:text-accent transition-colors">
-              <span className="material-symbols-outlined text-sm">menu_book</span>新入生ガイド一覧へ
+            <Link href="/guide" className="flex items-center gap-2 px-4 py-2 border border-rule hover:border-ink/40 text-sm font-bold text-ink hover:text-ink transition-colors">
+              <BookOpen className="w-4 h-4" aria-hidden="true" />新入生ガイド一覧へ
             </Link>
           </div>
         </section>
