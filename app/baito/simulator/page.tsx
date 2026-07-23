@@ -49,11 +49,49 @@ const PRIORITY_LABELS: Record<Priority, string> = {
   free: "🎮 自由時間",
 };
 
+/**
+ * 円グラフ用の6色（識別のための色。順番を入れ替えないこと）。
+ *
+ * ブランド色そのもの（#002B5C / #8B0000）は暗すぎて図の塗りには使えない
+ * （明度が図の許容帯を外れ、隣の区画と見分けがつかなくなる）ため、
+ * 同じ系統の明るい段を使ってブランドの気配だけ残している。
+ *
+ * この6色と**この並び順**は検証ツールで確認済み（明度帯・彩度下限・
+ * 色覚特性での隣接区別・通常視での隣接区別・地色とのコントラスト）。
+ * 色を1つでも差し替えるか順番を変えると隣接ペアの判定が変わるので、
+ * 必ず再検証すること。
+ *
+ * 検証時の但し書きが2つあり、どちらも「ラベルで補う」ことが条件：
+ *  - 赤と緑の隣接は色覚特性下で見分けにくい帯にある
+ *  - 山吹は地色とのコントラストが3:1未満
+ * したがって**凡例と直接ラベルを必ず併記し、区画の間に隙間を空ける**。
+ * 色だけで意味を伝えない。
+ */
+const CHART_COLORS = {
+  study: "#3A6FA8",
+  free: "#D19A3C",
+  baito: "#B34A44",
+  circle: "#4E9B4A",
+  sleep: "#8A63C4",
+  commute: "#1B9AA6",
+} as const;
+
+/**
+ * SNS共有画像（紺地のCanvas）専用の色。
+ * 図の6色とは役割が違う。good/warning は状態を表す予約色で、
+ * 区画の識別色として使い回さないこと。必ず ✅/⚠️ と文言を添える。
+ */
+const SHARE_COLORS = {
+  accent: "#D19A3C",
+  good: "#46B37D",
+  warning: "#E4813C",
+} as const;
+
 const PRIORITY_COLORS: Record<Priority, string> = {
-  study: "#002b5c",
-  circle: "#0ea5e9",
-  baito: "#8B0000",
-  free: "#10b981",
+  study: CHART_COLORS.study,
+  circle: CHART_COLORS.circle,
+  baito: CHART_COLORS.baito,
+  free: CHART_COLORS.free,
 };
 
 // ─────────────────────────────────────────────
@@ -229,7 +267,7 @@ function generateShareImage(
   ctx.font = "bold 36px sans-serif";
   ctx.fillStyle = "rgba(255,255,255,0.7)";
   ctx.fillText("/ 100点", 220, 240);
-  ctx.fillStyle = "#10b981";
+  ctx.fillStyle = SHARE_COLORS.accent;
   ctx.font = "bold 28px sans-serif";
   ctx.fillText(result.scoreLabel, 60, 300);
 
@@ -243,9 +281,9 @@ function generateShareImage(
 
   // 3つの指標
   const metrics = [
-    { label: "自由時間", value: `${result.freeHours}h/週`, color: "#10b981" },
-    { label: "月収見込み", value: `¥${result.actualMonthlyIncome.toLocaleString()}`, color: "#f59e0b" },
-    { label: "年収の壁", value: result.wallStatus === "safe" ? "✅ 安全圏" : "⚠️ 要注意", color: result.wallStatus === "safe" ? "#10b981" : "#f59e0b" },
+    { label: "自由時間", value: `${result.freeHours}h/週`, color: "#ffffff" },
+    { label: "月収見込み", value: `¥${result.actualMonthlyIncome.toLocaleString()}`, color: "#ffffff" },
+    { label: "年収の壁", value: result.wallStatus === "safe" ? "✅ 安全圏" : "⚠️ 要注意", color: result.wallStatus === "safe" ? SHARE_COLORS.good : SHARE_COLORS.warning },
   ];
 
   metrics.forEach((m, i) => {
@@ -443,13 +481,16 @@ export default function SimulatorPage() {
   if (targetIncome >= 80000) baitoSearchParams.set("tags", "高時給");
 
   // ドーナツチャートデータ
+  // 並び順は CHART_COLORS の定義順と一致させること。
+  // 隣り合う区画の見分けやすさをその順番で検証しているため、
+  // 並べ替えると検証していない組み合わせが隣接することになる。
   const donutData = [
-    { label: "睡眠", hours: result.sleepHours, color: "#94a3b8" },
-    { label: "通学", hours: result.commuteHours, color: "#cbd5e1" },
-    { label: "授業・課題", hours: result.classHours + result.homeworkHours, color: PRIORITY_COLORS.study },
-    { label: "サークル", hours: result.circleHours, color: PRIORITY_COLORS.circle },
-    { label: "バイト", hours: result.baitoHours, color: PRIORITY_COLORS.baito },
-    { label: "自由時間", hours: result.freeHours, color: PRIORITY_COLORS.free },
+    { label: "授業・課題", hours: result.classHours + result.homeworkHours, color: CHART_COLORS.study },
+    { label: "自由時間", hours: result.freeHours, color: CHART_COLORS.free },
+    { label: "バイト", hours: result.baitoHours, color: CHART_COLORS.baito },
+    { label: "サークル", hours: result.circleHours, color: CHART_COLORS.circle },
+    { label: "睡眠", hours: result.sleepHours, color: CHART_COLORS.sleep },
+    { label: "通学", hours: result.commuteHours, color: CHART_COLORS.commute },
   ].filter((d) => d.hours > 0);
 
   // 年収ゲージ（160万上限）
