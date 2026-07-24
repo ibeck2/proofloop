@@ -42,7 +42,10 @@ type JobListing = {
   score_skill: number | null;
   score_income: number | null;
   tags: string[];
+  /** カードのリンク先URL。is_affiliate=true のときは広告リンク */
   affiliate_url: string | null;
+  /** true=広告（rel=sponsored と「広告」開示を付ける） / false=公式サイトへの通常リンク */
+  is_affiliate: boolean;
 };
 
 // ─────────────────────────────────────────────
@@ -284,7 +287,11 @@ function JobCard({ job }: { job: JobListing }) {
           <a
             href={job.affiliate_url}
             target="_blank"
-            rel="noopener noreferrer sponsored"
+            rel={
+              job.is_affiliate
+                ? "noopener noreferrer sponsored"
+                : "noopener noreferrer"
+            }
             className="w-full flex items-center justify-center gap-2 bg-ink text-paper hover:bg-ink/90 transition-colors py-3 font-bold text-sm"
           >
             {job.title}で探す
@@ -296,7 +303,9 @@ function JobCard({ job }: { job: JobListing }) {
           </div>
         )}
         <p className="text-[10px] text-graphite text-center">
-          ※外部サービスに移動します（広告）
+          {job.is_affiliate
+            ? "※外部サービスに移動します（広告）"
+            : "※公式サイトに移動します"}
         </p>
       </div>
     </article>
@@ -584,6 +593,10 @@ export default function BaitoPage() {
           <h2 className="font-mincho text-ink text-xl md:text-2xl font-bold">
             ProofLoop厳選 求人一覧
           </h2>
+          <p className="text-graphite text-sm leading-relaxed">
+            大学生が使いやすい求人サービスをまとめました。広告（提携先）と、提携のない公式サイトの両方を載せています。
+            カード下の表記で見分けられます。
+          </p>
 
           {/* フィルター：タイプ */}
           <div className="flex flex-col gap-4">
