@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildOrgDescription, buildOrgTitle, type OrgMetaSource } from "./pageMetadata";
+import { buildOrgDescription, buildOrgTitle, parseMemberCount, type OrgMetaSource } from "./pageMetadata";
 
 const base: OrgMetaSource = {
   name: "音楽部交響楽団",
@@ -58,14 +58,38 @@ describe("buildOrgDescription", () => {
     expect(d).toContain("メンバーは約60人。");
   });
 
+  it("DBの実際の形式（「46人」のような文字列）でも部員数を出す", () => {
+    // member_count カラムは text。数値として扱っていたため、実データでは
+    // 一度も部員数が出ていなかった
+    expect(buildOrgDescription({ ...base, member_count: "46人" })).toContain("メンバーは約46人。");
+  });
+
   it("部員数が0や負値のときは触れない（未入力の代わりに0が入る場合がある）", () => {
     expect(buildOrgDescription({ ...base, member_count: 0 })).not.toContain("メンバー");
     expect(buildOrgDescription({ ...base, member_count: -1 })).not.toContain("メンバー");
+    expect(buildOrgDescription({ ...base, member_count: "0人" })).not.toContain("メンバー");
   });
 
   it("団体ごとに異なる文になる（全ページ同一descriptionの解消）", () => {
     const a = buildOrgDescription(base);
     const b = buildOrgDescription({ ...base, name: "写真部", university: "上智大学" });
     expect(a).not.toBe(b);
+  });
+});
+
+describe("parseMemberCount", () => {
+  it("単位付きの文字列から人数を取り出す", () => {
+    expect(parseMemberCount("46人")).toBe(46);
+  });
+
+  it("全角数字も扱える（実データに「１7人」「４０人」がある）", () => {
+    expect(parseMemberCount("４０人")).toBe(40);
+    expect(parseMemberCount("１7人")).toBe(17);
+  });
+
+  it("数値が入っていなければ null", () => {
+    expect(parseMemberCount("非公開")).toBeNull();
+    expect(parseMemberCount("")).toBeNull();
+    expect(parseMemberCount(null)).toBeNull();
   });
 });

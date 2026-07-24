@@ -20,8 +20,27 @@ export type OrgMetaSource = {
   university: string | null;
   description: string | null;
   activity_frequency: string | null;
-  member_count: number | null;
+  /** DBの型は text。「46人」「４０人」のように単位付き・全角混じりで入っている */
+  member_count: string | number | null;
 };
+
+/**
+ * member_count から人数を取り出す。
+ *
+ * カラムは text で、実データは「46人」「１7人」「４０人」のように
+ * 単位付きで、全角数字が混ざっているものもある。数値として比較できないと
+ * 「0人」を弾けないので、ここで正規化する。
+ */
+export function parseMemberCount(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+
+  const normalized = value.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+  const m = /\d+/.exec(normalized);
+  if (!m) return null;
+  const n = Number(m[0]);
+  return Number.isFinite(n) ? n : null;
+}
 
 /** 表示に使えない値（null・空文字・空白のみ）を弾く */
 function present(v: string | null | undefined): string | null {
@@ -54,10 +73,8 @@ export function buildOrgDescription(org: OrgMetaSource): string {
   const freq = present(org.activity_frequency);
   if (freq) parts.push(`活動頻度は${freq}。`);
 
-  const members = org.member_count;
-  if (typeof members === "number" && Number.isFinite(members) && members > 0) {
-    parts.push(`メンバーは約${members}人。`);
-  }
+  const members = parseMemberCount(org.member_count);
+  if (members !== null && members > 0) parts.push(`メンバーは約${members}人。`);
 
   parts.push("公式サイトやSNSへのリンクをまとめています。");
   return parts.join("");
