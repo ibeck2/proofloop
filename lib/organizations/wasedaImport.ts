@@ -130,19 +130,30 @@ export function genreJa(label: string | null | undefined): string {
 }
 
 /**
- * 一覧ページ由来のジャンルからカテゴリを決める。
+ * カテゴリを決める。団体名からの判定を優先し、決まらないときだけ
+ * 早稲田側のジャンルを使う。
  *
- * 一覧はジャンルあたり24件で頭打ちになるため、全サークルのジャンルが取れるわけ
- * ではない（実測で463件中425件）。取れなかった分は団体名から推定する。
+ * 早稲田のジャンル体系は ProofLoop の8分類と噛み合わない箇所がある。
+ * 「囲碁会」「将棋部」は japanese-culture、「フィルハーモニー管絃楽団」や
+ * 「ショパンの会」は hobby に置かれている。ジャンルをそのまま採ると、
+ * 既存1,958団体（囲碁部＝趣味、交響楽団＝文化系）と食い違ってしまう。
+ *
+ * DB全体で分類が揃っていることのほうが、出典の分類に忠実であることより
+ * 利用者の役に立つので、既存と同じ classifyCategory を先に当てる。
+ * 名前だけでは決まらないもの（「ザ・ナレオ」「タッチ☆ネッツ」など）に
+ * ジャンルが効く。
  */
 export function categoryForGenres(slugs: readonly string[], name: string): Category {
+  const byName = classifyCategory(name);
+  if (byName) return byName;
+
   // 細かいジャンルを先に見る
   const ordered = [...slugs].sort((a, b) => Number(UMBRELLA.has(a)) - Number(UMBRELLA.has(b)));
   for (const s of ordered) {
     const c = SLUG_TO_CATEGORY[s];
     if (c) return c;
   }
-  return classifyCategory(name) ?? CATEGORIES.hobby;
+  return CATEGORIES.hobby;
 }
 
 /** @deprecated 詳細ページのジャンル表示は関連サークル欄のもので当てにならない */

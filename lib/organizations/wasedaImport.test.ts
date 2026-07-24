@@ -37,24 +37,33 @@ describe("genreJa", () => {
 });
 
 describe("categoryForGenres", () => {
-  it("一覧ページのジャンルからカテゴリを決める", () => {
+  it("団体名から決まるならそれを使う", () => {
     expect(categoryForGenres(["baseball"], "軟式野球部")).toBe(CATEGORIES.sports);
-    expect(categoryForGenres(["publication"], "早稲田文学会")).toBe(CATEGORIES.media);
+    expect(categoryForGenres([], "ロッククライミング")).toBe(CATEGORIES.sports);
+    expect(categoryForGenres([], "交響楽団")).toBe(CATEGORIES.culture);
+  });
+
+  it("早稲田のジャンルが既存DBの分類と食い違うときは既存側に揃える", () => {
+    // 早稲田では囲碁・将棋は japanese-culture、管絃楽団やショパンの会は hobby。
+    // 既存1,958団体では囲碁部＝趣味、交響楽団＝文化系にしてあるので、そちらに合わせる
+    expect(categoryForGenres(["japanese-culture"], "囲碁会")).toBe(CATEGORIES.hobby);
+    expect(categoryForGenres(["japanese-culture"], "将棋部")).toBe(CATEGORIES.hobby);
+    expect(categoryForGenres(["hobby"], "早稲田大学フィルハーモニー管絃楽団")).toBe(CATEGORIES.culture);
+  });
+
+  it("名前にも手がかりが無ければ、早稲田のジャンルに従う", () => {
+    // 「ショパンの会」はピアノサークルだが名前からは決められない。
+    // 作曲家名まで辞書に入れるときりが無いので、ジャンル（hobby）に委ねる
+    expect(categoryForGenres(["hobby"], "ショパンの会")).toBe(CATEGORIES.hobby);
+  });
+
+  it("団体名で決まらないときにジャンルが効く", () => {
     expect(categoryForGenres(["volunteer"], "あいの会")).toBe(CATEGORIES.volunteer);
+    expect(categoryForGenres(["tennis"], "タッチ☆ネッツ")).toBe(CATEGORIES.sports);
   });
 
   it("上位の受け皿ジャンルより細かいジャンルを優先する", () => {
-    // 軟式野球部は ball-game と baseball の両方に属している
-    expect(categoryForGenres(["ball-game", "baseball"], "軟式野球部")).toBe(CATEGORIES.sports);
-    expect(categoryForGenres(["others", "publication"], "新聞会")).toBe(CATEGORIES.media);
-  });
-
-  it("ジャンルが取れないときは団体名から推定する", () => {
-    // 一覧はジャンルあたり24件で頭打ちになるため、ジャンル不明のサークルが出る。
-    // ロッククライミングは実際にこれに該当し、詳細ページの関連サークル欄では
-    // 「音楽 / Music」と表示されていた
-    expect(categoryForGenres([], "ロッククライミング")).toBe(CATEGORIES.sports);
-    expect(categoryForGenres([], "交響楽団")).toBe(CATEGORIES.culture);
+    expect(categoryForGenres(["others", "volunteer"], "あいの会")).toBe(CATEGORIES.volunteer);
   });
 
   it("どちらでも決まらなければ趣味・その他に落とす", () => {
