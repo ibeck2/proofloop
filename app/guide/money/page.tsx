@@ -31,6 +31,8 @@ import {
   Plane,
 } from "lucide-react";
 import { SITE_URL } from "@/lib/site-url";
+import { ResourceGroupList } from "@/components/guide/ResourceGroupList";
+import { MONEY_RESOURCES } from "@/lib/guide/resources";
 
 export const metadata: Metadata = {
   title: "お金・奨学金どうする？大学生の生活費・JASSO・民間奨学金まとめ | ProofLoop",
@@ -608,6 +610,17 @@ export default function MoneyGuidePage() {
             シミュレートしてみる
             <ArrowRight className="w-5 h-5" aria-hidden="true" />
           </Link>
+        </section>
+
+        {/* 関連リソース */}
+        <section className="flex flex-col gap-4">
+          <h2 className="text-ink font-display text-xl md:text-2xl font-bold">
+            お金の相談に役立つ窓口・サービス
+          </h2>
+          <p className="text-graphite text-sm">
+            公式・無料の一次情報で制度を確認し、必要なら関連サービスを比較してください。
+          </p>
+          <ResourceGroupList groups={MONEY_RESOURCES} page="/guide/money" />
         </section>
 
         {/* 他のガイド */}
