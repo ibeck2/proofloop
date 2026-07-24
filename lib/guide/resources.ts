@@ -48,6 +48,30 @@ export const LIVING_ALONE_RESOURCES: ResourceGroupData[] = [
         url: "https://www.mlit.go.jp/",
         note: "公式・無料",
       },
+      {
+        kind: "affiliate",
+        label: "ビレッジハウス（敷金・礼金・仲介手数料ゼロの賃貸）で探す",
+        url: "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3766669&pid=892665096",
+        advertiser: "village-house",
+      },
+    ],
+  },
+  {
+    id: "utilities",
+    heading: "電気・ガスを見直す",
+    links: [
+      {
+        kind: "official",
+        label: "国民生活センター（電力・ガス切り替えの勧誘トラブル）",
+        url: "https://www.kokusen.go.jp/",
+        note: "公式・無料",
+      },
+      {
+        kind: "affiliate",
+        label: "エネチェンジで電気・ガスのプランを比較する",
+        url: "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3766669&pid=892665095",
+        advertiser: "enechange",
+      },
     ],
   },
   {
