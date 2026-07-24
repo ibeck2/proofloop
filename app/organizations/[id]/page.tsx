@@ -1,5 +1,9 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { SITE_URL } from "@/lib/site-url";
+import { buildOrgDescription, buildOrgTitle } from "@/lib/organizations/pageMetadata";
 import OrganizationDetailClient from "./OrganizationDetailClient";
 
 export type EventRow = {
@@ -29,6 +33,52 @@ export type ReviewRow = {
   club_replied_at?: string | null;
 };
 
+const ORG_COLUMNS =
+  "id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process, selection_flow, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, x_id, instagram_id, line_url, website_url";
+
+/**
+ * generateMetadata と本体レンダリングの両方から団体行を使うため、リクエスト単位でメモ化する。
+ * これが無いと1リクエストあたり同じ問い合わせが2回走る。
+ */
+const getOrganization = cache(async (id: string) => {
+  const { data, error } = await supabase
+    .from("organizations")
+    .select(ORG_COLUMNS)
+    .eq("id", id)
+    .single();
+  return { data, error };
+});
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const { data: org, error } = await getOrganization(id);
+
+  // 取得できないときは既定のメタデータに任せる（notFound はページ本体で扱う）
+  if (error || !org) return {};
+
+  const title = buildOrgTitle(org);
+  const description = buildOrgDescription(org);
+  const url = `${SITE_URL}/organizations/${id}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      type: "website",
+      url,
+      siteName: "ProofLoop",
+      title: `${title} | ProofLoop`,
+      description,
+      locale: "ja_JP",
+    },
+    alternates: { canonical: url },
+  };
+}
+
 export default async function OrganizationPage({
   params,
 }: {
@@ -36,13 +86,7 @@ export default async function OrganizationPage({
 }) {
   const { id } = await params;
   const [orgResult, eventsResult, photosResult, reviewsResult] = await Promise.all([
-    supabase
-      .from("organizations")
-      .select(
-        "id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process, selection_flow, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, x_id, instagram_id, line_url, website_url"
-      )
-      .eq("id", id)
-      .single(),
+    getOrganization(id),
     supabase
       .from("events")
       .select("id, organization_id, title, event_date, location, description")
