@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CATEGORIES } from "./classifyCategory";
 import {
-  categoryFor,
+  categoryForGenres,
   genreJa,
   handleFrom,
   splitActivity,
@@ -36,24 +36,29 @@ describe("genreJa", () => {
   });
 });
 
-describe("categoryFor", () => {
-  it("出典のジャンル表示を優先する", () => {
-    expect(categoryFor({ genre_label: "野球 / Baseball", name: "軟式野球部" })).toBe(CATEGORIES.sports);
-    expect(categoryFor({ genre_label: "出版 / Publication", name: "早稲田文学会" })).toBe(CATEGORIES.media);
-    expect(categoryFor({ genre_label: "ボランティア / Volunteer", name: "あいの会" })).toBe(CATEGORIES.volunteer);
+describe("categoryForGenres", () => {
+  it("一覧ページのジャンルからカテゴリを決める", () => {
+    expect(categoryForGenres(["baseball"], "軟式野球部")).toBe(CATEGORIES.sports);
+    expect(categoryForGenres(["publication"], "早稲田文学会")).toBe(CATEGORIES.media);
+    expect(categoryForGenres(["volunteer"], "あいの会")).toBe(CATEGORIES.volunteer);
   });
 
-  it("ジャンル表示が団体名と食い違っても、ジャンル表示に従う", () => {
-    // 「写真」を含むが出典は学問。名前からの推定に流されない
-    expect(categoryFor({ genre_label: "学問 / Learning", name: "写真研究会" })).toBe(CATEGORIES.academic);
+  it("上位の受け皿ジャンルより細かいジャンルを優先する", () => {
+    // 軟式野球部は ball-game と baseball の両方に属している
+    expect(categoryForGenres(["ball-game", "baseball"], "軟式野球部")).toBe(CATEGORIES.sports);
+    expect(categoryForGenres(["others", "publication"], "新聞会")).toBe(CATEGORIES.media);
   });
 
-  it("未知のジャンルなら団体名から推定する", () => {
-    expect(categoryFor({ genre_label: "謎ジャンル / Unknown", name: "交響楽団" })).toBe(CATEGORIES.culture);
+  it("ジャンルが取れないときは団体名から推定する", () => {
+    // 一覧はジャンルあたり24件で頭打ちになるため、ジャンル不明のサークルが出る。
+    // ロッククライミングは実際にこれに該当し、詳細ページの関連サークル欄では
+    // 「音楽 / Music」と表示されていた
+    expect(categoryForGenres([], "ロッククライミング")).toBe(CATEGORIES.sports);
+    expect(categoryForGenres([], "交響楽団")).toBe(CATEGORIES.culture);
   });
 
   it("どちらでも決まらなければ趣味・その他に落とす", () => {
-    expect(categoryFor({ genre_label: null, name: "さくらの会" })).toBe(CATEGORIES.hobby);
+    expect(categoryForGenres([], "さくらの会")).toBe(CATEGORIES.hobby);
   });
 });
 
@@ -131,7 +136,7 @@ describe("toOrganization", () => {
   });
 
   it("全体像", () => {
-    expect(toOrganization(base, { includeDescription: false, isApproved: true })).toMatchObject({
+    expect(toOrganization(base, { includeDescription: false, isApproved: true, genres: ["baseball"] })).toMatchObject({
       name: "軟式野球部",
       university: "早稲田大学",
       category: CATEGORIES.sports,

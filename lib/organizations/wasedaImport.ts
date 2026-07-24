@@ -23,11 +23,67 @@ export type WasedaCircle = {
 };
 
 /**
- * 早稲田側のジャンル表示（「野球 / Baseball」形式）を ProofLoop のカテゴリに寄せる。
+ * 早稲田側のジャンル（一覧ページの genre[] の値）を ProofLoop のカテゴリに寄せる。
  *
- * 団体名からの推定（classifyCategory）よりこちらを優先する。出典が明示している
- * 分類のほうが、名前から推し量るより確かなため。
+ * ジャンルは詳細ページからは取れない。詳細ページ末尾にある
+ * 「Waseda Circle Search: 音楽 / Music」は関連サークル欄の見出しであって、
+ * そのサークル自身のジャンルではない（ロッククライミングのページに
+ * 「音楽」と出ていた）。一覧ページ側の genre → ID の対応が正しい情報源。
  */
+const SLUG_TO_CATEGORY: Record<string, Category> = {
+  // スポーツ
+  "american-football": CATEGORIES.sports, badminton: CATEGORIES.sports,
+  "ball-game": CATEGORIES.sports, baseball: CATEGORIES.sports,
+  basketball: CATEGORIES.sports, cycling: CATEGORIES.sports, dance: CATEGORIES.sports,
+  football: CATEGORIES.sports, futsal: CATEGORIES.sports, golf: CATEGORIES.sports,
+  "horse-riding": CATEGORIES.sports, "martial-arts": CATEGORIES.sports,
+  "other-ball-game": CATEGORIES.sports, "other-sports": CATEGORIES.sports,
+  outdoor: CATEGORIES.sports, rugby: CATEGORIES.sports, skiing: CATEGORIES.sports,
+  sport: CATEGORIES.sports, swimming: CATEGORIES.sports, tennis: CATEGORIES.sports,
+  volleyball: CATEGORIES.sports, yacht: CATEGORIES.sports,
+
+  // 文化・芸術
+  cinema: CATEGORIES.culture, "culture-art": CATEGORIES.culture,
+  "fine-art": CATEGORIES.culture, "japanese-culture": CATEGORIES.culture,
+  "japanese-literature": CATEGORIES.culture, music: CATEGORIES.culture,
+  "other-culture": CATEGORIES.culture, "performing-arts": CATEGORIES.culture,
+  singing: CATEGORIES.culture, theater: CATEGORIES.culture,
+
+  // 学術・研究
+  economy: CATEGORIES.academic, history: CATEGORIES.academic, law: CATEGORIES.academic,
+  learning: CATEGORIES.academic, "natural-science": CATEGORIES.academic,
+  philosophy: CATEGORIES.academic, politics: CATEGORIES.academic,
+  religion: CATEGORIES.academic, study: CATEGORIES.academic, technology: CATEGORIES.academic,
+
+  // 国際交流・語学
+  "international-exchange": CATEGORIES.international, language: CATEGORIES.international,
+  "international-exchange-volunteer": CATEGORIES.international,
+
+  // ボランティア
+  volunteer: CATEGORIES.volunteer,
+
+  // メディア・出版
+  communication: CATEGORIES.media, media: CATEGORIES.media,
+  "media-publication": CATEGORIES.media, publication: CATEGORIES.media,
+
+  // イベント・企画
+  planning: CATEGORIES.event, recreation: CATEGORIES.event,
+
+  // その他
+  hobby: CATEGORIES.hobby, "other-circle": CATEGORIES.hobby, others: CATEGORIES.hobby,
+  toumonkai: CATEGORIES.hobby,
+};
+
+/**
+ * 上位の受け皿ジャンル。同じサークルが「baseball」と「ball-game」の両方に
+ * 属していたら、細かいほうを見たい。
+ */
+const UMBRELLA = new Set([
+  "ball-game", "sport", "study", "culture-art", "media-publication",
+  "international-exchange-volunteer", "others", "other-circle",
+]);
+
+/** 参考用に残している旧マッピング（詳細ページの日本語ジャンル表示向け） */
 const GENRE_TO_CATEGORY: Record<string, Category> = {
   // スポーツ
   野球: CATEGORIES.sports, ラグビー: CATEGORIES.sports, サッカー: CATEGORIES.sports,
@@ -73,10 +129,26 @@ export function genreJa(label: string | null | undefined): string {
   return label.split("/")[0].trim();
 }
 
+/**
+ * 一覧ページ由来のジャンルからカテゴリを決める。
+ *
+ * 一覧はジャンルあたり24件で頭打ちになるため、全サークルのジャンルが取れるわけ
+ * ではない（実測で463件中425件）。取れなかった分は団体名から推定する。
+ */
+export function categoryForGenres(slugs: readonly string[], name: string): Category {
+  // 細かいジャンルを先に見る
+  const ordered = [...slugs].sort((a, b) => Number(UMBRELLA.has(a)) - Number(UMBRELLA.has(b)));
+  for (const s of ordered) {
+    const c = SLUG_TO_CATEGORY[s];
+    if (c) return c;
+  }
+  return classifyCategory(name) ?? CATEGORIES.hobby;
+}
+
+/** @deprecated 詳細ページのジャンル表示は関連サークル欄のもので当てにならない */
 export function categoryFor(circle: Pick<WasedaCircle, "genre_label" | "name">): Category {
   const mapped = GENRE_TO_CATEGORY[genreJa(circle.genre_label)];
   if (mapped) return mapped;
-  // ジャンル表示が未知のときだけ団体名から推定し、それも駄目なら「趣味・その他」
   return classifyCategory(circle.name) ?? CATEGORIES.hobby;
 }
 
@@ -154,18 +226,20 @@ export type ToOrganizationOptions = {
   includeDescription?: boolean;
   /** 公開するか。既定は非公開で入れて、確認してから公開する。 */
   isApproved?: boolean;
+  /** 一覧ページ由来のジャンル。無ければ団体名から推定する。 */
+  genres?: readonly string[];
 };
 
 export function toOrganization(
   circle: WasedaCircle,
-  { includeDescription = false, isApproved = false }: ToOrganizationOptions = {}
+  { includeDescription = false, isApproved = false, genres = [] }: ToOrganizationOptions = {}
 ): OrganizationInsert {
   const { frequency, location } = splitActivity(circle.activity);
 
   return {
     name: circle.name.trim(),
     university: "早稲田大学",
-    category: categoryFor(circle),
+    category: categoryForGenres(genres, circle.name),
     description: includeDescription ? (circle.description?.trim() || null) : null,
     member_count: circle.member_count_raw?.trim() || null,
     activity_frequency: frequency,
