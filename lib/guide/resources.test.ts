@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LIVING_ALONE_RESOURCES, MONEY_RESOURCES } from "./resources";
-import { findAdOnlyGroups } from "./validateResourceGroups";
+import { findAdOnlyGroups, findMislabeledAffiliateLinks } from "./validateResourceGroups";
 
 const allGroups = [...LIVING_ALONE_RESOURCES, ...MONEY_RESOURCES];
 
@@ -12,6 +12,10 @@ describe("リソースデータの健全性", () => {
     const ids = allGroups.map((g) => g.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
+  it("広告URL(VC/MyLink)が official/guide に誤ラベルされていない（ステマ規制対策）", () => {
+    expect(findMislabeledAffiliateLinks(allGroups)).toEqual([]);
+  });
+  // 現状シードに広告リンクが無いため空振り。Phase 0 で広告追加時に有効化される。
   it("affiliate リンクは advertiser（計測識別子）を持つ", () => {
     const ads = allGroups.flatMap((g) => g.links).filter((l) => l.kind === "affiliate");
     for (const ad of ads) expect(ad.advertiser, ad.label).toBeTruthy();

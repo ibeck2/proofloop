@@ -6,6 +6,8 @@
 // 【一次情報が主役】各グループに非アフィリエイトを1つ以上（findAdOnlyGroups で担保）。
 // 【シード】以下は安定した公式ドメインの初期値。深い一次情報ソースと実際の
 // アフィリエイト(MyLink)URL は Phase 0/1 で拡充する。
+// 【誤ラベル防止】広告(バリューコマース/MyLink)のURLは必ず kind:"affiliate" にする。
+// official/guide に置くと開示が消える(findMislabeledAffiliateLinks が検出)。
 export type { ResourceKind } from "./resourceLink";
 import type { ResourceKind } from "./resourceLink";
 
