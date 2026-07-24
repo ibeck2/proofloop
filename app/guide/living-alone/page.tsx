@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_URL } from "@/lib/site-url";
+import { ResourceGroupList } from "@/components/guide/ResourceGroupList";
+import { LIVING_ALONE_RESOURCES } from "@/lib/guide/resources";
 import {
   ChevronRight,
   ChevronDown,
@@ -598,6 +600,17 @@ export default function LivingAloneGuidePage() {
             シミュレートしてみる
             <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
+        </section>
+
+        {/* 関連リソース */}
+        <section className="flex flex-col gap-4">
+          <h2 className="text-ink font-display text-xl md:text-2xl font-bold">
+            一人暮らしの準備に役立つ窓口・サービス
+          </h2>
+          <p className="text-graphite text-sm">
+            まず公式・無料の一次情報で相場と注意点を押さえ、必要なら関連サービスで比較してください。
+          </p>
+          <ResourceGroupList groups={LIVING_ALONE_RESOURCES} page="/guide/living-alone" />
         </section>
 
         {/* 他のガイド */}
