@@ -20,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { asRow, asRows } from "@/lib/supabase-rows";
 import { Input, Button } from "@/components/ui";
 import SearchOrgCard from "@/components/SearchOrgCard";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
@@ -351,7 +352,7 @@ export default function MypagePage() {
       }
       const list: SavedEventWithDetails[] = [];
       for (const row of data ?? []) {
-        const ev = (row as { events: SavedEventWithDetails | null }).events;
+        const ev = asRow<{ events: SavedEventWithDetails | null }>(row).events;
         if (ev && typeof ev === "object" && ev.id) list.push(ev);
       }
       setSavedEvents(list);
@@ -400,7 +401,7 @@ export default function MypagePage() {
       }
       const list: SavedOrgRow[] = [];
       for (const row of data ?? []) {
-        const o = (row as { organizations: SavedOrgRow | null }).organizations;
+        const o = asRow<{ organizations: SavedOrgRow | null }>(row).organizations;
         if (o && typeof o === "object" && o.id) list.push(o);
       }
       setSavedOrgs(list);
@@ -449,7 +450,7 @@ export default function MypagePage() {
         setEntryApplicationsLoading(false);
         return;
       }
-      const list: ApplicationWithOrg[] = (data ?? []).map((row) => ({
+      const list: ApplicationWithOrg[] = asRows<ApplicationWithOrg>(data).map((row) => ({
         id: row.id,
         user_id: row.user_id,
         organization_id: row.organization_id,

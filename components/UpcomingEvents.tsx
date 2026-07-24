@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarDays, ChevronRight, MapPin, Video } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { asRows } from "@/lib/supabase-rows";
 
 type EventWithOrg = {
   id: string;
@@ -42,7 +43,7 @@ export default function UpcomingEvents() {
         console.error("upcoming events fetch error:", error);
         setEvents([]);
       } else {
-        setEvents((data as EventWithOrg[]) ?? []);
+        setEvents(asRows<EventWithOrg>(data));
       }
       setLoading(false);
     };
