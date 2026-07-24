@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site-url";
 import {
   ArrowRight, CalendarDays, Inbox, Kanban, LayoutGrid,
   ListTodo, MessageSquare, Rss, Sparkles, UserPlus, Users,
@@ -7,9 +8,23 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "学生団体の運営を、もっとスマートに | ProofLoop",
+  // 末尾に「| ProofLoop」を付けない。app/layout.tsx が
+  // title.template = "%s | ProofLoop" を持っており自動で付与されるため、
+  // ここに書くと「… | ProofLoop | ProofLoop」と二重になる。
+  // （openGraph.title にはテンプレートが効かないので、そちらは明示する）
+  title: "学生団体の運営を、もっとスマートに",
   description:
     "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。LINEのDM管理・バラバラのスプレッドシートから卒業しよう。ProofLoop——学生団体のための無料プラットフォーム。",
+  openGraph: {
+    type: "website",
+    url: `${SITE_URL}/for-clubs`,
+    siteName: "ProofLoop",
+    title: "学生団体の運営を、もっとスマートに | ProofLoop",
+    description:
+      "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。学生団体のための無料プラットフォームです。",
+    locale: "ja_JP",
+  },
+  alternates: { canonical: `${SITE_URL}/for-clubs` },
 };
 
 // ─────────────────────────────────────────────
