@@ -50,6 +50,24 @@ export const LIVING_ALONE_RESOURCES: ResourceGroupData[] = [
       },
     ],
   },
+  {
+    id: "furniture-appliances",
+    heading: "家電・家具をそろえる",
+    links: [
+      {
+        kind: "official",
+        label: "消費者庁（ネット通販のトラブル・製品安全）",
+        url: "https://www.caa.go.jp/",
+        note: "公式・無料",
+      },
+      {
+        kind: "affiliate",
+        label: "Yahoo!ショッピングで一人暮らしの家電・家具を探す",
+        url: "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3766669&pid=892664926",
+        advertiser: "yahoo-shopping",
+      },
+    ],
+  },
 ];
 
 export const MONEY_RESOURCES: ResourceGroupData[] = [
