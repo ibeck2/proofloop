@@ -41,3 +41,5 @@ next-env.d.ts
 # 早稲田サークルの収集データは記録として残す（説明文を後から取り込めるように）。
 # 変換後の投入ファイルは生成物なので追跡しない。
 scripts/waseda/data/import.json
+scripts/waseda/data/ins*.sql
+scripts/waseda/data/insert*.sql
