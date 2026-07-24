@@ -8,5 +8,18 @@
     "claude-md-management@claude-plugins-official": true,
     "playwright@claude-plugins-official": true,
     "superpowers@claude-plugins-official": true
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/link-freshness-reminder.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }

@@ -96,13 +96,17 @@ B2Cコンテンツ面（`/baito`・`/guide` 系）から収益を立ち上げる
 ### Phase 4 — 改善
 - クリック率・成果を見て、カード順・文言・広告主を入れ替え（**すべて git 経由**、原則5）。
 
-### Phase 5 — 一次情報の鮮度監視（月次・自動）
-- **実行基盤**：GitHub Actions の `schedule` cron（月1回）。
-- **対象**：`lib/guide/resources.ts` の全リンク。
+### Phase 5 — 一次情報の鮮度監視（月次）※実装済み・2026-07-24
+
+**当初はGitHub Actions × Claude APIを想定していたが、Claude Code自身に実行させる方式に変更した。** APIを使うとサブスクとは別課金（試算 月約$0.30）が発生し、`ANTHROPIC_API_KEY` の管理というオーナー対応も増える。オーナー不在時の完全自動実行は要件ではなかったため、Claude Code起動時に実行する方式で十分と判断した。追加の請求と依存パッケージ（`@anthropic-ai/sdk` / `tsx`）が不要になる。
+
+- **実行基盤**：`link-freshness` スキル（`.claude/skills/link-freshness/`）＋ SessionStart フック（`.claude/hooks/link-freshness-reminder.mjs`）。フックが `docs/.link-freshness-last-run` を読み、30日経過でリマインドする。
+- **対象**：`lib/guide/resources.ts` の全リンク ＋ Supabase `job_listings`（`is_active=true`）の求人サイト。
 - **チェック（2段）**：
-  1. **死活チェック**（無料）：各URLのHTTPステータス（4xx/5xx/リダイレクト先変化）を確認。
-  2. **内容変化チェック**（Claude API）：一次情報ページを取得し、Claude が「年度・制度が変わって古くなっていないか」を判定（例：「2025年度の額に更新されている」「募集要項が差し替わっている」）。リンク数×月1回なのでAPIコストは軽微。
-- **出力**：**自動修正はしない**。検出結果を **GitHub Issue（または PR ドラフト）に「要確認リンク一覧＋理由」として起票** → 人が判断して更新。ProofLoopの「自動公開しない」原則（CLAUDE.md §7・content-pipeline設計）と整合。
+  1. **死活チェック**：`curl` でHTTPステータス。`403/401/429` は **bot遮断（blocked）** としてdeadと区別する（Indeed・経産省など、実在するがcurlを拒否するサイトがある）。
+  2. **内容変化チェック**：`official` かつ2xxのページをWebFetchで読み、年度・制度・金額の変更や主題のズレを判定。断定できないときは「要確認」に寄せる。
+- **⚠️ 広告リンクはHTTPで叩かない**：VCの `ck.jp.ap.valuecommerce.com/servlet/referral` を機械的に叩くと**クリックとして計測され**、成果レポートが歪むうえ不正クリックとみなされる恐れがある。遷移先ドメインを直接確認し、提携終了はVC管理画面で見る。
+- **出力**：**自動修正はしない**。`docs/link-freshness-report.md` に記録し会話で報告 → 人が判断して更新。ProofLoopの「自動公開しない」原則（CLAUDE.md §7・content-pipeline設計）と整合。
 
 ---
 
