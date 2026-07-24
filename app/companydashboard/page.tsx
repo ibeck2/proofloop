@@ -19,7 +19,7 @@ export default function CompanyDashboardPage() {
       {/* Sidebar */}
       <aside className="w-64 h-full bg-ink flex flex-col shrink-0">
         <nav className="flex-1 py-6 flex flex-col gap-1">
-          <Link className="relative flex items-center gap-3 px-6 py-3 bg-paper/10 text-paper group hover:bg-paper/15 transition-colors" href="/companydashborad">
+          <Link className="relative flex items-center gap-3 px-6 py-3 bg-paper/10 text-paper group hover:bg-paper/15 transition-colors" href="/companydashboard">
             <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-paper" />
             <LayoutDashboard className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm font-medium">ダッシュボード</span>
@@ -32,11 +32,11 @@ export default function CompanyDashboardPage() {
             <Mail className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm font-medium">メッセージ</span>
           </Link>
-          <Link className="flex items-center gap-3 px-6 py-3 text-paper/60 hover:text-paper hover:bg-paper/5 transition-colors" href="/companydashborad">
+          <Link className="flex items-center gap-3 px-6 py-3 text-paper/60 hover:text-paper hover:bg-paper/5 transition-colors" href="/companydashboard">
             <BarChart3 className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm font-medium">協賛実績レポート</span>
           </Link>
-          <Link className="flex items-center gap-3 px-6 py-3 text-paper/60 hover:text-paper hover:bg-paper/5 transition-colors" href="/companydashborad">
+          <Link className="flex items-center gap-3 px-6 py-3 text-paper/60 hover:text-paper hover:bg-paper/5 transition-colors" href="/companydashboard">
             <Settings className="w-5 h-5" aria-hidden="true" />
             <span className="text-sm font-medium">設定</span>
           </Link>

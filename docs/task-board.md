@@ -58,12 +58,20 @@
 
 **この過程で見つかった別件の不具合**（本タスクの対象外。着手時期の判断が必要）
 
-- **`app/sitemap.ts:128` の `.limit(1000)` により、958団体分のURLがGoogleに送信されていない。** 承認済み1,958件に対して上限1000件。実害が最も大きい
-- `organizations.category` に文字化けデータが2件（`�` を含む）。DB側の修正が必要
+- ~~**`app/sitemap.ts:128` の `.limit(1000)`**~~ → ✅ 撤廃済み（2026-07-23）
+- ~~`organizations.category` の文字化け2件~~ → ✅ 修正済み（2026-07-24）。2件とも `運動系（スポーツ・アウトドア）` に統一
 - `/for-students` が本番で404。旧フッターは全ページでこの死にリンクを出していた（フッターからは削除済み。**ページを作るなら復活させる**）
-- `/search` のタイトルが「サークルを探す | ProofLoop | ProofLoop」と重複
-- ルート名のスペルミス `app/clubdashborad` / `app/companydashborad`
+- ~~`/search` のタイトル重複~~ → ✅ 修正済み（2026-07-24）。**実は6ページで発生していた**（/search /baito /baito/simulator /classinfo /login /for-clubs）。原因は root の `title.template = "%s | ProofLoop"` に対し子側でも接尾辞を手書きしていたこと
+- ~~ルート名のスペルミス `app/clubdashborad` / `app/companydashborad`~~ → ✅ 両方とも修正済み（clubdashboard は既対応、companydashboard は 2026-07-24。旧URLは308リダイレクト）
 - 公式SNSアカウントのURLが未確定のため、フッターにSNS項目を出していない
+
+**2026-07-24 のサイト精査で新たに判明したもの**
+- ✅ `/manual` が404なのに `/for-clubs` からリンクされていた → ページを新規作成して解消
+- ✅ `/baito/simulator` が `/baito` の metadata を継承していた → 専用 layout を新設
+- ✅ `/guide/study-abroad/recommend` が sitemap 未掲載 → 追加
+- ✅ `/timeline` `/schedule` がログイン必須なのに sitemap 掲載 → 除去＋robots で Disallow
+- ⚠️ **承認済み1,958団体のうち説明文があるのは1件だけ。** sitemap に全件送信しており、薄いコンテンツが大量に出ている。実装では解決できず、データをどう埋めるかの事業判断が要る
+- ⚠️ **`next.config.ts` が `typescript.ignoreBuildErrors` と `eslint.ignoreDuringBuilds` を有効にしている。** 型エラーがあってもビルドが通るため、壊れたコードが本番に出る可能性がある。外すかどうかの判断が必要
 
 ### 狙い
 ProofLoop全体の見た目が「AIが生成した無個性なUI」に寄っている。学生団体・企業・大学生という実在の読者に対して、**信頼できる自社プロダクトの顔**を作る。

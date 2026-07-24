@@ -35,7 +35,7 @@ export default function CompanymessagePage() {
       <aside className="w-64 bg-ink flex flex-col justify-between p-6 shrink-0">
         <div className="flex flex-col gap-8">
           <nav className="flex flex-col gap-2">
-            <Link className="flex items-center gap-4 px-3 py-3 bg-paper/10 text-paper" href="/companydashborad">
+            <Link className="flex items-center gap-4 px-3 py-3 bg-paper/10 text-paper" href="/companydashboard">
               <Home className="w-5 h-5" aria-hidden="true" />
               <span className="text-sm font-medium">ホーム</span>
             </Link>
@@ -47,11 +47,11 @@ export default function CompanymessagePage() {
               <Search className="w-5 h-5" aria-hidden="true" />
               <span className="text-sm font-medium">学生団体検索</span>
             </Link>
-            <Link className="flex items-center gap-4 px-3 py-3 text-paper/70 hover:bg-paper/5" href="/companydashborad">
+            <Link className="flex items-center gap-4 px-3 py-3 text-paper/70 hover:bg-paper/5" href="/companydashboard">
               <Handshake className="w-5 h-5" aria-hidden="true" />
               <span className="text-sm font-medium">協賛管理</span>
             </Link>
-            <Link className="flex items-center gap-4 px-3 py-3 text-paper/70 hover:bg-paper/5 mt-4" href="/companydashborad">
+            <Link className="flex items-center gap-4 px-3 py-3 text-paper/70 hover:bg-paper/5 mt-4" href="/companydashboard">
               <Settings className="w-5 h-5" aria-hidden="true" />
               <span className="text-sm font-medium">設定</span>
             </Link>
