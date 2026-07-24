@@ -24,7 +24,7 @@ export default function CompanySearchPage() {
       {/* Sidebar */}
       <aside className="flex flex-col w-64 h-full bg-ink text-paper flex-shrink-0">
         <nav className="flex-1 py-6 px-3 flex flex-col gap-1 overflow-y-auto">
-          <Link className="flex items-center gap-3 px-3 py-3 hover:bg-paper/10 transition-colors text-paper/70 hover:text-paper group" href="/companydashborad">
+          <Link className="flex items-center gap-3 px-3 py-3 hover:bg-paper/10 transition-colors text-paper/70 hover:text-paper group" href="/companydashboard">
             <LayoutDashboard className="w-5 h-5 group-hover:text-paper transition-colors" aria-hidden="true" />
             <span className="text-sm font-medium">ダッシュボード</span>
           </Link>
@@ -36,7 +36,7 @@ export default function CompanySearchPage() {
             <Mail className="w-5 h-5 group-hover:text-paper transition-colors" aria-hidden="true" />
             <span className="text-sm font-medium">メッセージ</span>
           </Link>
-          <Link className="flex items-center gap-3 px-3 py-3 hover:bg-paper/10 transition-colors text-paper/70 hover:text-paper group" href="/companydashborad">
+          <Link className="flex items-center gap-3 px-3 py-3 hover:bg-paper/10 transition-colors text-paper/70 hover:text-paper group" href="/companydashboard">
             <Settings className="w-5 h-5 group-hover:text-paper transition-colors" aria-hidden="true" />
             <span className="text-sm font-medium">設定</span>
           </Link>
