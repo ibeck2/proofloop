@@ -6,6 +6,7 @@ import CategoryEntries from "@/components/home/CategoryEntries";
 import CampusLifeEntries from "@/components/home/CampusLifeEntries";
 import ForClubsCallout from "@/components/home/ForClubsCallout";
 import { getHomeData } from "@/lib/home/homeData";
+import { SITE_URL } from "@/lib/site-url";
 
 export const revalidate = 3600;
 
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
     title: PAGE_TITLE,
     description: PAGE_DESCRIPTION,
   },
+  alternates: { canonical: SITE_URL },
 };
 
 export default async function Page() {

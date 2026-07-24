@@ -13,6 +13,10 @@ export default function robots(): MetadataRoute.Robots {
           "/api/",
           "/mypage/",
           "/invite/",
+          // ログイン前提のページ。未ログインではログイン誘導しか見えないため、
+          // インデックスさせる価値がない（sitemap からも外している）。
+          "/timeline",
+          "/schedule",
           "/(club)/",
           "/clubdashboard/",
           "/clubats/",

@@ -35,18 +35,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.9,
     },
-    {
-      url: `${SITE_URL}/timeline`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/schedule`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.7,
-    },
+    // /timeline と /schedule はログインが前提のページなので sitemap に載せない。
+    // 未ログインのクローラにはログイン誘導しか見えず、インデックスさせる価値がない。
+    // robots.ts でもクロール対象から外している。
     {
       url: `${SITE_URL}/classinfo`,
       lastModified: new Date(),
@@ -58,6 +49,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
+    },
+    {
+      url: `${SITE_URL}/manual`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
     },
     // ── ガイド系ページ
     {
@@ -74,6 +71,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${SITE_URL}/guide/study-abroad`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      // 留学先診断。拡散フックとして使う想定なのに sitemap から漏れていた。
+      url: `${SITE_URL}/guide/study-abroad/recommend`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,

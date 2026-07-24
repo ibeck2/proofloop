@@ -3,7 +3,12 @@ import { SITE_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
   // ── タイトル ──────────────────────────────────────
-  title: "大学生におすすめのバイトは？タイプ別の選び方・平均月収・年収の壁まで | ProofLoop",
+  // 末尾に「| ProofLoop」を付けない。app/layout.tsx が
+  // title.template = "%s | ProofLoop" を持っており自動で付与されるため、
+  // ここに書くと「… | ProofLoop | ProofLoop」と二重になる。
+  // （openGraph.title / twitter.title にはテンプレートが効かないので、
+  //   そちらは「| ProofLoop」を明示したままで正しい）
+  title: "大学生におすすめのバイトは？タイプ別の選び方・平均月収・年収の壁まで",
 
   // ── description ───────────────────────────────────
   description:
