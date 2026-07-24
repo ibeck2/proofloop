@@ -5,6 +5,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Clock, MapPin, Video, Bookmark, CalendarX, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { asRows } from "@/lib/supabase-rows";
 import { Button } from "@/components/ui";
 
 type EventWithOrg = {
@@ -73,7 +74,7 @@ export default function SchedulePage() {
       setEvents([]);
       return;
     }
-    setEvents((data as EventWithOrg[]) ?? []);
+    setEvents(asRows<EventWithOrg>(data));
   }, []);
 
   const fetchSavedIds = useCallback(async (uid: string) => {
@@ -332,8 +333,14 @@ export default function SchedulePage() {
                   selectedDay.year === cell.date.getFullYear() &&
                   selectedDay.month === cell.date.getMonth() &&
                   selectedDay.day === cell.date.getDate();
-                const dayEvents =
-                  cell.date && events.filter((e) => isSameDay(e.event_date, calendarMonth.year, calendarMonth.month, cell.day!));
+                // cell.date が無い枠（月初・月末の空白セル）では空配列にする。
+                // 使用箇所は {cell.date && ...} の内側だが、TS は JSX 境界を越えて
+                // 絞り込めないため、null を作らない書き方にしておく。
+                const dayEvents = cell.date
+                  ? events.filter((e) =>
+                      isSameDay(e.event_date, calendarMonth.year, calendarMonth.month, cell.day!)
+                    )
+                  : [];
                 return (
                   <div
                     key={i}

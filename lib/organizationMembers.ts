@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { asRows } from "@/lib/supabase-rows";
 
 /** Supabase の外部キー結合がオブジェクトまたは配列で返る場合の正規化 */
 export function normalizeJoinedRow<T>(value: T | T[] | null | undefined): T | null {
@@ -62,9 +63,9 @@ async function fetchOrganizationsByIds(
 
   let lastError: Error | null = null;
   for (const sel of attempts) {
-    const { data, error } = await supabase.from("organizations").select(sel).in("id", orgIds);
+    const { data, error } = await supabase.from("organizations").select(sel as string).in("id", orgIds);
     if (!error) {
-      return { data: (data as OrgRowDb[]) ?? [], error: null };
+      return { data: asRows<OrgRowDb>(data), error: null };
     }
     lastError = new Error(error.message);
     if (!isMissingColumnError(error)) {

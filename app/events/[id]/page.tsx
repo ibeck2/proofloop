@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { asRow } from "@/lib/supabase-rows";
 import EventDetailClient from "./EventDetailClient";
 
 export type EventDetailRow = {
@@ -36,5 +37,5 @@ export default async function EventPage({
 
   if (error || !event) notFound();
 
-  return <EventDetailClient event={event as EventDetailRow} />;
+  return <EventDetailClient event={asRow<EventDetailRow>(event)} />;
 }
