@@ -201,7 +201,7 @@ export default function FinanceSettingsContent() {
     await load();
   };
 
-  if (ctxLoading || loading) {
+  if (ctxLoading) {
     return (
       <div className="p-6 md:p-10">
         <p className="text-graphite/70 py-20 text-center">読み込み中...</p>
@@ -214,6 +214,13 @@ export default function FinanceSettingsContent() {
         <div className="rounded-lg border border-rule border-l-4 border-l-seal bg-mist p-6 text-center">
           <p className="text-ink font-medium">管理できる団体がありません</p>
         </div>
+      </div>
+    );
+  }
+  if (loading) {
+    return (
+      <div className="p-6 md:p-10">
+        <p className="text-graphite/70 py-20 text-center">読み込み中...</p>
       </div>
     );
   }

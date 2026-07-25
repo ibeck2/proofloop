@@ -20,10 +20,6 @@ export const DEFAULT_CATEGORIES: { name: string; kind: FinanceKind }[] = [
 /** 支払手数料の費目名（手数料行の自動生成で参照） */
 export const FEE_CATEGORY_NAME = "支払手数料";
 
-function pad2(n: number): string {
-  return n < 10 ? `0${n}` : `${n}`;
-}
-
 /** 4月始まりの会計年度を返す */
 export function defaultPeriodForDate(date: Date): {
   name: string;

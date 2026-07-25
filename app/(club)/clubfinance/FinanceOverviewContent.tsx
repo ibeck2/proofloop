@@ -21,6 +21,7 @@ export default function FinanceOverviewContent() {
   const { loading: ctxLoading, activeOrgId: orgId, activeOrgName: orgName, hasNoMemberships, isReady } = useClubOrganization();
 
   const [canManage, setCanManage] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [period, setPeriod] = useState<FinancePeriod | null>(null);
   const [categories, setCategories] = useState<FinanceCategory[]>([]);
   const [projects, setProjects] = useState<FinanceProject[]>([]);
@@ -37,6 +38,7 @@ export default function FinanceOverviewContent() {
     // 権限
     const { data: sess } = await supabase.auth.getSession();
     const uid = sess.session?.user?.id ?? null;
+    setUserId(uid);
     let manage = false;
     if (uid) {
       const { data: mem } = await supabase.from("organization_members")
@@ -91,6 +93,12 @@ export default function FinanceOverviewContent() {
   const openNew = () => { setEditing(null); setModalOpen(true); };
   const openEdit = (t: FinanceTransaction) => { setEditing(t); setModalOpen(true); };
 
+  const openReceipt = async (path: string) => {
+    const { data, error } = await supabase.storage.from("finance-receipts").createSignedUrl(path, 60);
+    if (error || !data) { toast.error("領収書を開けませんでした"); return; }
+    window.open(data.signedUrl, "_blank", "noopener");
+  };
+
   const handleSubmit = async ({ values, file }: TxnSubmit) => {
     if (!orgId || !period) return;
     const amount = Math.round(Number(values.amount));
@@ -99,6 +107,7 @@ export default function FinanceOverviewContent() {
       return;
     }
     setSaving(true);
+    let feeUnrecorded = false;
     try {
       const base: NewTxnPayload = {
         organization_id: orgId, period_id: period.id, occurred_on: values.occurred_on,
@@ -114,7 +123,7 @@ export default function FinanceOverviewContent() {
         if (error) throw error;
         txnId = editing.id;
       } else {
-        const { data, error } = await supabase.from("finance_transactions").insert(base).select("id").single();
+        const { data, error } = await supabase.from("finance_transactions").insert({ ...base, created_by: userId }).select("id").single();
         if (error) throw error;
         txnId = (data as { id: string }).id;
       }
@@ -130,7 +139,7 @@ export default function FinanceOverviewContent() {
       // 手数料行（新規時のみ・支出のみ）
       const feeAmount = Math.round(Number(values.fee));
       if (!editing && values.kind === "expense" && feeAmount > 0) {
-        if (!feeCategory) { toast.error("『支払手数料』費目が見つかりません（設定で追加してください）"); }
+        if (!feeCategory) { feeUnrecorded = true; }
         else {
           const feePayload = buildFeePayload(base, feeCategory.id, feeAmount, txnId);
           if (feePayload) {
@@ -140,7 +149,11 @@ export default function FinanceOverviewContent() {
         }
       }
 
-      toast.success(editing ? "取引を更新しました" : "取引を追加しました");
+      if (feeUnrecorded) {
+        toast.error("取引は保存しましたが、支払手数料の費目が見つからず手数料を記録できませんでした。設定で費目を確認してください");
+      } else {
+        toast.success(editing ? "取引を更新しました" : "取引を追加しました");
+      }
       setModalOpen(false);
       setEditing(null);
       await load();
@@ -159,7 +172,7 @@ export default function FinanceOverviewContent() {
     await load();
   };
 
-  if (ctxLoading || loading) {
+  if (ctxLoading) {
     return <div className="p-6 md:p-10"><p className="text-graphite/70 py-20 text-center">読み込み中...</p></div>;
   }
   if (hasNoMemberships || !isReady || !orgId) {
@@ -170,6 +183,9 @@ export default function FinanceOverviewContent() {
         </div>
       </div>
     );
+  }
+  if (loading) {
+    return <div className="p-6 md:p-10"><p className="text-graphite/70 py-20 text-center">読み込み中...</p></div>;
   }
   if (!period) {
     return (
@@ -191,6 +207,8 @@ export default function FinanceOverviewContent() {
         </div>
         <div className="flex gap-2">
           <Link href={`/clubfinance/report?orgId=${orgId}`}><Button variant="outlineMuted">集計・Excel出力</Button></Link>
+          <Link href={`/clubfinance/budget?orgId=${orgId}`}><Button variant="outlineMuted">予算</Button></Link>
+          <Link href={`/clubfinance/settings?orgId=${orgId}`}><Button variant="outlineMuted">設定</Button></Link>
           {canManage && (
             <Button variant="primary" onClick={openNew} className="inline-flex items-center gap-2">
               <Plus className="w-5 h-5" aria-hidden="true" />取引を追加
@@ -243,7 +261,18 @@ export default function FinanceOverviewContent() {
                     <td className="px-3 py-2">{t.memo ?? ""}</td>
                     <td className="px-3 py-2 text-right font-numeric tabular-nums">{t.kind === "income" ? yen(t.amount) : ""}</td>
                     <td className="px-3 py-2 text-right font-numeric tabular-nums">{t.kind === "expense" ? yen(t.amount) : ""}</td>
-                    <td className="px-3 py-2 text-center">{t.receipt_path && <Paperclip className="w-4 h-4 inline text-graphite/70" aria-label="領収書あり" />}</td>
+                    <td className="px-3 py-2 text-center">
+                      {t.receipt_path && (
+                        <button
+                          type="button"
+                          onClick={() => openReceipt(t.receipt_path!)}
+                          aria-label="領収書を開く"
+                          className="inline-flex items-center justify-center text-graphite/70 hover:text-ink"
+                        >
+                          <Paperclip className="w-4 h-4" aria-hidden="true" />
+                        </button>
+                      )}
+                    </td>
                     {canManage && (
                       <td className="px-3 py-2 text-right whitespace-nowrap">
                         {!t.parent_transaction_id && <button className="text-xs text-ink underline mr-2" onClick={() => openEdit(t)}>編集</button>}
