@@ -96,6 +96,11 @@
   - 適用内容：`finance_*` 5テーブル＋RLS（ポリシー10）＋関数（`is_org_member` / `can_manage_org_finance`）＋`organization_members`・`organization_invitations` への `can_manage_finance` 列＋`accept_organization_invitation` RPC更新＋Storageバケット `finance-receipts`（非公開・ポリシー3）。`get_advisors(security)` 確認済み（財務テーブルのRLSは正常。新規WARNはヘルパ関数のRPC実行可能のみ＝RLSに必須・既存同種関数と同構造で無害）。
   - ⚠️ **残タスク①（UI公開）**：本番サイト（proofloop.jp＝`main`をVercel配信）に画面を出すには **PRを`main`にマージ**する必要があります。DBは適用済みなのでマージは安全（未使用テーブルが増えるだけ）。PR作成リンク：`https://github.com/ibeck2/proofloop/compare/main...feat/finance-dx?expand=1`
   - ⚠️ **残タスク②（会計担当の付与）**：団体メンバーの誰かに **会計担当権限（`can_manage_finance`）** を付与しないと記録の書き込みができません（閲覧は全メンバー可）。新規招待では招待画面の「会計・財務の管理」チェックで付与。既存メンバーに付けたい場合は Claude に「この団体のこの人を会計担当に」と指示ください（SQLで設定します）。
+    - ✅ 2026-07-25：`ProofLoop運営事務局` の owner（admin アカウント）に `can_manage_finance` を付与済み。
+
+- [ ] **財務DX：マイグレーション027（既定シードの競合防止）を適用する**
+  - `feat/finance-followups` ブランチで作成。会計担当が2人同時に初回アクセスした際の期間・費目の重複作成を、部分ユニークインデックスで根本防止する（アプリ側は再読込フォールバックを実装済み）。
+  - ファイル：`supabase/migrations/027_finance_unique_indexes.sql`。**スキーマ変更のため §5 により承認が前提。** 承認いただければ Claude が MCP `apply_migration` で適用します（現状シードデータ未投入のため安全）。
 
 ---
 

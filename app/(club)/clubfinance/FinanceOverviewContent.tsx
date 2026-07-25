@@ -10,7 +10,7 @@ import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 import type { FinanceCategory, FinancePeriod, FinanceProject, FinanceTransaction } from "@/lib/finance/types";
 import { DEFAULT_CATEGORIES, FEE_CATEGORY_NAME, defaultPeriodForDate, nextReceiptNo } from "@/lib/finance/defaults";
 import { currentBalance, sumByKind, sortForLedger } from "@/lib/finance/balance";
-import { buildFeePayload, type NewTxnPayload } from "@/lib/finance/fee";
+import { buildFeePayload, planFeeReconciliation, type NewTxnPayload } from "@/lib/finance/fee";
 import TransactionModal, { type TxnSubmit } from "./TransactionModal";
 
 function yen(n: number): string {
@@ -48,27 +48,53 @@ export default function FinanceOverviewContent() {
     setCanManage(manage);
 
     // 期間（無ければ会計担当が作成）
-    let { data: periods } = await supabase.from("finance_periods")
+    const { data: periods, error: periodsErr } = await supabase.from("finance_periods")
       .select("*").eq("organization_id", orgId).order("starts_on", { ascending: false });
-    if ((!periods || periods.length === 0) && manage) {
+    if (periodsErr) {
+      toast.error("会計期間の読み込みに失敗しました");
+      setLoading(false);
+      return;
+    }
+    let periodList = (periods as FinancePeriod[]) ?? [];
+    if (periodList.length === 0 && manage) {
       const def = defaultPeriodForDate(new Date());
       const { data: created, error } = await supabase.from("finance_periods")
         .insert({ organization_id: orgId, ...def, opening_balance: 0 }).select("*").single();
-      if (error) { toast.error("会計期間の作成に失敗しました"); }
-      periods = created ? [created] : [];
+      if (error) {
+        // 競合（他の会計担当が同時に作成）の可能性 → 再読込で既存を採用
+        const { data: reread } = await supabase.from("finance_periods")
+          .select("*").eq("organization_id", orgId).order("starts_on", { ascending: false });
+        periodList = (reread as FinancePeriod[]) ?? [];
+        if (periodList.length === 0) toast.error("会計期間の作成に失敗しました");
+      } else if (created) {
+        periodList = [created as FinancePeriod];
+      }
     }
-    const activePeriod = (periods?.[0] as FinancePeriod) ?? null;
+    const activePeriod = periodList[0] ?? null;
     setPeriod(activePeriod);
 
     // 費目（無ければ会計担当が初期投入）
-    let { data: cats } = await supabase.from("finance_categories")
+    const { data: cats, error: catsErr } = await supabase.from("finance_categories")
       .select("*").eq("organization_id", orgId).order("sort_order", { ascending: true });
-    if ((!cats || cats.length === 0) && manage) {
-      const rows = DEFAULT_CATEGORIES.map((c, i) => ({ organization_id: orgId, name: c.name, kind: c.kind, sort_order: i }));
-      const { data: inserted } = await supabase.from("finance_categories").insert(rows).select("*");
-      cats = inserted ?? [];
+    if (catsErr) {
+      toast.error("費目の読み込みに失敗しました");
+      setLoading(false);
+      return;
     }
-    setCategories((cats as FinanceCategory[]) ?? []);
+    let catList = (cats as FinanceCategory[]) ?? [];
+    if (catList.length === 0 && manage) {
+      const rows = DEFAULT_CATEGORIES.map((c, i) => ({ organization_id: orgId, name: c.name, kind: c.kind, sort_order: i }));
+      const { data: inserted, error: insErr } = await supabase.from("finance_categories").insert(rows).select("*");
+      if (insErr) {
+        // 競合の可能性 → 再読込で既存を採用
+        const { data: reread } = await supabase.from("finance_categories")
+          .select("*").eq("organization_id", orgId).order("sort_order", { ascending: true });
+        catList = (reread as FinanceCategory[]) ?? [];
+      } else {
+        catList = (inserted as FinanceCategory[]) ?? [];
+      }
+    }
+    setCategories(catList);
 
     const { data: projs } = await supabase.from("finance_projects")
       .select("*").eq("organization_id", orgId).order("created_at", { ascending: true });
@@ -128,17 +154,29 @@ export default function FinanceOverviewContent() {
         txnId = (data as { id: string }).id;
       }
 
-      // 領収書アップロード
+      // 領収書アップロード（差し替え時は旧オブジェクトを削除して孤児化を防ぐ）
       if (file) {
+        const oldPath = editing?.receipt_path ?? null;
         const path = `${orgId}/${txnId}/${Date.now()}_${file.name}`;
         const { error: upErr } = await supabase.storage.from("finance-receipts").upload(path, file, { upsert: true });
         if (upErr) { toast.error("領収書の保存に失敗しました"); }
-        else { await supabase.from("finance_transactions").update({ receipt_path: path }).eq("id", txnId); }
+        else {
+          await supabase.from("finance_transactions").update({ receipt_path: path }).eq("id", txnId);
+          if (oldPath && oldPath !== path) {
+            await supabase.storage.from("finance-receipts").remove([oldPath]);
+          }
+        }
       }
 
-      // 手数料行（新規時のみ・支出のみ）
+      // 手数料行の同期（新規・編集どちらも。手数料を持つのは支出のみ）
       const feeAmount = Math.round(Number(values.fee));
-      if (!editing && values.kind === "expense" && feeAmount > 0) {
+      const existingFee = editing ? txns.find((x) => x.parent_transaction_id === editing.id) ?? null : null;
+      const feeAction = planFeeReconciliation({
+        kind: values.kind,
+        newFeeAmount: feeAmount,
+        hasExistingFee: !!existingFee,
+      });
+      if (feeAction === "insert") {
         if (!feeCategory) { feeUnrecorded = true; }
         else {
           const feePayload = buildFeePayload(base, feeCategory.id, feeAmount, txnId);
@@ -147,6 +185,14 @@ export default function FinanceOverviewContent() {
             if (feeErr) throw feeErr;
           }
         }
+      } else if (feeAction === "update" && existingFee) {
+        const { error: feeErr } = await supabase.from("finance_transactions")
+          .update({ amount: feeAmount, occurred_on: base.occurred_on, project_id: base.project_id, updated_at: new Date().toISOString() })
+          .eq("id", existingFee.id);
+        if (feeErr) throw feeErr;
+      } else if (feeAction === "delete" && existingFee) {
+        const { error: feeErr } = await supabase.from("finance_transactions").delete().eq("id", existingFee.id);
+        if (feeErr) throw feeErr;
       }
 
       if (feeUnrecorded) {
@@ -165,9 +211,15 @@ export default function FinanceOverviewContent() {
   };
 
   const handleDelete = async (t: FinanceTransaction) => {
-    // 子（手数料行）は ON DELETE CASCADE。親のみ削除でよい。
+    // 子（手数料行）は DB の ON DELETE CASCADE で消えるが、Storage は連動しない。
+    // 親・子の領収書オブジェクトを集めて削除し、孤児化を防ぐ。
+    const childFee = txns.find((x) => x.parent_transaction_id === t.id) ?? null;
+    const paths = [t.receipt_path, childFee?.receipt_path].filter((p): p is string => !!p);
     const { error } = await supabase.from("finance_transactions").delete().eq("id", t.id);
     if (error) { toast.error("削除に失敗しました"); return; }
+    if (paths.length > 0) {
+      await supabase.storage.from("finance-receipts").remove(paths);
+    }
     toast.success("削除しました");
     await load();
   };
@@ -294,6 +346,7 @@ export default function FinanceOverviewContent() {
           categories={categories}
           projects={projects}
           defaultReceiptNo={nextReceiptNo(txns)}
+          defaultFee={editing ? (txns.find((x) => x.parent_transaction_id === editing.id)?.amount ?? 0) : 0}
           saving={saving}
           onClose={() => { setModalOpen(false); setEditing(null); }}
           onSubmit={handleSubmit}

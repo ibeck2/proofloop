@@ -22,13 +22,15 @@ export type TxnSubmit = {
 };
 
 export default function TransactionModal({
-  open, editing, categories, projects, defaultReceiptNo, saving, onClose, onSubmit,
+  open, editing, categories, projects, defaultReceiptNo, defaultFee, saving, onClose, onSubmit,
 }: {
   open: boolean;
   editing: FinanceTransaction | null;
   categories: FinanceCategory[];
   projects: FinanceProject[];
   defaultReceiptNo: string;
+  /** 編集対象に紐づく既存の手数料額（0 なら手数料なし）。編集時に手数料欄へ初期表示する。 */
+  defaultFee: number;
   saving: boolean;
   onClose: () => void;
   onSubmit: (payload: TxnSubmit) => void;
@@ -49,7 +51,7 @@ export default function TransactionModal({
         project_id: editing.project_id ?? "",
         amount: String(editing.amount),
         memo: editing.memo ?? "",
-        fee: "",
+        fee: defaultFee > 0 ? String(defaultFee) : "",
         receipt_no: editing.receipt_no ?? "",
       });
     } else {
@@ -60,7 +62,7 @@ export default function TransactionModal({
       });
     }
     setFile(null);
-  }, [open, editing, defaultReceiptNo]);
+  }, [open, editing, defaultReceiptNo, defaultFee]);
 
   if (!open) return null;
 
