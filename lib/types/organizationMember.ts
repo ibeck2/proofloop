@@ -5,6 +5,7 @@ export type OrganizationMemberPermissions = {
   can_manage_posts: boolean;
   can_manage_members: boolean;
   can_manage_applications: boolean;
+  can_manage_finance: boolean;
 };
 
 export type OrganizationMemberRow = {

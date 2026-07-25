@@ -120,6 +120,7 @@ export async function POST(request: Request) {
     const canManagePosts = b.can_manage_posts === true;
     const canManageMembers = b.can_manage_members === true;
     const canManageApplications = b.can_manage_applications === true;
+    const canManageFinance = b.can_manage_finance === true;
 
     if (!organizationId || !email) {
       return NextResponse.json(
@@ -227,6 +228,7 @@ export async function POST(request: Request) {
       can_manage_posts: canManagePosts,
       can_manage_members: canManageMembers,
       can_manage_applications: canManageApplications,
+      can_manage_finance: canManageFinance,
     };
     let inserted: { token: string } | null = null;
     let insErr: { code?: string; message?: string } | null = null;
