@@ -24,14 +24,20 @@ ProofLoop は「B2Cメディアで検索流入を貯め、B2B獲得につなげ�
 - `docs/seo/reports/` の最新レポートを読む（無ければ「初回」）。
 - **データ成熟度モードを判定**：GSC の総クリック/インデックス数が僅少なら **初期モード**（インデックス健全性＋ベースライン計測中心）、流入が貯まっていれば **成熟モード**（改稿・押し上げ中心）。レポート冒頭に明記する。
 
-### 2. GSC データを取得（Ahrefs MCP・自動）
+### 2. GSC データを取得
 
-`gsc-*` ツールで、直近28日 vs 前28日の比較を基本に取得：
+取得する内容（直近28日 vs 前28日の比較を基本に）：
 
-- ページ別：クリック / 表示回数 / CTR / 平均掲載順位（`gsc-pages`, `gsc-pages-history`, `gsc-page-history`）
-- 主要ページのクエリ（`gsc-keywords`, `gsc-keyword-history`）
+- ページ別：クリック / 表示回数 / CTR / 平均掲載順位
+- 主要ページのクエリ
 - **「あと一歩」クエリ＝平均掲載順位 5〜20 位**（1ページ目に最短で届く勝ち筋。最優先の分析軸）
 - インデックス健全性（登録ページ数の推移）
+
+**取得経路（重要・2026-07-25 初回で確定）：**
+
+- Ahrefs MCP の `gsc-*` ツールは **proofloop.jp では使えない**。これらは Ahrefs の「プロジェクト」単位（要 `project_id`）で、Ahrefs に proofloop.jp のプロジェクトが未登録（CEO対応待ち）。`management-projects` に proofloop が現れたら MCP 経路に切り替えてよい。
+- それまでは **同席ブラウザの GSC 画面から直接取得**する（`claude-in-chrome`、`sc-domain:proofloop.jp`）。検索パフォーマンス → クエリ/ページ/デバイスのタブ。
+- ⚠️ GSC は SPA で document_idle にならず、`screenshot`・`find` がタイムアウトしやすい。**`get_page_text` は安定して数値を読める**ので、まずこれを使う。タブ切替が要る場合のクリックは座標指定で行う。
 
 > 監視の主対象はコンテンツ面：`/gpa`・`/guide/*`・`/baito`・`/baito/simulator`・`/guide/study-abroad/recommend`。団体ページ（2,400+）は個別でなく**集計**（合計流入・インデックス率）で扱う。
 
@@ -43,7 +49,7 @@ ProofLoop は「B2Cメディアで検索流入を貯め、B2B獲得につなげ�
 - キーイベント／主要イベント：`gpa_calculate`・`simulator_complete`・`study_abroad_complete`・`affiliate_click`・`simulator_share`
 - 流入元（オーガニック比率・参照元）
 
-複数のChromeが接続されている場合は、GA4にログイン済みのものを選ぶ（AskUserQuestionで確認）。ブラウザが無ければこの節を「未取得」として飛ばす。
+複数のChromeが接続されている場合は、GA4にログイン済みのものを選ぶ（AskUserQuestionで確認）。ブラウザが無ければこの節を「未取得」として飛ばす。GA4 も SPA で screenshot が不安定なため、**ホームやレポート画面は `get_page_text` で数値を一括取得**すると速い（スコアカード・トップページ・チャネル・イベント名別が一度に読める）。
 
 ### 4. ページ別スコアカードにまとめ、4分類にフラグ
 
