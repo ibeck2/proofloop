@@ -8,7 +8,7 @@
 > - 新しく発生した対応事項は該当の優先度セクションに追記する
 > - Claude は作業開始時にこのファイルを読み、未完了項目があれば必要に応じて言及する
 
-**最終更新：2026-07-23**
+**最終更新：2026-07-25**
 
 ---
 
@@ -90,6 +90,12 @@
   - ② **成績評価係数で不可・F を分母に含めるか**
     同じファイル内で記載が矛盾しています。白紙シートの式は「総**登録**単位数」で除す（＝不可を含む）、記入例シートの手順説明は「不可やFは単位数に含めません」。現在は切替式にして既定を「含める」にしています。
   - 確認が取れたら Claude に伝えてください。データと注記を更新します。
+
+- [ ] **財務DX（学生団体 会計モジュール）の DBマイグレーション026 を適用する**
+  - `feat/finance-dx` ブランチ（PR）で財務モジュールv1を実装済み（出納帳・費目別集計・予算対比・領収書写真・Excel出力）。コードはレビュー済みでマージ可能だが、**DBに026を適用するまで画面は実データで動きません**。
+  - 適用内容：`finance_*` 5テーブル＋RLS＋関数（`is_org_member` / `can_manage_org_finance`）＋`organization_members`・`organization_invitations` への `can_manage_finance` 列＋`accept_organization_invitation` RPC更新＋Storageバケット `finance-receipts`（非公開）。
+  - **スキーマ変更のため CLAUDE.md §5 によりオーナー承認が前提。** 承認いただければ Claude が MCP `apply_migration` で適用 → `get_advisors(security)` でRLS警告が無いことを確認 → Storageバケット作成を確認します。ファイルは `supabase/migrations/026_finance_module.sql`。
+  - ⚠️ 適用後、団体メンバーの誰かに **会計担当権限（`can_manage_finance`）** を付与しないと記録の書き込みができません（閲覧は全メンバー可）。
 
 ---
 
