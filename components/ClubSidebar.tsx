@@ -13,6 +13,7 @@ import {
   CalendarDays,
   Images,
   Star,
+  Wallet,
   LogOut,
 } from "lucide-react";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
@@ -63,6 +64,10 @@ export default function ClubSidebar() {
             <Link className={linkClass("/clubtasks", true)} href={withOrgQuery("/clubtasks")}>
               <Kanban className="w-6 h-6" aria-hidden="true" />
               <span className="text-sm font-medium">タスク管理</span>
+            </Link>
+            <Link className={linkClass("/clubfinance", true)} href={withOrgQuery("/clubfinance")}>
+              <Wallet className="w-6 h-6" aria-hidden="true" />
+              <span className="text-sm font-medium">会計・財務</span>
             </Link>
             <Link className={linkClass("/clubposts", true)} href={withOrgQuery("/clubposts")}>
               <Megaphone className="w-6 h-6" aria-hidden="true" />

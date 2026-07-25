@@ -31,6 +31,7 @@ const DEFAULT_PERMISSIONS: OrganizationMemberPermissions = {
   can_manage_posts: true,
   can_manage_members: false,
   can_manage_applications: true,
+  can_manage_finance: false,
 };
 
 const PERMISSION_LABELS: Array<{
@@ -41,6 +42,7 @@ const PERMISSION_LABELS: Array<{
   { key: "can_manage_posts", label: "投稿管理" },
   { key: "can_manage_members", label: "メンバー管理" },
   { key: "can_manage_applications", label: "応募者管理" },
+  { key: "can_manage_finance", label: "会計・財務の管理（会計担当）" },
 ];
 
 function roleLabel(role: string): string {
@@ -123,7 +125,7 @@ export default function ClubMembersSettingsPage() {
       const { data: memData, error: memErr } = await supabase
         .from("organization_members")
         .select(
-          "id, user_id, role, can_edit_profile, can_manage_posts, can_manage_members, can_manage_applications"
+          "id, user_id, role, can_edit_profile, can_manage_posts, can_manage_members, can_manage_applications, can_manage_finance"
         )
         .eq("organization_id", orgId)
         .order("role", { ascending: true });
@@ -146,6 +148,8 @@ export default function ClubMembersSettingsPage() {
           can_manage_applications:
             m.can_manage_applications ??
             DEFAULT_PERMISSIONS.can_manage_applications,
+          can_manage_finance:
+            m.can_manage_finance ?? DEFAULT_PERMISSIONS.can_manage_finance,
         }));
         setMembers(list);
         const ids = list.map((m) => m.user_id).filter(Boolean);
@@ -211,6 +215,7 @@ export default function ClubMembersSettingsPage() {
       can_manage_posts: member.can_manage_posts,
       can_manage_members: member.can_manage_members,
       can_manage_applications: member.can_manage_applications,
+      can_manage_finance: member.can_manage_finance,
     });
   };
 
