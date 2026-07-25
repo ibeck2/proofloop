@@ -70,8 +70,10 @@
 - ✅ `/baito/simulator` が `/baito` の metadata を継承していた → 専用 layout を新設
 - ✅ `/guide/study-abroad/recommend` が sitemap 未掲載 → 追加
 - ✅ `/timeline` `/schedule` がログイン必須なのに sitemap 掲載 → 除去＋robots で Disallow
-- ⚠️ **承認済み1,958団体のうち説明文があるのは1件だけ。** sitemap に全件送信しており、薄いコンテンツが大量に出ている。実装では解決できず、データをどう埋めるかの事業判断が要る
-- ⚠️ **`next.config.ts` が `typescript.ignoreBuildErrors` と `eslint.ignoreDuringBuilds` を有効にしている。** 型エラーがあってもビルドが通るため、壊れたコードが本番に出る可能性がある。外すかどうかの判断が必要
+- ⚠️ **既存団体は説明文がほぼ空**（1,958件中1件のみ）。実装では解決できず、データをどう埋めるかの事業判断が要る。**部分的に前進（2026-07-25）**：`generateMetadata` 実装で全団体ページのタイトル/descriptionを一意化（薄いコンテンツ問題は緩和）。早稲田463件は事実データ付きで投入済み（説明文は方針判断待ち）。詳細はメモリ `proofloop-org-metadata` / `proofloop-waseda-import`
+- ✅ **`organizations.category` が分類として機能していなかった**（運動系に音楽系が混在等）→ 2026-07-25 にルールベースで455件再分類（`lib/organizations/classifyCategory.ts`）。死んでいた4カテゴリが機能するように
+- ✅ ~~`next.config.ts` の `typescript.ignoreBuildErrors`~~ → 撤廃済み（2026-07-24）。型チェックが有効。`eslint.ignoreDuringBuilds` は残置
+- ⚠️ **要オーナー判断（2026-07-25）**：早稲田収集が CLAUDE.md §5「スクレイピング禁止」方針と乖離。方針文の更新可否／早稲田の説明文（活動内容の文章）を取り込むか。取り込むなら `source_url` 列追加（スキーマ変更）が要る
 
 ### 狙い
 ProofLoop全体の見た目が「AIが生成した無個性なUI」に寄っている。学生団体・企業・大学生という実在の読者に対して、**信頼できる自社プロダクトの顔**を作る。
