@@ -57,8 +57,9 @@
 - [x] **（コード改修）診断系にGA4イベントを実装**（実装完了 2026-07-25・Claude／**未デプロイ**）
   - 追加イベント：`simulator_complete`（score_band/wall_status/circle_level/credits/target_income）、`simulator_share`（share_platform＝x/line）、`study_abroad_complete`（top_country/top_region/purpose/period/budget/english_level/priority）。
   - 純粋関数＋テストは `lib/analytics/simulatorEvents.ts`・`studyAbroadEvents.ts`（既存 affiliateClick.ts と同パターン）。全177テスト緑・型チェック通過。
-  - ⚠️ **本番push待ち**（デプロイして初めてGA4にイベントが届く。localhostは計測しない仕様）。
-  - 🔜 **デプロイ後の追作業（Claude可）**：イベントが1回発火したらGA4で `simulator_complete`・`study_abroad_complete` を**キーイベント化**、必要なら score_band 等を**カスタムディメンション登録**。
+  - ✅ **本番デプロイ済み（2026-07-25）**。本番で各診断を1回実行し、**GA4リアルタイムに `simulator_complete`・`simulator_share`・`study_abroad_complete` の3イベントが届くことを確認済み**（計測経路OK）。
+  - 🔜 **キーイベント化は保留中（GA4の制約待ち）**：`simulator_complete`・`study_abroad_complete` をキーイベント化したいが、このプロパティは「イベント一覧のスター付け」でしか設定できず、**発火直後の新イベントは一覧に反映されるまで最大24〜48時間かかる**ため今すぐ設定できない。一覧に出たら（＝翌日以降）スター1つで完了。Claude が対応可能なので、翌日以降にブラウザを開いた状態で依頼のこと。
+  - 🔜 必要なら score_band 等を**カスタムディメンション登録**（任意）。
 
 - [ ] **本番URLで最終目視する**
   - `https://proofloop.jp/gpa`
