@@ -25,7 +25,7 @@
 - B＝設計書（`docs/superpowers/specs/2026-07-24-content-pipeline-design.md`）はある。実装するかの判断待ち
 
 ### この後にやると効くこと（本番反映済みの上に積む）
-- GSCで sitemap 再送信（958団体分のURLが新規対象）。※`/gpa`インデックス登録は完了済み
+- ✅ **GSCで sitemap 送信**（2026-07-25 完了）。実査したら**ドメインプロパティ `sc-domain:proofloop.jp` に sitemap が一度も送信されておらず、インデックス登録は2ページのみ**だった（＝旧記載「送信まで完了」は誤り）。`https://proofloop.jp/sitemap.xml`（2,438 URL）を送信し、`/guide/money`・`/guide/credits`・`/guide/living-alone`・`/baito` の個別インデックス登録もリクエスト済み（`/gpa`・トップは既に登録済み）。**1〜2日後にステータスが「成功」に変わり登録数が増えるかをオーナーが確認**（詳細メモリ `proofloop-status-2026-07-24` 追記2）
 - Ahrefs に proofloop.jp を登録（CEO依頼・未完）。SEO効果測定の前提
 - スマホ実機での目視（375px幅・`/clubtasks`のD&D。Claude環境で未確認の分）
 

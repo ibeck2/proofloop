@@ -34,6 +34,7 @@ import {
   Brain,
   type LucideIcon,
 } from "lucide-react";
+import { trackStudyAbroadComplete } from "@/lib/analytics/studyAbroadEvents";
 
 // ─────────────────────────────────────────────
 // 質問データの icon 文字列（Material Symbols名）→ lucide コンポーネントの対応表
@@ -476,7 +477,16 @@ export default function StudyAbroadRecommendClient() {
     if (step < totalSteps - 1) {
       setStep(step + 1);
     } else {
-      setResults(getRecommendations(newAnswers));
+      const recs = getRecommendations(newAnswers);
+      const top = recs[0];
+      if (top) {
+        trackStudyAbroadComplete({
+          answers: newAnswers,
+          topCountry: top.country,
+          topRegion: top.region,
+        });
+      }
+      setResults(recs);
     }
   };
 

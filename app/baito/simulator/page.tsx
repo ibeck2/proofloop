@@ -13,6 +13,7 @@ import {
   Download,
   RefreshCw,
 } from "lucide-react";
+import { trackSimulatorComplete, trackSimulatorShare } from "@/lib/analytics/simulatorEvents";
 
 // ─────────────────────────────────────────────
 // 型・定数
@@ -452,6 +453,7 @@ export default function SimulatorPage() {
   }, [phase, credits, circleLevel, targetIncome, commuteMins, hourlyWage]);
 
   const handleShare = useCallback((platform: "x" | "line") => {
+    trackSimulatorShare(platform);
     const text = encodeURIComponent(
       `授業${credits}コマ・${CIRCLE_LABELS[circleLevel]}・月収目標¥${targetIncome.toLocaleString()}で\n` +
       `充実度スコア ${result.score}点「${result.scoreLabel}」でした！\n` +
@@ -650,7 +652,16 @@ export default function SimulatorPage() {
                 className="flex-1 border border-rule bg-paper text-graphite font-bold py-4 hover:bg-mist transition-colors">
                 戻る
               </button>
-              <button onClick={() => setPhase("result")}
+              <button onClick={() => {
+                  trackSimulatorComplete({
+                    score: result.score,
+                    wallStatus: result.wallStatus,
+                    circleLevel,
+                    credits,
+                    targetIncome,
+                  });
+                  setPhase("result");
+                }}
                 className="flex-[3] bg-seal text-paper font-black text-base py-4 hover:bg-seal/90 transition-colors flex items-center justify-center gap-2">
                 シミュレート開始
                 <TrendingUp className="w-5 h-5" aria-hidden="true" />

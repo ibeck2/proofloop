@@ -19,6 +19,11 @@
 - [x] **`www.proofloop.jp` の CNAME 追加**（完了 2026-07-24・CEO対応）
 - [x] **Google Search Console で `/gpa` のインデックス登録をリクエストする**（完了 2026-07-24）
 
+- [x] **GSC にサイトマップを送信する**（完了 2026-07-25・Claude が claude-in-chrome で実施）
+  - ⚠️ **実査で判明**：ドメインプロパティ `sc-domain:proofloop.jp` に **サイトマップが一度も送信されておらず、インデックス登録は2ページのみ**でした（旧記載「送信まで完了」は誤り）。
+  - `https://proofloop.jp/sitemap.xml`（2,438 URL）を送信し、主要集客ページ（`/guide/money`・`/guide/credits`・`/guide/living-alone`・`/baito`）の個別インデックス登録もリクエスト済み。
+  - 🔎 **オーナー確認（1〜2日後）**：GSC → サイトマップのステータスが「取得できませんでした」→「**成功**」に変わっているか／「ページ」レポートの登録数が増え始めているか。増えなければ Claude に伝えてください（再送信・原因調査します）。
+
 - [x] **GA4 にカスタムディメンションを2つ登録する**（完了 2026-07-22・Claude が実施）
   - `metric_id` / `input_mode` をイベントスコープで登録済み。
   - あわせて本番 `https://proofloop.jp/gpa` で実際に計算を1回実行し、**GA4のリアルタイムに `gpa_calculate` イベントが届くことを確認**しました。計測経路は通っています。
@@ -36,11 +41,24 @@
 
 </details>
 
-- [ ] **`value_band` もカスタムディメンションに登録するか判断する**
-  - `metric_id` / `input_mode` は登録しましたが、`value_band`（満点に対する比率の帯）は**未登録**です。
-  - 登録すれば「上位校の学生がどの成績帯に分布しているか」をレポートで直接見られます。
-  - GA4のカスタムディメンションは**プロパティあたり50個まで**という上限があります。現在2個なので余裕は十分あります。
-  - 必要と判断されたら Claude に伝えてください。同じ手順で登録します。
+- [x] **`value_band` をカスタムディメンションに登録**（完了 2026-07-25・Claude が claude-in-chrome で実施）
+  - 分析目的「上位校の成績帯分布」に必要なため登録。あわせて **`university_tier`（上位校比率の測定に直結）** も登録した（`gpa_calculate` が送信しているのに未登録だった）。
+  - 現在のカスタムディメンションは4個：`metric_id` / `input_mode` / `value_band` / `university_tier`（50個上限に対し余裕）。
+  - ⚠️ **カスタムディメンションは登録後に収集されたデータにのみ適用**され、過去データには遡及しません。value_band/university_tier のレポート反映は 2026-07-25 以降のイベントから。
+
+- [x] **GA4：データ保持期間を14か月に変更**（完了 2026-07-25・Claude）
+  - イベントデータの保持が初期値の「2か月」だったため「**14か月**」に変更（ユーザーデータは既に14か月）。過ぎたデータの探索分析が可能に。反映まで最大24時間。
+
+- [x] **GA4：主要成果イベントをキーイベント（コンバージョン）化**（完了 2026-07-25・Claude）
+  - `gpa_calculate`・`affiliate_click` をキーイベントに設定（従来キーイベントは0件だった）。
+  - ⚠️ GA4がテンプレとして持っていた `close_convert_lead`・`qualify_lead`・`purchase` は**コードから一度も送信されていない空のキーイベント**。実害はないが、レポートを綺麗に保つなら外してよい（オーナー判断。将来ファネル用に残す選択も可）。
+  - ⚠️ **キーイベントの集計はマークした時点以降**。過去のイベントは遡ってコンバージョン化されない。
+
+- [x] **（コード改修）診断系にGA4イベントを実装**（実装完了 2026-07-25・Claude／**未デプロイ**）
+  - 追加イベント：`simulator_complete`（score_band/wall_status/circle_level/credits/target_income）、`simulator_share`（share_platform＝x/line）、`study_abroad_complete`（top_country/top_region/purpose/period/budget/english_level/priority）。
+  - 純粋関数＋テストは `lib/analytics/simulatorEvents.ts`・`studyAbroadEvents.ts`（既存 affiliateClick.ts と同パターン）。全177テスト緑・型チェック通過。
+  - ⚠️ **本番push待ち**（デプロイして初めてGA4にイベントが届く。localhostは計測しない仕様）。
+  - 🔜 **デプロイ後の追作業（Claude可）**：イベントが1回発火したらGA4で `simulator_complete`・`study_abroad_complete` を**キーイベント化**、必要なら score_band 等を**カスタムディメンション登録**。
 
 - [ ] **本番URLで最終目視する**
   - `https://proofloop.jp/gpa`
