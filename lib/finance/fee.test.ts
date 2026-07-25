@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildFeePayload, type NewTxnPayload } from "./fee";
+import { buildFeePayload, planFeeReconciliation, type NewTxnPayload } from "./fee";
 
 const base: NewTxnPayload = {
   organization_id: "o", period_id: "p", occurred_on: "2026-05-01",
@@ -22,5 +22,29 @@ describe("buildFeePayload", () => {
     expect(fee!.occurred_on).toBe("2026-05-01");
     expect(fee!.parent_transaction_id).toBe("parent-1");
     expect(fee!.receipt_no).toBeNull();
+  });
+});
+
+describe("planFeeReconciliation", () => {
+  it("支出・手数料あり・既存なし → insert", () => {
+    expect(planFeeReconciliation({ kind: "expense", newFeeAmount: 330, hasExistingFee: false })).toBe("insert");
+  });
+  it("支出・手数料あり・既存あり → update", () => {
+    expect(planFeeReconciliation({ kind: "expense", newFeeAmount: 500, hasExistingFee: true })).toBe("update");
+  });
+  it("支出・手数料0・既存あり → delete", () => {
+    expect(planFeeReconciliation({ kind: "expense", newFeeAmount: 0, hasExistingFee: true })).toBe("delete");
+  });
+  it("支出・手数料0・既存なし → none", () => {
+    expect(planFeeReconciliation({ kind: "expense", newFeeAmount: 0, hasExistingFee: false })).toBe("none");
+  });
+  it("支出・手数料NaN・既存あり → delete（未入力扱い）", () => {
+    expect(planFeeReconciliation({ kind: "expense", newFeeAmount: NaN, hasExistingFee: true })).toBe("delete");
+  });
+  it("収入に変更・既存の手数料あり → delete", () => {
+    expect(planFeeReconciliation({ kind: "income", newFeeAmount: 330, hasExistingFee: true })).toBe("delete");
+  });
+  it("収入・既存なし → none", () => {
+    expect(planFeeReconciliation({ kind: "income", newFeeAmount: 0, hasExistingFee: false })).toBe("none");
   });
 });

@@ -37,3 +37,25 @@ export function buildFeePayload(
     parent_transaction_id: parentId,
   };
 }
+
+export type FeeReconcileAction = "none" | "insert" | "update" | "delete";
+
+/**
+ * 本体取引の新規/編集時に、紐づく手数料行（子）をどう扱うかを決める純関数。
+ * - kind が expense 以外：既存の手数料行があれば delete、無ければ none
+ *   （収入に変更された取引は手数料を持たない）
+ * - expense：
+ *   - 新しい手数料 > 0：既存があれば update、無ければ insert
+ *   - 新しい手数料 <= 0（未入力含む）：既存があれば delete、無ければ none
+ */
+export function planFeeReconciliation(params: {
+  kind: FinanceKind;
+  newFeeAmount: number;
+  hasExistingFee: boolean;
+}): FeeReconcileAction {
+  const { kind, newFeeAmount, hasExistingFee } = params;
+  const positive = Number.isFinite(newFeeAmount) && newFeeAmount > 0;
+  if (kind !== "expense") return hasExistingFee ? "delete" : "none";
+  if (positive) return hasExistingFee ? "update" : "insert";
+  return hasExistingFee ? "delete" : "none";
+}
