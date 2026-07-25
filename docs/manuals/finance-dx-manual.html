@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ProofLoop 会計・財務 利用マニュアル</title>
+<style>
+  :root{
+    --navy:#002b5c; --accent:#8B0000; --ink:#1f2733; --slate:#5b6472;
+    --rule:#d8dee6; --mist:#f4f6f9; --paper:#ffffff; --gold:#8a6d1a;
+  }
+  *{box-sizing:border-box;}
+  @page{ size:A4; margin:17mm 15mm; }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{
+    font-family:"Noto Sans JP","Yu Gothic","Meiryo",sans-serif;
+    color:var(--ink); font-size:10.5pt; line-height:1.75; margin:0;
+  }
+  h1,h2,h3{ font-family:"Noto Sans JP","Yu Gothic",serif; line-height:1.35; }
+  a{ color:var(--navy); }
+
+  /* 表紙 */
+  .cover{ padding:24mm 4mm 12mm; border-bottom:3px solid var(--navy); margin-bottom:10mm; }
+  .cover .kicker{ color:var(--accent); font-weight:700; letter-spacing:.16em; font-size:10pt; }
+  .cover h1{ color:var(--navy); font-size:26pt; margin:6px 0 4px; }
+  .cover .sub{ color:var(--slate); font-size:12pt; }
+  .cover .meta{ margin-top:14mm; color:var(--slate); font-size:9.5pt; }
+
+  h2{
+    color:var(--navy); font-size:15pt; margin:16px 0 8px;
+    padding:6px 0 6px 12px; border-left:6px solid var(--navy); background:var(--mist);
+    break-after:avoid;
+  }
+  h3{ color:var(--navy); font-size:12pt; margin:14px 0 4px; break-after:avoid; }
+  p{ margin:6px 0; }
+  ul,ol{ margin:6px 0 6px 0; padding-left:1.3em; }
+  li{ margin:3px 0; }
+  .lead{ font-size:11pt; }
+
+  section{ break-inside:auto; }
+  .avoid{ break-inside:avoid; }
+
+  /* メリット箱 */
+  .merits{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+  .merit{ border:1px solid var(--rule); border-left:5px solid var(--accent); border-radius:6px; padding:9px 11px; background:var(--paper); break-inside:avoid; }
+  .merit b{ color:var(--navy); display:block; margin-bottom:2px; }
+  .merit small{ color:var(--slate); font-size:9.5pt; }
+
+  /* 手順 */
+  .steps{ counter-reset:step; list-style:none; padding-left:0; margin:8px 0; }
+  .steps>li{ position:relative; padding:6px 6px 6px 34px; margin:6px 0; border:1px solid var(--rule); border-radius:6px; background:var(--paper); break-inside:avoid; }
+  .steps>li::before{
+    counter-increment:step; content:counter(step);
+    position:absolute; left:8px; top:7px; width:20px; height:20px; border-radius:50%;
+    background:var(--navy); color:#fff; font-size:9.5pt; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* コールアウト */
+  .tip,.note,.warn{ border-radius:6px; padding:8px 12px; margin:9px 0; font-size:9.8pt; break-inside:avoid; }
+  .tip{ background:#eef5ff; border:1px solid #cfe0f7; }
+  .note{ background:var(--mist); border:1px solid var(--rule); }
+  .warn{ background:#fff5f2; border:1px solid #f2ccc0; }
+  .tip b,.note b,.warn b{ color:var(--navy); }
+  .warn b{ color:var(--accent); }
+
+  table{ width:100%; border-collapse:collapse; margin:9px 0; font-size:9.6pt; break-inside:auto; }
+  th,td{ border:1px solid var(--rule); padding:6px 8px; text-align:left; vertical-align:top; }
+  th{ background:var(--navy); color:#fff; font-weight:600; }
+  tbody tr:nth-child(even){ background:var(--mist); }
+  tr{ break-inside:avoid; }
+
+  code,.kbd{ font-family:"Consolas",monospace; background:var(--mist); border:1px solid var(--rule); border-radius:4px; padding:0 5px; font-size:9.4pt; }
+
+  .toc{ background:var(--mist); border:1px solid var(--rule); border-radius:8px; padding:10px 16px; margin:8px 0 14px; }
+  .toc h3{ margin:0 0 4px; }
+  .toc ol{ columns:2; column-gap:22px; }
+
+  .pagebreak{ break-before:page; }
+  hr{ border:0; border-top:1px solid var(--rule); margin:14px 0; }
+  .foot{ margin-top:14mm; padding-top:6px; border-top:2px solid var(--navy); color:var(--slate); font-size:9pt; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="kicker">PROOFLOOP ／ 学生団体向け</div>
+  <h1>会計・財務 利用マニュアル</h1>
+  <div class="sub">部費も、協賛も、助成金も。会計を「引き継げる資産」に。</div>
+  <div class="meta">
+    対象：学生団体の会計担当・代表 ／ バージョン：v1（2026年7月）<br>
+    このマニュアルは ProofLoop の団体管理画面「会計・財務」機能の使い方を説明します。
+  </div>
+</div>
+
+<div class="toc avoid">
+  <h3>目次</h3>
+  <ol>
+    <li>会計・財務とは（5つのメリット）</li>
+    <li>使い始める前に</li>
+    <li>画面を開く</li>
+    <li>最初の設定</li>
+    <li>取引を記録する</li>
+    <li>領収書を管理する</li>
+    <li>予算を立てる</li>
+    <li>集計を見る・Excel出力</li>
+    <li>取引の編集・削除</li>
+    <li>権限と透明性</li>
+    <li>よくある質問（FAQ）</li>
+    <li>機能一覧</li>
+    <li>用語集・対象範囲</li>
+  </ol>
+</div>
+
+<section>
+<h2>1. 会計・財務とは（5つのメリット）</h2>
+<p class="lead">現金出納帳・領収書・決算・助成金/協賛の報告書づくりを、スマホ1つで完結できる学生団体向けの会計ツールです。「Excelが代替わりで消える」「領収書が行方不明」「決算前に徹夜」——そんな会計担当の悩みを解消します。</p>
+<div class="merits">
+  <div class="merit"><b>① 代替わりで消えない</b><small>団体アカウントに紐づくので、会計担当が代わっても記録・繰越金がそのまま引き継がれます。属人的なExcelとお別れ。</small></div>
+  <div class="merit"><b>② 残高がいつも合う</b><small>収入・支出を入れるだけで残高を自動計算。<b>振込手数料も取りこぼさず記録</b>でき、「現金と帳簿が合わない」を防ぎます。</small></div>
+  <div class="merit"><b>③ 領収書を写真でひもづけ</b><small>取引に領収書の写真を添付。バラバラの紙をファイリングする手間が消え、後から1タップで確認できます。</small></div>
+  <div class="merit"><b>④ 提出書類がExcelで一発</b><small>助成金の収支決算・協賛の実施報告に使える<b>整形済みExcel</b>（収支報告書＋出納帳）をボタン1つで出力。</small></div>
+  <div class="merit"><b>⑤ みんなで見える透明性</b><small>記録できるのは会計担当だけ、でも<b>閲覧は団体メンバー全員</b>。お金の流れがオープンになり信頼が生まれます。</small></div>
+  <div class="merit"><b>＋ 予算と実績を比較</b><small>費目ごとに予算を入れておけば、実績との差額が自動表示。使いすぎ・未達がひと目で分かります。</small></div>
+</div>
+<div class="note"><b>ひとことで言うと：</b>日々の記録（出納帳）→ 期末の決算 → 助成金・協賛への提出書類、までが1つの画面でつながります。</div>
+</section>
+
+<section>
+<h2>2. 使い始める前に</h2>
+<h3>必要なもの</h3>
+<ul>
+  <li><b>団体アカウント</b>（ProofLoop に登録済みの学生団体）</li>
+  <li><b>会計担当の権限</b>：お金の記録（追加・編集・削除）ができるのは、この権限を持つメンバーだけです。</li>
+</ul>
+<h3>権限のしくみ</h3>
+<table>
+  <thead><tr><th>できること</th><th>会計担当</th><th>一般メンバー</th></tr></thead>
+  <tbody>
+    <tr><td>帳簿・残高・レポートを見る</td><td>○</td><td>○</td></tr>
+    <tr><td>取引の記録・編集・削除</td><td>○</td><td>×</td></tr>
+    <tr><td>費目・予算・繰越金の設定</td><td>○</td><td>×</td></tr>
+    <tr><td>Excel出力</td><td>○</td><td>○</td></tr>
+  </tbody>
+</table>
+<div class="tip"><b>会計担当の付け方：</b>メンバーを招待する画面で「<b>会計・財務の管理</b>」にチェックを入れます。すでにいるメンバーに付けたい場合は、団体の代表から運営（ProofLoop）へご依頼ください。</div>
+</section>
+
+<section>
+<h2>3. 画面を開く</h2>
+<ol class="steps">
+  <li>ProofLoop にログインし、団体の管理画面（ダッシュボード）を開きます。</li>
+  <li>左側のサイドバーメニューから <b>「会計・財務」</b> をクリックします。</li>
+  <li>会計のトップ画面（出納帳）が表示されます。上部に「現在残高／当期収入計／当期支出計」が並びます。</li>
+</ol>
+<div class="note">画面上部のボタンから、<b>集計・Excel出力</b>・<b>予算</b>・<b>設定</b>の各ページへ移動できます。「取引を追加」ボタンは会計担当だけに表示されます。</div>
+</section>
+
+<section>
+<h2>4. 最初の設定</h2>
+<p>会計担当が初めて「会計・財務」を開くと、次の2つが<b>自動で用意</b>されます。すぐ記録を始められます。</p>
+<ul>
+  <li><b>会計期間</b>：当年度（4月始まり〜翌年3月末、例「2026年度」）が1つ作られます。</li>
+  <li><b>費目（勘定科目）</b>：学生団体でよく使う費目が最初から入っています。
+    <br><small>収入：部費・会費／協賛金／助成金・補助金／イベント収入／その他収入　　支出：備品・消耗品費／会場費／印刷・広報費／交通費／飲食・交流費／通信費／謝礼・報酬／支払手数料／その他支出</small></li>
+</ul>
+<h3>「設定」ページでできること</h3>
+<ul>
+  <li><b>費目の追加・名前変更・アーカイブ</b>：自団体に合わせて費目を調整できます（使わない費目はアーカイブして非表示に）。</li>
+  <li><b>事業・イベントタグの管理</b>：「夏合宿」「〇〇祭」「△△財団助成」などのタグを作れます。取引に付けると、あとで<b>その事業・その協賛/助成ごとの収支</b>を切り出せます。</li>
+  <li><b>繰越金（期首残高）の設定</b>：前年度から繰り越した現金・預金の残高を入力します。これが残高計算の出発点になります。</li>
+</ul>
+<div class="tip"><b>おすすめの初期作業：</b>①繰越金を入力 → ②必要なら費目を微調整 → ③今年の主な事業タグを作成。ここまでやると記録がスムーズです。</div>
+</section>
+
+<section class="pagebreak">
+<h2>5. 取引を記録する</h2>
+<p>日々のお金の出入りは「取引」として1件ずつ記録します。出納帳トップの<b>「取引を追加」</b>から入力します。</p>
+<ol class="steps">
+  <li><b>収入 / 支出</b>を選びます。</li>
+  <li><b>日付</b>を選びます（既定は今日）。</li>
+  <li><b>費目</b>を選びます（収入・支出それぞれの費目が表示されます）。</li>
+  <li>必要なら<b>事業・イベント</b>タグを選びます（任意）。</li>
+  <li><b>金額（円）</b>を入力します。</li>
+  <li>支出のときは<b>振込手数料</b>を入力できます（任意・下の囲み参照）。</li>
+  <li><b>摘要</b>（支払先・内容など）を入力します（任意）。</li>
+  <li><b>領収書番号</b>（任意・自動で次の番号が提案されます）と<b>領収書写真</b>（任意）を添付します。</li>
+  <li><b>保存</b>を押すと、出納帳に行が追加され、残高が自動更新されます。</li>
+</ol>
+<div class="warn"><b>振込・出金手数料はここで一緒に：</b>法人口座の手数料は、積もると数千円単位のズレになります。支出の入力時に「振込手数料」を入れておくと、<b>本体の支出とは別に「支払手数料」の行が自動で作られ</b>、残高も手数料込みで正確になります。手数料だけ入れ忘れる心配がありません。</div>
+<div class="note"><b>残高の考え方：</b>現在残高 ＝ 繰越金 ＋ 収入の合計 − 支出の合計。手数料も支出として自動計上されます。</div>
+</section>
+
+<section>
+<h2>6. 領収書を管理する</h2>
+<ul>
+  <li><b>添付：</b>取引の入力・編集画面で「領収書写真」を選ぶと、写真やPDFをその取引に紐づけて保存できます（保管は非公開）。</li>
+  <li><b>閲覧：</b>出納帳の行にクリップのマーク（📎）が付いていれば領収書あり。クリックすると領収書を開けます。</li>
+  <li><b>差し替え：</b>編集画面で新しい写真を選ぶと差し替わります（古いファイルは自動で片付けられます）。</li>
+</ul>
+<div class="tip"><b>助成金の提出を意識するなら：</b>領収書番号を費目や日付順で振っておくと、提出時に「収支報告書の費目 ↔ 領収書」の対応が取りやすくなります。番号は入力時に自動提案されます。</div>
+</section>
+
+<section>
+<h2>7. 予算を立てる</h2>
+<p>上部メニューの<b>「予算」</b>から、費目ごとに今年度の予算額を入力します。</p>
+<ol class="steps">
+  <li>「予算」ページを開きます（収入費目・支出費目に分かれて表示されます）。</li>
+  <li>各費目に予算額（円）を入力します。</li>
+  <li><b>保存</b>を押すと、その会計期間の予算として記録されます。</li>
+</ol>
+<div class="note">予算を入れておくと、次の「集計・レポート」やExcel出力で<b>予算 vs 実績 vs 差額</b>が表示され、助成金の収支決算（予算対比つき）にそのまま使えます。</div>
+</section>
+
+<section>
+<h2>8. 集計を見る・Excelで出力する</h2>
+<p>上部メニューの<b>「集計・Excel出力」</b>で、費目別の収支と予算対比を確認し、提出用のExcelを出力できます。</p>
+<h3>画面で見える集計</h3>
+<ul>
+  <li>収入の部・支出の部を<b>費目別</b>に一覧（予算・実績・差額）。</li>
+  <li>前期繰越金・当期収入・当期支出・<b>期末残高</b>のまとめ。</li>
+</ul>
+<h3>Excel出力（提出書類づくり）</h3>
+<ol class="steps">
+  <li>「<b>Excelで出力</b>」ボタンを押します。</li>
+  <li>ファイル（<code>団体名_収支報告_期間.xlsx</code>）がダウンロードされます。</li>
+  <li>ダブルクリックで開くと、罫線・金額書式で整形された<b>2つのシート</b>が入っています。</li>
+</ol>
+<table>
+  <thead><tr><th>シート</th><th>内容</th><th>主な使い道</th></tr></thead>
+  <tbody>
+    <tr><td>収支報告書</td><td>団体名・会計期間・費目別（収入/支出）の予算・実績・差額・期末残高</td><td>助成金の<b>収支決算報告</b>、協賛の<b>実施報告</b>、総会資料</td></tr>
+    <tr><td>出納帳</td><td>全取引の明細（日付/区分/費目/事業/摘要/収入/支出/残高/領収書番号）</td><td>監査・証憑突合・引き継ぎ資料</td></tr>
+  </tbody>
+</table>
+<div class="tip"><b>そのまま提出できる形：</b>多くの助成金・協賛は「費目別の収支＋領収書」を求めます。この2シートは、その要求にそのまま合う体裁で出力されます。</div>
+</section>
+
+<section>
+<h2>9. 取引の編集・削除</h2>
+<ul>
+  <li><b>編集：</b>出納帳の行の「編集」から内容を直せます。支出に付けた<b>振込手数料も編集画面に表示され</b>、金額の変更・追加・削除がその場ででき、手数料の行にも自動で反映されます。</li>
+  <li><b>削除：</b>「削除」を押すと取引を消せます。振込手数料の行が紐づいている場合は<b>一緒に削除</b>され、添付していた領収書も片付けられます。</li>
+</ul>
+<div class="note">手数料の行そのものは一覧で「（手数料）」と表示され、本体の取引を通じて管理します（手数料行を単独で編集する必要はありません）。</div>
+</section>
+
+<section>
+<h2>10. 権限と透明性</h2>
+<p>会計・財務のデータは<b>団体メンバーだけ</b>が見られます（外部・一般には公開されません）。その中で、</p>
+<ul>
+  <li><b>記録できるのは会計担当だけ</b>：不正・誤入力を防ぎます。</li>
+  <li><b>閲覧は全メンバー</b>：お金の流れが役員だけのブラックボックスになりません。代替わりや監査のときも安心です。</li>
+</ul>
+</section>
+
+<section class="pagebreak">
+<h2>11. よくある質問（FAQ）</h2>
+<h3>Q. 現金と帳簿が合いません。</h3>
+<p>A. まず<b>繰越金（期首残高）</b>が正しく入っているか、<b>振込・出金手数料</b>を記録し忘れていないかを確認してください。手数料は支出入力時の「振込手数料」欄に入れると自動で計上されます。</p>
+<h3>Q. 費目を増やしたい／使わない費目を消したい。</h3>
+<p>A. 「設定」ページで費目を追加・改名・アーカイブできます。過去に使った費目は、アーカイブすると一覧から隠れます（記録は残ります）。</p>
+<h3>Q. 「事業・イベントタグ」は何に使うの？</h3>
+<p>A. 取引に「夏合宿」「〇〇財団助成」などのタグを付けておくと、その事業・その助成/協賛ごとの使い道を後から切り出せます。協賛企業・助成元への報告に便利です。</p>
+<h3>Q. 貸借対照表（BS）は作れますか？</h3>
+<p>A. v1では、学生団体の実態に合わせて<b>収支計算書（収入・支出・残高）</b>に絞っています。多くの団体はこれで十分です。</p>
+<h3>Q. 領収書はどこに保管されますか？誰が見られますか？</h3>
+<p>A. 非公開の安全な保管領域に保存され、<b>その団体のメンバーだけ</b>が閲覧できます。</p>
+<h3>Q. 会計担当を複数人にできますか？</h3>
+<p>A. できます。複数メンバーに会計担当権限を付けられます。閲覧は全員なので、役割分担がしやすくなっています。</p>
+</section>
+
+<section>
+<h2>12. 機能一覧</h2>
+<table>
+  <thead><tr><th>機能</th><th>できること</th><th>場所</th></tr></thead>
+  <tbody>
+    <tr><td>出納帳</td><td>収入・支出の記録、残高の自動計算、一覧表示</td><td>会計・財務トップ</td></tr>
+    <tr><td>振込手数料の自動記録</td><td>支出に手数料を入れると「支払手数料」行を自動生成</td><td>取引の追加/編集</td></tr>
+    <tr><td>領収書の添付・閲覧</td><td>写真/PDFを取引に紐づけ、後から表示・差し替え</td><td>取引の追加/編集・出納帳</td></tr>
+    <tr><td>事業・イベントタグ</td><td>取引を事業/協賛/助成源で分類</td><td>設定・取引の追加/編集</td></tr>
+    <tr><td>費目マスタ</td><td>費目の追加・改名・アーカイブ</td><td>設定</td></tr>
+    <tr><td>会計期間・繰越金</td><td>年度の管理、期首残高（繰越金）の設定</td><td>設定</td></tr>
+    <tr><td>予算</td><td>費目別に予算を入力</td><td>予算</td></tr>
+    <tr><td>費目別集計・予算対比</td><td>収入/支出を費目別に集計、予算との差額表示</td><td>集計・Excel出力</td></tr>
+    <tr><td>Excel出力</td><td>収支報告書＋出納帳の2シートを整形出力</td><td>集計・Excel出力</td></tr>
+    <tr><td>権限・透明性</td><td>記録は会計担当のみ／閲覧は全メンバー</td><td>全体</td></tr>
+  </tbody>
+</table>
+</section>
+
+<section>
+<h2>13. 用語集・対象範囲</h2>
+<h3>用語集</h3>
+<table>
+  <thead><tr><th>用語</th><th>意味</th></tr></thead>
+  <tbody>
+    <tr><td>費目</td><td>お金の使い道・出どころの分類（例：会場費、協賛金）。勘定科目にあたります。</td></tr>
+    <tr><td>事業・イベントタグ</td><td>取引を横断的に分類する印（例：夏合宿、〇〇財団助成）。使途報告の切り出しに使います。</td></tr>
+    <tr><td>繰越金（期首残高）</td><td>会計期間の開始時点で持っている現金・預金の残高。残高計算の出発点。</td></tr>
+    <tr><td>期末残高</td><td>繰越金＋当期収入−当期支出。次年度への繰越金になります。</td></tr>
+    <tr><td>収支計算書</td><td>収入の部・支出の部を費目別にまとめた表。学生団体の決算の中心です。</td></tr>
+  </tbody>
+</table>
+<h3>この版（v1）で対象外のこと</h3>
+<p>次の機能は現時点では含まれていません（今後の拡張候補です）。過度な期待を避けるため明記します。</p>
+<ul>
+  <li>複数口座を分けての管理・銀行残高との自動照合</li>
+  <li>立替金の申請→承認→精算のワークフロー</li>
+  <li>領収書の自動読み取り（OCRによる金額・日付の自動入力）</li>
+</ul>
+<div class="foot">
+  ProofLoop 会計・財務 利用マニュアル v1（2026年7月）／学生団体向け<br>
+  不明点・改善要望は団体の代表を通じて ProofLoop 運営までお知らせください。機能は継続的に改善されます。
+</div>
+</section>
+
+</body>
+</html>
