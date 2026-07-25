@@ -17,6 +17,11 @@
             "type": "command",
             "command": "node .claude/hooks/link-freshness-reminder.mjs",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/seo-pdca-reminder.mjs",
+            "timeout": 10
           }
         ]
       }
