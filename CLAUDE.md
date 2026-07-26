@@ -70,14 +70,20 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
 
 ## 3. デザイントークン（UIの一貫性を保つ）
 
-| トークン | 値 | 用途 |
-| --- | --- | --- |
-| primary | `#002b5c` | 紺色・メインカラー |
-| accent | `#8B0000` | 深紅・アクセント |
-| text-grey | スレートグレー | 本文・補足テキスト |
-| フォント | Noto Sans JP / Inter / Lexend | 本文・見出し |
+**唯一の定義元は `lib/design/tokens.ts`。** 色は6つだけ、書体は3ロールだけ。
 
-新規ページ・コンポーネントは既存の `/guide` 配下のトーンとこのトークンに必ず合わせること。独自の配色やフォントを勝手に導入しない。
+| 色 | 値 | 用途 |
+| --- | --- | --- |
+| ink | `#002B5C` | 紺。見出し・面・ヘッダー/フッター地 |
+| seal | `#8B0000` | 深紅。「印」。**静止状態で1画面2箇所まで** |
+| paper | `#FFFFFF` | 地 |
+| mist | `#F2F4F7` | 面の切り替え（青みのある紙色） |
+| rule | `#C9D2DC` | 罫線 |
+| graphite | `#1F2A36` | 本文 |
+
+書体：`mincho`（Shippori Mincho B1＝h1と主要セクション見出しのみ）／`body`（Noto Sans JP＝本文・UI）／`numeric`（Inter＝数値・ラベル）。
+
+新規ページ・コンポーネントは既存の `/guide` 配下のトーンとこのトークンに必ず合わせること。**色を足す前に既存6色で表現できないか必ず検討する。** `tailwind.config.ts` に残る旧色エイリアスは使わない。仕様は `docs/superpowers/specs/2026-07-23-ui-identity-design.md`。
 
 ---
 
@@ -91,9 +97,12 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
 - `/guide/study-abroad` 留学どうする？ ／ `/guide/study-abroad/recommend` 留学先診断（12カ国対応）
 - `/guide/credits` 単位・授業どうする？ ✅**実装済み**（履修・GPA・/classinfoへの誘導）
 - `/guide/money` お金・奨学金どうする？ ✅**実装済み**（奨学金種類・生活費・マネー系ASP）
+- `/guide/living-alone` 一人暮らしどうする？ ✅**実装済み**（部屋探し・光熱費・家電。開示付きアフィリ枠あり）
+- `/gpa` GPA計算機 ✅**実装済み**（東大の基本平均点・成績評価係数に対応。主要SEO施策）
 
 ### B2B：団体管理OS・企業向け（実装済み）
 - 学生団体側：`/clubdashboard` `/clubtasks` `/clubevents` `/clubats` `/clubposts` `/clubmessages` `/clubphotos` `/clubprofile` `/clubsettings/members`
+  ／`/clubfinance` **会計・財務** ✅2026-07-26 本番稼働（出納帳・費目/事業タグ設定・費目別予算・予算対比・領収書写真・Excel出力）
 - 企業側：`/companydashboard` `/companysearch` `/companymessage`
 - 学生個人：`/mypage`（`/messages` `/selection`）`/timeline` `/schedule` `/classinfo` `/search` `/organizations/[id]`
 - 参加・招待：`/signup` `/login` `/invite/[token]` `/events/[id]`
@@ -104,7 +113,7 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
 - GA4：`app/layout.tsx` に組込（`NEXT_PUBLIC_GA_ID`）
 - `app/sitemap.ts`（静的ページ＋承認済み団体を動的生成）／ `app/robots.ts`
 
-> ⚠️ **進行中の未コミット作業**：`app/for-clubs/page.tsx`（B2B向けLPのリニューアル）。扱いを決めてからコミット/退避する。
+> ⚠️ **`/for-students`（一般学生の方へ）は本番で404**。旧フッターが全ページで出していた死にリンクのため削除済み。ページを作るならフッターに復活させる（判断待ち：`docs/owner-todo.md`）。
 
 ---
 
@@ -120,24 +129,32 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
   - バイト系：アルバイトEX
   - インターン系：クラウドワークス
 - Supabaseのスキーマ変更・RLS・認証設定の変更は影響範囲が大きいため、必ず計画提示と承認を経てから行う。
+- **信頼性ファースト**：一次情報（公式・無料）が主役、広告は開示（`rel="sponsored"`／「※広告」）付きで横に置く。強制ルールは `lib/guide/` の純粋関数＋テストで担保しており、`resources.ts` に `kind:"affiliate"` 以外でVCのURLを置くと誤ラベル検出テストが落ちる（＝仕様どおりの挙動）。
+- **ロジックは純粋関数に切り出し、テストを書く**（`lib/finance/` `lib/gpa/` `lib/guide/` `lib/analytics/` `lib/organizations/` が既存の型）。UIコンポーネントに計算を埋め込まない。
 
 ---
 
 ## 6. 直近の最優先タスク（今ここを進めている）
 
 ### ✅ 完了フェーズ（アーカイブ）
-- **"B" ドメイン移行の後始末＋計測基盤**：旧Vercel URL置換 → `SITE_URL`一元化、GA4導入、`sitemap.ts`/`robots.ts`、GSC登録・sitemap送信まで完了。
-- **Phase 1 コンテンツページ第一弾**：`/guide/credits`・`/guide/money` を実装・公開・sitemap登録済み。
+- **ドメイン移行の後始末＋計測基盤**：旧Vercel URL置換 → `SITE_URL`一元化、GA4導入、`sitemap.ts`/`robots.ts`。
+  - ⚠️ 旧記載の「GSC登録・sitemap送信まで完了」は**誤りだった**。2026-07-25の実査で、ドメインプロパティ `sc-domain:proofloop.jp` に**sitemapが一度も送信されておらずインデックス2ページのみ**と判明し、同日 2,438 URL を初送信した。
+- **コンテンツページ**：`/guide/credits`・`/guide/money`・`/guide/living-alone`・`/gpa` を公開。
+- **UI刷新（第一周・第二周）**：全ページを6色トークンに統一（§3）。
+- **アフィリエイト導入**：VC提携3社を開示付きで設置。8件が審査待ち（`docs/owner-todo.md`）。
+- **GA4整備**：保持14か月・キーイベント2件・カスタムディメンション4件・内部トラフィック除外・診断系イベント実装。
+- **財務DX（学生団体 会計モジュール）v1**：`/clubfinance` を本番公開（2026-07-26）。マイグレーション026/027は本番適用済み。学生団体向けマニュアルは `docs/manuals/`。
 
-### 🔴 最優先：SEO調査エンジンの立ち上げ（データ駆動のコンテンツ戦略）
-計測の「配線」は済んだので、次は**データを見て刺さるSEOを設計する**フェーズ。
-- **Ahrefs ＋ DataforSEO の利用を開始**する。Claude（このCLI／MCP連携）から両者を叩き、キーワード分析を回す。
-  - Ahrefs は claude.ai MCP 接続済み（Keywords Explorer / GSC / Rank Tracker 等が使える）。DataforSEO は API連携方式を別途検討。
-- **分析の観点**：①市場として強い（検索ボリュームの大きい）ワード、②競合が強いワード／弱い（=狙い目の）ワード、を洗い出す。
-- **メインペルソナ＝「一人暮らしの大学生」**（※要確定）に刺さるロングテールへ寄せる。credits/money と地続きの通年フック（家賃・自炊・生活費・履修・奨学金・バイト探し）を軸にする。
-- 出口：分析結果を下の「AI記事＋SNS生成ループ」の入力キーワードとして流す。
+### 🔴 最優先：インデックスを増やす（SEOはまだ「始まっていない」）
+2026-07-25のベースライン（`docs/seo/reports/2026-07-25-pdca.md`）＝GSC 3ヶ月で**クリック6・表示63・CTR 9.5%・平均順位14.3**、インデックス**2ページ**。クリックの大半は指名クエリ（`proofloop`）。
+**受け皿が検索に載っていない以上、記事を増やしても効かない。** 次回PDCA（≈2026-08-22・`seo-pdca` スキル）で見る最初の成長シグナルは
+①インデックス登録数が増えたか ②団体ページ2,400+が吸収され始めたか ③オーガニッククリックが発生したか。
+- **ブロッカー：Ahrefs に proofloop.jp が未登録**（ワークスペース所有者がCEO・`docs/owner-todo.md`）。順位の定点観測ができない。
+- 現状のGSCデータ取得は**同席ブラウザの画面から**行う運用（プロジェクト未登録のため Ahrefs MCP の `gsc-*` は使えない）。
+- 分析の観点は不変：①検索ボリュームの大きいワード ②競合の弱い狙い目ワード。**メインペルソナ＝「一人暮らしの大学生」**（※要確定）に刺さる通年フック（家賃・自炊・生活費・履修・奨学金・バイト探し）へ寄せ、結果を下の記事生成ループへ流す。
 
 ### 🔴 次：AI記事＋SNS（X / Instagram）自動生成でバズを狙う
+- **設計は完了済み**（`docs/superpowers/specs/2026-07-24-content-pipeline-design.md`）。実装するかの判断待ち。核心＝律速はAPIコストではなく**人間のレビュー時間**。出力はGitHub PRとし、自動投稿・自動公開はしない。
 - Phase 1 の「AI記事自動生成ループ」を、**記事だけでなく X（Twitter）・Instagram 投稿の生成まで**拡張する。
 - 記事本文と、そこから派生させたSNS投稿（画像・キャプション・診断系の拡散素材）を半自動生成 → 投稿 → エンゲージメント分析 → リライト、のPDCA。
 - 狙いは**バズによる認知獲得**。診断系（シミュレーター・留学診断）を拡散フックとして最大活用。
@@ -224,3 +241,21 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
 - 開発はClaude Code（このCLI）で行う。以前はclaude.aiのチャットにコードを貼り付ける形だったが移行済み。
 - 起動は必ずProofLoopのリポジトリ直下で `claude` を実行する（コンテキストを読むため）。
 - このCLAUDE.mdは状況の変化に応じて更新する。大きな方針変更があったら、その都度ここに反映すること。
+
+### コマンド
+- `npm test` … vitest（現在 23ファイル / 201テスト・約2秒）。**実装後は必ず通す。**
+- ⚠️ **開発サーバー（`npm run dev`）稼働中に `npm run build` を叩くと `.next` が壊れてサイトが落ちる。同時に走らせない。**
+- ポート3000に旧プロセスが残ると旧ビルドを見てしまう。PowerShellで明示的に落としてから確認する。
+- `next.config.ts` は型チェック有効（`typescript.ignoreBuildErrors` は撤廃済み）。`eslint.ignoreDuringBuilds` は残置。
+
+### 参照先の優先順位
+- **進行中タスクの正は `docs/task-board.md`**、オーナー作業の正は `docs/owner-todo.md`、外部サービスの識別子は `docs/accounts-inventory.md`。このCLAUDE.mdはビジョンと不変ルールを持つ。
+- 設計は `docs/superpowers/specs/`、実装計画は `docs/superpowers/plans/` に日付付きで残す。
+
+### 定期運用スキル（`.claude/skills/`）
+- `seo-pdca` … 月1回（28日周期）のSEO/GA4解析。次回 ≈2026-08-22。
+- `link-freshness` … 掲載外部リンクの死活・陳腐化点検（**未実行**）。
+
+### 落とし穴
+- CSVの行数を `wc -l` で数えると引用符内の改行を過大カウントする（団体データ取りこぼしの誤報の原因になった）。
+- `organizations.member_count` は **text型**（「46人」等）。数値として扱わない。
