@@ -81,6 +81,7 @@
   - ⚠️ **残タスク（CEO対応・下の未完項目を参照）：Rank Tracker のキーワードが 0 件**。登録しただけでは順位の定点観測は始まらない。
 
 - [ ] **Ahrefs Rank Tracker に追跡キーワードを登録してもらう（CEOへ依頼）**
+  - 📧 **依頼文は作成済み：`docs/ceo-request-2026-07-29-ahrefs.md`**。§1 をそのままコピーして送れます（Rank Tracker・Site Audit・席付与の3件を1通にまとめてあります）。
   - `management-projects` で確認したところ `Proofloop`（project_id `10155573`）の **`keyword_count` が 0**。プロジェクトは登録されたが、**追跡キーワードが1語も入っていない**ため順位推移が取れない。
   - Rank Tracker への追加は管理画面操作のため **Claude 側からは実行できない**（データ取得はMCPで可能）。
   - 登録してほしいキーワード（優先順）：
