@@ -14,7 +14,7 @@ ProofLoop は「B2Cメディアで検索流入を貯め、B2B獲得につなげ�
 ## 前提
 
 - **GA4 はログイン済みブラウザが要る。** このスキルは同席実行が前提（リマインドを見て手動起動する半自動モデル）。ブラウザが繋がっていない場合は GSC 分析だけ先に行い、GA4 分は「未取得」として明記する。
-- GSC は Ahrefs MCP の `gsc-*` ツールで取得する（Rank Tracker 登録は不要）。
+- GSC は Ahrefs MCP の `gsc-*` ツールで取得する（`project_id: 10155573`。Rank Tracker 登録は不要）。
 - 広告リンク（バリューコマース）は**叩かない**。本スキルで外部リンクを踏む必要はない。
 
 ## 手順
@@ -33,11 +33,14 @@ ProofLoop は「B2Cメディアで検索流入を貯め、B2B獲得につなげ�
 - **「あと一歩」クエリ＝平均掲載順位 5〜20 位**（1ページ目に最短で届く勝ち筋。最優先の分析軸）
 - インデックス健全性（登録ページ数の推移）
 
-**取得経路（重要・2026-07-25 初回で確定）：**
+**取得経路（2026-07-29 更新・Ahrefs 登録により MCP 経路へ切替）：**
 
-- Ahrefs MCP の `gsc-*` ツールは **proofloop.jp では使えない**。これらは Ahrefs の「プロジェクト」単位（要 `project_id`）で、Ahrefs に proofloop.jp のプロジェクトが未登録（CEO対応待ち）。`management-projects` に proofloop が現れたら MCP 経路に切り替えてよい。
-- それまでは **同席ブラウザの GSC 画面から直接取得**する（`claude-in-chrome`、`sc-domain:proofloop.jp`）。検索パフォーマンス → クエリ/ページ/デバイスのタブ。
-- ⚠️ GSC は SPA で document_idle にならず、`screenshot`・`find` がタイムアウトしやすい。**`get_page_text` は安定して数値を読める**ので、まずこれを使う。タブ切替が要る場合のクリックは座標指定で行う。
+- **Ahrefs MCP の `gsc-*` ツールを使う。`project_id` は `10155573`**（プロジェクト名 `Proofloop` / `proofloop.jp` / verified）。2026-07-29 に稼働確認済み。ブラウザは不要。
+  - `gsc-performance-history`（`history_grouping: monthly` で推移）／ `gsc-keywords`（クエリ別）／ `gsc-pages`（ページ別）
+  - 「あと一歩」クエリは `gsc-keywords` の `position` 5〜20 で絞る
+- ⚠️ **Rank Tracker の追跡キーワードは 0 件**（CEO対応待ち・`docs/owner-todo.md`）。`rank-tracker-*` 系はまだ空を返すので、順位推移は GSC の `position` で代用する。
+- ⚠️ **インデックス登録数は GSC API に無い**指標。ここだけは同席ブラウザの GSC「ページ」レポート（`sc-domain:proofloop.jp`）を見る必要がある。ブラウザが無ければ「未取得」と明記する。
+- （参考・ブラウザで GSC を開く場合）SPA で document_idle にならず `screenshot`・`find` がタイムアウトしやすい。**`get_page_text` は安定して数値を読める**ので、まずこれを使う。
 
 > 監視の主対象はコンテンツ面：`/gpa`・`/guide/*`・`/baito`・`/baito/simulator`・`/guide/study-abroad/recommend`。団体ページ（2,400+）は個別でなく**集計**（合計流入・インデックス率）で扱う。
 

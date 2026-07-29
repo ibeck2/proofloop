@@ -8,7 +8,7 @@
 > - 新しく発生した対応事項は該当の優先度セクションに追記する
 > - Claude は作業開始時にこのファイルを読み、未完了項目があれば必要に応じて言及する
 
-**最終更新：2026-07-25**
+**最終更新：2026-07-29**
 
 ---
 
@@ -75,12 +75,18 @@
 
 ## 🟡 今週中
 
-- [ ] **Ahrefs に proofloop.jp を登録してもらう（CEOへ依頼）**
-  - ワークスペース所有者が CEO（takenaka01@ibeck.co.jp）のため、**Claude 側からは操作できません**。
-  - 2026-07-16 の会議時点で未完。完了済みならこの項目にチェックを入れてください。
-  - 登録後、Rank Tracker に以下を追加：
+- [x] **Ahrefs に proofloop.jp を登録してもらう（CEOへ依頼）**（完了 2026-07-29・Claude が MCP で稼働確認）
+  - プロジェクト名 `Proofloop` ／ **project_id `10155573`** ／ `proofloop.jp/`（mode: subdomains・protocol: both・**verified: true**）。所有者は CEO（takenaka01@ibeck.co.jp）、Claude からは `access: shared` で参照可。
+  - **GSC 連携も生きていることを実データで確認**（`gsc-performance-history` / `gsc-keywords` / `gsc-pages` が応答）。これまでの「同席ブラウザの画面から GSC を読む」運用は**不要になった**。
+  - ⚠️ **残タスク（CEO対応・下の未完項目を参照）：Rank Tracker のキーワードが 0 件**。登録しただけでは順位の定点観測は始まらない。
+
+- [ ] **Ahrefs Rank Tracker に追跡キーワードを登録してもらう（CEOへ依頼）**
+  - `management-projects` で確認したところ `Proofloop`（project_id `10155573`）の **`keyword_count` が 0**。プロジェクトは登録されたが、**追跡キーワードが1語も入っていない**ため順位推移が取れない。
+  - Rank Tracker への追加は管理画面操作のため **Claude 側からは実行できない**（データ取得はMCPで可能）。
+  - 登録してほしいキーワード（優先順）：
     - `gpa 計算` / `大学 gpa`（既存施策の主軸）
-    - `東大 gpa` / `基本平均点` / `成績評価係数`（今回の東大対応で新たに狙えるKW）
+    - `東大 gpa` / `京大 gpa 計算` / `gpa 換算` / `基本平均点` / `成績評価係数`（**GSCで既に表示が出ており、順位6〜12位と射程内**）
+    - 全28語のリストは `docs/seo/rank-tracker-keywords.md` にある
   - 理由：これがないと施策の効果を数値で追えません。
 
 - [ ] **東京大学の教務窓口に2点確認する（できれば）**

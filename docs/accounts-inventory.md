@@ -102,8 +102,12 @@
 ### Ahrefs ⚠️ CEO所有
 
 - ワークスペース所有者：**takenaka01@ibeck.co.jp（CEO）**
-- 2026-07-16 時点で **proofloop.jp のプロジェクト登録は未完**。Claude の Ahrefs MCP はこの CEO 側ワークスペースを参照します。
-- プラン：Lite（月100,000ユニット）
+- ✅ **`proofloop.jp` のプロジェクト登録は完了**（2026-07-29 に Claude が MCP で稼働確認）。
+  - プロジェクト名 `Proofloop` ／ **project_id `10155573`** ／ mode: subdomains ／ protocol: both ／ **verified: true** ／ access: shared
+  - **GSC 連携も有効**。`gsc-performance-history` / `gsc-keywords` / `gsc-pages` が実データを返す。
+  - ⚠️ **Rank Tracker の追跡キーワードは 0 件**。登録は管理画面操作＝CEO対応（`docs/owner-todo.md`）。
+- ⚠️ **オーナー（contact@proofloop.jp）はワークスペースの席を持っておらず、管理画面を直接操作できない。** Claude の Ahrefs MCP は CEO 側ワークスペースを参照するためデータ取得はできるが、設定変更（Rank Tracker・Site Audit・アラート）はすべて CEO 依頼になる。席の付与を依頼するかは判断事項。
+- プラン：Lite（月100,000ユニット）。2026-07-29 時点の消費 **22,030 / 100,000**（リセット 2026-08-09・ワークスペース全体の合算）
 
 ---
 
@@ -186,7 +190,7 @@ CLAUDE.md には以下の記載があります。
 | Vercel | 未確認 | | プロジェクト2つ（要整理） |
 | **Resend** | **ibeckzoom@gmail.com** | **2026-07-22** | 送信元が resend.dev のまま（要対応） |
 | さくらインターネット | 未確認 | | proofloop.jp のDNS。更新期限も要確認 |
-| Ahrefs | takenaka01@ibeck.co.jp（CEO） | 2026-07-16 | proofloop.jp のプロジェクト登録は未完 |
+| Ahrefs | takenaka01@ibeck.co.jp（CEO） | 2026-07-29 | proofloop.jp 登録済（project_id `10155573`・GSC連携有効）。Rank Tracker KWは0件・オーナーに席なし |
 | **バリューコマース** | **ibeckzoom@gmail.com** | **2026-07-22** | **旧URLで登録されていたため proofloop.jp へURL変更を申請中（審査待ち）。** サイトへの実装は未着手 |
 
 ### 判明した構図（2026-07-22）
