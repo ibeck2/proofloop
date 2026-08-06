@@ -52,6 +52,12 @@ ProofLoop は「B2Cメディアで検索流入を貯め、B2B獲得につなげ�
 - キーイベント／主要イベント：`gpa_calculate`・`simulator_complete`・`study_abroad_complete`・`affiliate_click`・`simulator_share`
 - 流入元（オーガニック比率・参照元）
 
+> ⚠️ **GA4 は必ず保存済みの比較「日本のみ（海外ボット除外）」（国 完全一致 'Japan'）を適用して読む**（2026-08-06 作成）。
+> 適用しないと数値が約2倍に水増しされる：2026-08 時点で全299ユーザーのうち Singapore 88・その他海外72 が**滞在0秒・エンゲージメント率0%**のボットで、実ユーザーは Japan 139 のみ。
+> **GA4 のデータフィルタでは国による除外はできない**（選べる種類はデベロッパー／内部トラフィック／ウェブホスト名の3つだけ・2026-08-06 に画面で確認）。だから収集時ではなく**閲覧時に比較で落とす**のが唯一の手段。
+
+**取得経路のコツ**：レポートのURLに `params=_u..nav%3Dmaui%26_u.date00%3DYYYYMMDD%26_u.date01%3DYYYYMMDD` を付けると期間を直接指定できる（`&r=` はレポートID：`all-pages-and-screens` / `lifecycle-traffic-acquisition-v2` / `top-events` / `user-demographics-detail`）。ただし `_u.comparisonOption` は期待どおり効かないので、**前期比は期間を2回に分けて取得する**。行数は既定10なので「1ページあたりの行数」を50に変える。
+
 複数のChromeが接続されている場合は、GA4にログイン済みのものを選ぶ（AskUserQuestionで確認）。ブラウザが無ければこの節を「未取得」として飛ばす。GA4 も SPA で screenshot が不安定なため、**ホームやレポート画面は `get_page_text` で数値を一括取得**すると速い（スコアカード・トップページ・チャネル・イベント名別が一度に読める）。
 
 ### 4. ページ別スコアカードにまとめ、4分類にフラグ

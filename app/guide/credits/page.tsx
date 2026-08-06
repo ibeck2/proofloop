@@ -32,15 +32,19 @@ import {
   FileCheck2,
   MessageCircle,
 } from "lucide-react";
+import { creditsToRecover, gpaAfterFail } from "@/lib/gpa/dropImpact";
 
 export const metadata: Metadata = {
   title: "単位どうする？履修・GPA・卒業要件で失敗しないための完全ガイド | ProofLoop",
   description:
-    "大学の履修登録の手順・必修と選択の違い・GPAの仕組みと使い場・単位を落としたときの対処まで。ProofLoopが新入生向けに大学の単位制度を徹底解説。",
+    "選択科目を落とすとGPAはいくつ下がるのか、実際の数字で解説。履修登録の手順・必修と選択の違い・GPAの仕組み・落としたときの再履修まで、大学の単位制度を新入生向けに徹底解説。",
   keywords: [
     "大学 履修登録",
     "大学 GPA 計算",
     "大学 単位 落とした",
+    "大学 選択科目 落とす gpa",
+    "選択科目 落とす",
+    "不可 GPA 影響",
     "必修 選択",
     "卒業要件",
     "大学 留年",
@@ -48,7 +52,8 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "単位どうする？履修・GPA・卒業要件で失敗しないための完全ガイド | ProofLoop",
-    description: "履修登録・必修と選択・GPA・単位を落としたとき。大学の単位制度を新入生向けにまとめました。",
+    description:
+      "選択科目を落とすとGPAはいくつ下がるのか。履修登録・必修と選択・GPA・落としたときの対処を新入生向けにまとめました。",
     url: `${SITE_URL}/guide/credits`,
   },
   alternates: { canonical: `${SITE_URL}/guide/credits` },
@@ -188,7 +193,52 @@ const HOWTO_ITEMS = [
   },
 ] as const;
 
+// ── 落単がGPAに与える影響（数字は /gpa と同じ計算ロジックで算出する） ──
+// 前提：GPA 3.00 を 20単位分で作っている1年生が、2単位の選択科目を落とした場合。
+const DROP_BASE = { currentGpa: 3.0, currentCredits: 20, failedCredits: 2 } as const;
+
+const DROP_CASES = [
+  {
+    label: "修正期間内に履修取消（W）で逃げた",
+    gpa: gpaAfterFail({ ...DROP_BASE, failedCredits: 0 }),
+    note: "GPAには算入されない",
+  },
+  {
+    label: "2単位の選択科目を1つ落とした（不可）",
+    gpa: gpaAfterFail(DROP_BASE),
+    note: "0点として分母に算入される",
+  },
+  {
+    label: "4単位ぶん落とした（不可）",
+    gpa: gpaAfterFail({ ...DROP_BASE, failedCredits: 4 }),
+    note: "落とした単位数に比例して重くなる",
+  },
+  {
+    label: "同じ2単位を、100単位まで進んだ4年次に落とした",
+    gpa: gpaAfterFail({ currentGpa: 3.0, currentCredits: 100, failedCredits: 2 }),
+    note: "母数が大きいほど下げ幅は小さい",
+  },
+] as const;
+
+/** 優（GP 3.0）だけを積んで 2.90 まで戻すのに必要な単位数 */
+const RECOVER_WITH_GOOD = creditsToRecover({ ...DROP_BASE, targetGpa: 2.9, gradePoint: 3.0 });
+/** 秀（GP 4.0）で 3.00 に戻すのに必要な単位数 */
+const RECOVER_WITH_TOP = creditsToRecover({ ...DROP_BASE, targetGpa: 3.0, gradePoint: 4.0 });
+
+/** 計算不能（本来起きない）を画面に出さないための表示整形 */
+function formatGpa(value: number | null): string {
+  return value === null ? "—" : value.toFixed(2);
+}
+
 const FAQ_ITEMS = [
+  {
+    q: "選択科目を落としても卒業できますか？",
+    a: "卒業要件だけを見れば、選択科目は別の選択科目で単位を埋め直せるので卒業自体は可能です。ただし成績証明書に残った不可（F）はGPAに0点として算入され続けます。「卒業要件は代替できるが、GPAは代替できない」という非対称が、選択科目を落とすことの本当のコストです。必修・選択必修は代替そのものができないため、再履修一択になります。",
+  },
+  {
+    q: "落とした科目を再履修して合格したら、GPAは元に戻りますか？",
+    a: "大学によって扱いが分かれます。再履修の成績で上書きして元の不可をGPA計算から外す大学と、不可と合格の両方を成績証明書に残して両方をGPAに算入する大学があります。後者の場合、再履修で合格してもGPAは完全には戻りません。所属大学の履修要項で「再履修」「成績の上書き」の項目を必ず確認してください。",
+  },
   {
     q: "卒業には何単位必要ですか？",
     a: "学部・大学によりますが、4年制大学の学士課程は概ね124単位前後が標準です（大学設置基準）。学部によっては140単位以上必要な場合や、必修科目の比率が高い場合があります。正確な数字は所属学部の「履修要項」「学生便覧」を必ず確認してください。",
@@ -268,6 +318,7 @@ export default function CreditsGuidePage() {
               { label: "履修登録", href: "#registration" },
               { label: "単位の仕組み", href: "#units" },
               { label: "GPA", href: "#gpa" },
+              { label: "落とすとGPAは", href: "#drop-gpa" },
               { label: "落としたら", href: "#fail" },
               { label: "コツ", href: "#howto" },
               { label: "よくある質問", href: "#faq" },
@@ -468,6 +519,112 @@ export default function CreditsGuidePage() {
             <Link href="/gpa" className="mt-3 inline-block text-sm font-bold text-ink underline">
               GPA計算機を使う
             </Link>
+          </div>
+        </section>
+
+        {/* §3.5 落単がGPAに与える影響 */}
+        <section id="drop-gpa" className="flex flex-col gap-6 scroll-mt-20">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">
+              選択科目を落とすとGPAはどう下がる？
+            </h2>
+            <p className="text-graphite text-sm">
+              「選択科目だから、落としても別の科目で埋めればいい」——卒業要件についてはそのとおりです。ただしGPAだけは埋め直せません。
+            </p>
+          </div>
+
+          {/* 結論 */}
+          <div className="border border-rule border-l-4 border-l-seal bg-mist p-5 flex gap-3">
+            <AlertCircle className="w-[18px] h-[18px] text-seal shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <p className="text-ink font-bold text-sm">卒業要件は代替できる。GPAは代替できない</p>
+              <p className="text-graphite text-xs leading-relaxed mt-1">
+                不可（F）は「履修しなかった」ではなく「<strong className="text-ink">0点を取った</strong>」という記録です。単位数はそのまま分母に算入されるため、他の選択科目で卒業単位を埋め直しても、GPAに刻まれた0点は消えません。奨学金の継続審査や交換留学の出願はこのGPAで判定されます。
+              </p>
+            </div>
+          </div>
+
+          {/* 数値シミュレーション */}
+          <div className="border border-rule p-6 flex flex-col gap-4">
+            <h3 className="text-ink font-black text-base">
+              GPA 3.00・20単位の1年生が、2単位の選択科目を落としたら
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border border-rule">
+                <thead className="bg-mist">
+                  <tr>
+                    <th className="px-4 py-2 text-left font-bold text-ink">ケース</th>
+                    <th className="px-4 py-2 text-left font-bold text-ink whitespace-nowrap">その後のGPA</th>
+                    <th className="px-4 py-2 text-left font-bold text-ink">ひとこと</th>
+                  </tr>
+                </thead>
+                <tbody className="text-graphite">
+                  {DROP_CASES.map((row) => (
+                    <tr key={row.label} className="border-t border-rule">
+                      <td className="px-4 py-2 leading-snug">{row.label}</td>
+                      <td className="px-4 py-2 font-bold text-ink font-numeric tabular-nums whitespace-nowrap">
+                        {formatGpa(row.gpa)}
+                      </td>
+                      <td className="px-4 py-2 text-xs leading-snug">{row.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-graphite text-sm leading-relaxed">
+              同じ2単位でも、<strong className="text-ink">早い学年で落とすほど痛い</strong>のが分かります。分母が小さいうちは1科目の重みが大きいためです。1年次の「とりあえず取った科目」を放置するリスクはここにあります。
+            </p>
+            <p className="text-[11px] text-graphite">
+              ※ 4.0スケールの一般的な換算での試算です。この表の数値は
+              <Link href="/gpa" className="text-ink underline">GPA計算機</Link>
+              と同じ計算式で算出しています。
+            </p>
+          </div>
+
+          {/* 取り返しにかかるコスト */}
+          <div className="border border-rule border-l-4 border-l-ink bg-mist p-5 flex gap-3">
+            <TrendingDown className="w-[18px] h-[18px] text-ink shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <p className="text-ink font-bold text-sm">一度下がったGPAは、想像よりずっと戻らない</p>
+              <p className="text-graphite text-xs leading-relaxed mt-1">
+                上の「2単位を落として2.73になった」状態から取り返す場合、
+                <strong className="text-ink">
+                  優（GP 3.0）をいくら積んでも3.00には二度と戻りません
+                </strong>
+                。積むほど3.00に近づきますが、決して届かないためです（3.0で薄めても平均は3.0を超えない）。
+              </p>
+              <ul className="text-graphite text-xs leading-relaxed mt-2 flex flex-col gap-1 list-disc pl-4">
+                <li>
+                  優（3.0）だけで <strong className="text-ink">2.90</strong> まで戻すのに{" "}
+                  <strong className="text-ink font-numeric tabular-nums">{RECOVER_WITH_GOOD}単位</strong>
+                  必要（＝おおよそ1年分の履修）
+                </li>
+                <li>
+                  秀（4.0）が取れるなら{" "}
+                  <strong className="text-ink font-numeric tabular-nums">{RECOVER_WITH_TOP}単位</strong>
+                  で 3.00 に復帰できる
+                </li>
+              </ul>
+              <p className="text-graphite text-xs leading-relaxed mt-2">
+                だからこそ「落としそう」と気づいた時点の判断が効きます。修正期間内であれば
+                <strong className="text-ink">履修取消（W）はGPAに算入されません</strong>
+                。取消は卒業単位が減るという別のコストを伴うので、残り単位に余裕があるかとセットで判断してください。
+              </p>
+            </div>
+          </div>
+
+          {/* 大学差の注意 */}
+          <div className="border border-rule p-5 flex gap-3">
+            <AlertTriangle className="w-[18px] h-[18px] text-graphite shrink-0 mt-0.5" aria-hidden="true" />
+            <div>
+              <p className="text-ink font-bold text-sm">「不可を分母に含めるか」は大学によって違う</p>
+              <p className="text-graphite text-xs leading-relaxed mt-1">
+                ここまでは不可を分母に算入する前提で計算しました。これが最も一般的ですが、大学や指標によっては不可を分母から除く規定を持つ場合があります（東京大学の成績評価係数のように、公式資料の中でも記載が分かれている例もあります）。ProofLoopのGPA計算機は<strong className="text-ink">この切替に対応</strong>しているので、自分の大学の規定に合わせて試せます。
+              </p>
+              <Link href="/gpa" className="mt-3 inline-block text-sm font-bold text-ink underline">
+                自分の数字で試す（GPA計算機）
+              </Link>
+            </div>
           </div>
         </section>
 
