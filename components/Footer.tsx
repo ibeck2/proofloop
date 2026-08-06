@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { COMPANY } from "@/lib/legal/company";
 
 const GUIDE_LINKS = [
   { href: "/gpa", label: "GPA計算機" },
@@ -13,11 +13,12 @@ const GUIDE_LINKS = [
 
 // /for-students リンクは該当ページが存在しないため削除（404）。ページ実装時にここで復活させる。
 const ABOUT_LINKS = [
+  { href: "/about", label: "運営者情報" },
   { href: "/for-clubs", label: "学生団体の方へ" },
+  { href: "/terms", label: "利用規約" },
+  { href: "/privacy", label: "プライバシーポリシー" },
+  { href: "/listing-policy", label: "掲載ポリシー" },
 ];
-
-const CONTACT_URL =
-  "https://proofloop.jp/organizations/4003e084-8da8-4315-b0dc-3dcce3da42d0";
 
 export default function Footer() {
   const year = new Date().getFullYear();
@@ -72,14 +73,14 @@ export default function Footer() {
           <div>
             <h2 className="font-body font-bold text-sm mb-4 text-paper">お問い合わせ</h2>
             <a
-              href={CONTACT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-paper/70 hover:text-paper transition-colors text-sm font-body"
+              href={`mailto:${COMPANY.contactEmail}`}
+              className="text-paper/70 hover:text-paper transition-colors text-sm font-body break-all"
             >
-              運営事務局
-              <ExternalLink className="w-4 h-4" aria-hidden="true" />
+              {COMPANY.contactEmail}
             </a>
+            <p className="text-paper/50 text-xs mt-3 leading-relaxed font-body">
+              掲載の停止・訂正のご依頼も、こちらで承ります。
+            </p>
           </div>
         </div>
 
