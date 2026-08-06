@@ -10,9 +10,9 @@ import { SITE_URL } from "@/lib/site-url";
 
 export const revalidate = 3600;
 
-const PAGE_TITLE = "学生団体を探す｜大学別・分野別に見つかる";
+const PAGE_TITLE = "サークル・学生団体を探す｜大学別・分野別に見つかる";
 const PAGE_DESCRIPTION =
-  "全国の大学の学生団体を大学別・分野別に掲載。サークル・研究会・学祭実行委員会を探せます。GPA計算機や単位・お金のガイドも。";
+  "全国の大学のサークル・学生団体を大学別・分野別に掲載。サークル・部活・研究会・学祭実行委員会を探せます。GPA計算機や単位・お金のガイドも。";
 
 export const metadata: Metadata = {
   title: PAGE_TITLE,

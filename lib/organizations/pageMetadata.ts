@@ -50,13 +50,13 @@ function present(v: string | null | undefined): string | null {
 }
 
 export function buildOrgTitle(org: OrgMetaSource): string {
-  const name = present(org.name) ?? "学生団体";
+  const name = present(org.name) ?? "団体";
   const univ = present(org.university);
   return univ ? `${name}（${univ}）` : name;
 }
 
 export function buildOrgDescription(org: OrgMetaSource): string {
-  const name = present(org.name) ?? "この学生団体";
+  const name = present(org.name) ?? "この団体";
   const univ = present(org.university);
   const own = present(org.description);
 
@@ -67,7 +67,9 @@ export function buildOrgDescription(org: OrgMetaSource): string {
   }
 
   const parts: string[] = [
-    univ ? `${univ}の学生団体「${name}」の情報ページです。` : `学生団体「${name}」の情報ページです。`,
+    univ
+      ? `${univ}のサークル・学生団体「${name}」の情報ページです。`
+      : `サークル・学生団体「${name}」の情報ページです。`,
   ];
 
   const freq = present(org.activity_frequency);

@@ -12,16 +12,16 @@ export const metadata: Metadata = {
   // title.template = "%s | ProofLoop" を持っており自動で付与されるため、
   // ここに書くと「… | ProofLoop | ProofLoop」と二重になる。
   // （openGraph.title にはテンプレートが効かないので、そちらは明示する）
-  title: "学生団体の運営を、もっとスマートに",
+  title: "サークル・学生団体の運営を、もっとスマートに",
   description:
-    "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。LINEのDM管理・バラバラのスプレッドシートから卒業しよう。ProofLoop——学生団体のための無料プラットフォーム。",
+    "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。LINEのDM管理・バラバラのスプレッドシートから卒業しよう。ProofLoop——サークル・学生団体のための無料プラットフォーム。",
   openGraph: {
     type: "website",
     url: `${SITE_URL}/for-clubs`,
     siteName: "ProofLoop",
-    title: "学生団体の運営を、もっとスマートに | ProofLoop",
+    title: "サークル・学生団体の運営を、もっとスマートに | ProofLoop",
     description:
-      "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。学生団体のための無料プラットフォームです。",
+      "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。サークル・学生団体のための無料プラットフォームです。",
     locale: "ja_JP",
   },
   alternates: { canonical: `${SITE_URL}/for-clubs` },
@@ -208,7 +208,7 @@ export default function ForClubsPage() {
         <div className="relative max-w-5xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32 text-center">
           {/* バッジ */}
           <div className="inline-flex items-center gap-2 border border-ink/20 bg-mist px-4 py-1.5 text-xs font-bold text-ink mb-8">
-            学生団体・サークル向け　完全無料
+            サークル・学生団体向け　完全無料
           </div>
 
           <h1 className="font-mincho text-3xl md:text-[2.75rem] lg:text-5xl font-black text-ink tracking-tight leading-tight md:leading-tight max-w-4xl mx-auto">
@@ -219,7 +219,7 @@ export default function ForClubsPage() {
           </p>
           <p className="mt-4 max-w-2xl mx-auto text-base text-graphite leading-relaxed">
             「返信漏れで候補者を逃した」「誰が何をやっているかわからない」「毎年の新歓で同じ失敗を繰り返す」——
-            学生団体あるあるを、ProofLoopがまとめて解決します。
+            サークル・学生団体あるあるを、ProofLoopがまとめて解決します。
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -417,7 +417,7 @@ export default function ForClubsPage() {
               { q: "本当に無料ですか？", a: "はい、現在提供しているすべての機能を無料でご利用いただけます。将来的に有料プランを追加する場合も、無料プランは継続する予定です。" },
               { q: "何人まで運営メンバーを招待できますか？", a: "現在は人数制限なく招待できます。権限（管理者・編集者・閲覧者）を設定できるため、安心して複数人での運営が可能です。" },
               { q: "登録から公開までどのくらいかかりますか？", a: "アカウント作成・団体情報の入力・プロフィール設定まで最短5分で完了します。登録後すぐに団体ページが公開されます。" },
-              { q: "どんな学生団体でも登録できますか？", a: "サークル・部活・学生NPO・ゼミ・インカレ団体など、学生が主体となって活動する団体であれば基本的にご利用いただけます。" },
+              { q: "どんな団体でも登録できますか？", a: "サークル・部活・学生NPO・ゼミ・インカレ団体など、学生が主体となって活動する団体であれば基本的にご利用いただけます。" },
               { q: "既存のSNSやLINEと併用できますか？", a: "もちろん可能です。ProofLoopをメンバー管理・タスク管理の中心にしつつ、拡散はSNSで行うというハイブリッドな使い方をされている団体が多いです。" },
             ].map((item, i) => (
               <div key={i} className="py-5">

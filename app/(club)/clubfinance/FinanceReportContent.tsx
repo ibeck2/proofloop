@@ -56,7 +56,7 @@ export default function FinanceReportContent() {
     setExporting(true);
     try {
       const data: FinanceReportData = {
-        orgName: orgName ?? "学生団体",
+        orgName: orgName ?? "団体",
         period,
         summary,
         incomeRows: income,

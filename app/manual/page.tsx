@@ -20,9 +20,9 @@ export const metadata: Metadata = {
   // title.template = "%s | ProofLoop" を持っており自動で付与されるため、
   // ここに書くと「… | ProofLoop | ProofLoop」と二重になる。
   // （openGraph.title にはテンプレートが効かないので、そちらは明示する）
-  title: "運営マニュアル｜学生団体向けの使い方ガイド",
+  title: "運営マニュアル｜サークル・学生団体向けの使い方ガイド",
   description:
-    "ProofLoopを学生団体で使うための手順書。アカウント登録から団体プロフィールの公開、新歓の応募管理、タスク・イベント・メンバー権限の使い方までを、実際の画面の流れに沿ってまとめています。",
+    "ProofLoopをサークル・学生団体で使うための手順書。アカウント登録から団体プロフィールの公開、新歓の応募管理、タスク・イベント・メンバー権限の使い方までを、実際の画面の流れに沿ってまとめています。",
   keywords: [
     "学生団体 運営",
     "サークル 運営 ツール",
@@ -34,9 +34,9 @@ export const metadata: Metadata = {
     type: "website",
     url: `${SITE_URL}/manual`,
     siteName: "ProofLoop",
-    title: "運営マニュアル｜学生団体向けの使い方ガイド | ProofLoop",
+    title: "運営マニュアル｜サークル・学生団体向けの使い方ガイド | ProofLoop",
     description:
-      "アカウント登録から団体プロフィールの公開、新歓の応募管理、タスク・イベント・メンバー権限まで。ProofLoopを学生団体で使うための手順書です。",
+      "アカウント登録から団体プロフィールの公開、新歓の応募管理、タスク・イベント・メンバー権限まで。ProofLoopをサークル・学生団体で使うための手順書です。",
     locale: "ja_JP",
   },
   alternates: { canonical: `${SITE_URL}/manual` },
@@ -122,7 +122,7 @@ export default function ManualPage() {
           </Link>
           <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
           <Link href="/for-clubs" className="hover:underline">
-            学生団体の方へ
+            サークル・学生団体の方へ
           </Link>
           <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
           <span className="text-ink font-bold">運営マニュアル</span>
@@ -138,7 +138,7 @@ export default function ManualPage() {
             運営マニュアル
           </h1>
           <p className="text-graphite leading-relaxed">
-            ProofLoopを学生団体で使うための手順書です。登録から新歓の応募管理までを、実際に触る順番で並べています。
+            ProofLoopをサークル・学生団体で使うための手順書です。登録から新歓の応募管理までを、実際に触る順番で並べています。
             上から順にやれば設定は終わります。分からないところだけ読む使い方でも構いません。
           </p>
         </section>
@@ -235,14 +235,14 @@ export default function ManualPage() {
         <section className="border border-rule p-6 flex flex-col gap-4">
           <h2 className="text-ink font-black text-base">まだ登録していない方へ</h2>
           <p className="text-graphite text-sm leading-relaxed">
-            ProofLoopは学生団体は無料で使えます。何ができるかを先に知りたい場合は、学生団体向けのご案内をご覧ください。
+            ProofLoopはサークル・学生団体なら無料で使えます。何ができるかを先に知りたい場合は、サークル・学生団体向けのご案内をご覧ください。
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/for-clubs"
               className="inline-flex items-center gap-2 border border-rule px-4 py-2 text-sm font-bold text-ink hover:bg-mist transition-colors"
             >
-              学生団体の方へ
+              サークル・学生団体の方へ
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </Link>
             <Link

@@ -351,7 +351,7 @@ export default function CircleGuidePage() {
           <div className="flex flex-col gap-2">
             <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">実際にサークルを探してみよう</h2>
             <p className="text-graphite text-sm leading-relaxed">
-              ProofLoopでは全国の学生団体の情報を掲載しています。活動頻度・メンバー数・選考の有無・SNSリンクまで、入部前に必要な情報をまとめて確認できます。
+              ProofLoopでは全国のサークル・学生団体の情報を掲載しています。活動頻度・メンバー数・選考の有無・SNSリンクまで、入部前に必要な情報をまとめて確認できます。
             </p>
           </div>
           {/* カテゴリ別ショートカット */}

@@ -79,12 +79,12 @@ export default function CompanyDashboardPage() {
             </section>
             {/* Matching Status Section */}
             <section className="flex flex-col gap-4">
-              <h3 className="text-ink text-xl font-bold font-mincho">現在オファー中の学生団体</h3>
+              <h3 className="text-ink text-xl font-bold font-mincho">現在オファー中の団体</h3>
               <div className="border border-rule bg-paper rounded-none overflow-hidden">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-mist border-b border-rule">
-                      <th className="py-4 px-6 text-sm font-semibold text-graphite/70 w-1/2">学生団体名</th>
+                      <th className="py-4 px-6 text-sm font-semibold text-graphite/70 w-1/2">団体名</th>
                       <th className="py-4 px-6 text-sm font-semibold text-graphite/70 w-1/4">オファー種別</th>
                       <th className="py-4 px-6 text-sm font-semibold text-graphite/70 w-1/4">ステータス</th>
                     </tr>
@@ -130,7 +130,7 @@ export default function CompanyDashboardPage() {
             {/* AI Recommendation Section */}
             <section className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-ink text-xl font-bold font-mincho">貴社の課題解決にマッチする注目の学生団体</h3>
+                <h3 className="text-ink text-xl font-bold font-mincho">貴社の課題解決にマッチする注目の団体</h3>
                 <button className="text-sm text-graphite/70 hover:text-ink font-medium flex items-center gap-1 transition-colors">
                   すべて見る
                   <ArrowRight className="w-4 h-4" aria-hidden="true" />

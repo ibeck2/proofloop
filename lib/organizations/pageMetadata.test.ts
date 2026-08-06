@@ -46,6 +46,13 @@ describe("buildOrgDescription", () => {
     expect(d).toContain("音楽部交響楽団");
   });
 
+  // 掲載2,400+ページのうち大半はサークル。「学生団体」とだけ名乗ると、
+  // サークル名で検索して来た学生が自分ごとに感じられない（2026-08-06 の用語中立化）。
+  it("サークルを含む中立的な表記を使う", () => {
+    expect(buildOrgDescription(base)).toContain("サークル・学生団体");
+    expect(buildOrgDescription({ ...base, university: null })).toContain("サークル・学生団体");
+  });
+
   it("持っていない情報には触れない（活動頻度・部員数が無いとき）", () => {
     const d = buildOrgDescription(base);
     expect(d).not.toContain("活動頻度");

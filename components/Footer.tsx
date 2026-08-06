@@ -14,7 +14,7 @@ const GUIDE_LINKS = [
 // /for-students リンクは該当ページが存在しないため削除（404）。ページ実装時にここで復活させる。
 const ABOUT_LINKS = [
   { href: "/about", label: "運営者情報" },
-  { href: "/for-clubs", label: "学生団体の方へ" },
+  { href: "/for-clubs", label: "サークル・学生団体の方へ" },
   { href: "/terms", label: "利用規約" },
   { href: "/privacy", label: "プライバシーポリシー" },
   { href: "/listing-policy", label: "掲載ポリシー" },

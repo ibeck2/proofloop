@@ -181,7 +181,7 @@ export default function GuidePage() {
           <div className="flex flex-col gap-2">
             <h3 className="text-ink font-black text-lg">サークルも一緒に探してみよう</h3>
             <p className="text-graphite text-sm">
-              ProofLoopでは全国の学生団体を検索できます。新歓情報・活動頻度・雰囲気がわかる詳細ページが揃っています。
+              ProofLoopでは全国のサークル・学生団体を検索できます。新歓情報・活動頻度・雰囲気がわかる詳細ページが揃っています。
             </p>
           </div>
           <Link href="/search"

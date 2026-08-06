@@ -11,7 +11,7 @@ export default function ForClubsCallout() {
     <section className="border-l-4 border-seal bg-mist px-6 py-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-col gap-1">
         <h2 className="font-mincho font-bold text-ink text-lg">
-          学生団体を運営している方へ
+          サークル・学生団体を運営している方へ
         </h2>
         <p className="font-body text-sm text-graphite">
           メンバー管理・新歓・イベント・タスクを、ひとつの場所で。

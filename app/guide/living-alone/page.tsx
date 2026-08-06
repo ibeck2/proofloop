@@ -527,7 +527,7 @@ export default function LivingAloneGuidePage() {
             <div className="flex-1">
               <p className="text-ink font-bold text-sm">居場所を作るならサークルから</p>
               <p className="text-graphite text-xs leading-relaxed mt-1">
-                サークルの選び方・入り方は「サークルガイド」で、全国の学生団体の検索はProofLoopでできます。
+                サークルの選び方・入り方は「サークルガイド」で、全国のサークル・学生団体の検索はProofLoopでできます。
                 <Link href="/guide/circle" className="text-ink font-bold underline ml-1">
                   サークルどうする？ →
                 </Link>

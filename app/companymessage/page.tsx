@@ -45,7 +45,7 @@ export default function CompanymessagePage() {
             </Link>
             <Link className="flex items-center gap-4 px-3 py-3 text-paper/70 hover:bg-paper/5" href="/companysearch">
               <Search className="w-5 h-5" aria-hidden="true" />
-              <span className="text-sm font-medium">学生団体検索</span>
+              <span className="text-sm font-medium">団体検索</span>
             </Link>
             <Link className="flex items-center gap-4 px-3 py-3 text-paper/70 hover:bg-paper/5" href="/companydashboard">
               <Handshake className="w-5 h-5" aria-hidden="true" />

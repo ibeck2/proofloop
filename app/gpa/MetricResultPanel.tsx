@@ -92,7 +92,7 @@ export default function MetricResultPanel({
 
       <div className="mt-6 border-t border-rule pt-6">
         <p className="text-sm text-graphite">
-          学外の活動（学生団体・インターン・プロジェクト）は成績には出ませんが、実績として蓄積できます。
+          授業以外の活動（サークル・学生団体・インターン・プロジェクト）は成績には出ませんが、実績として蓄積できます。
         </p>
         <Link href="/signup" className="mt-3 inline-block text-sm font-bold text-ink underline">
           ProofLoopで活動を記録する

@@ -701,7 +701,7 @@ export default function BaitoPage() {
           <div className="flex flex-col gap-2">
             <h3 className="font-mincho text-ink font-bold text-lg">バイトが決まったら、サークルも探そう</h3>
             <p className="text-graphite text-sm">
-              ProofLoopでは全国の学生団体を検索できます。バイトと両立できるサークルがきっと見つかります。
+              ProofLoopでは全国のサークル・学生団体を検索できます。バイトと両立できるサークルがきっと見つかります。
             </p>
           </div>
           <a

@@ -17,7 +17,7 @@ export default function DirectoryPreview({ universityCounts }: Props) {
           大学から探す
         </h2>
         <p className="font-body text-sm text-graphite">
-          学生団体を大学別に掲載しています。所属団体の多い順。
+          サークル・学生団体を大学別に掲載しています。所属団体の多い順。
         </p>
       </div>
 
