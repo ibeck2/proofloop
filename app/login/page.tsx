@@ -51,9 +51,10 @@ export default function LoginPage() {
     if (!trimmedEmail || !trimmedPassword) {
       return { success: false, error: "メールアドレスとパスワードを入力してください。" };
     }
-    if (trimmedPassword.length < 6) {
-      return { success: false, error: "パスワードは6文字以上で入力してください。" };
-    }
+    // ログインでは長さを検証しない。正否はサーバー（Supabase Auth）が実際の
+    // パスワードと照合して決めるためクライアント側の長さチェックに意味が無く、
+    // むしろ登録時の規則を引き上げたあと、古い規則で登録した利用者が正しい
+    // パスワードなのに弾かれて締め出される事故だけを生む。
 
     const { error } = await supabase.auth.signInWithPassword({
       email: trimmedEmail,

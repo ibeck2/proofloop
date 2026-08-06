@@ -10,6 +10,13 @@ import { Mail, Repeat } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_PLACEHOLDER,
+  PASSWORD_REQUIRED_MESSAGE,
+  PASSWORD_TOO_SHORT_MESSAGE,
+  validateNewPassword,
+} from "@/lib/auth/password";
+import {
   UNIVERSITY_OPTIONS,
   UNIVERSITY_OTHER,
   resolveUniversityValue,
@@ -24,7 +31,10 @@ const UNIVERSITY_DOMAIN_ERROR = "大学発行のメールアドレス（.ac.jp�
 
 const companySignupSchema = z.object({
   companyEmail: z.string().min(1, "法人メールアドレスを入力してください").email("正しいメールアドレスを入力してください"),
-  password: z.string().min(1, "パスワードを入力してください").min(6, "パスワードは6文字以上で入力してください"),
+  password: z
+    .string()
+    .min(1, PASSWORD_REQUIRED_MESSAGE)
+    .min(PASSWORD_MIN_LENGTH, PASSWORD_TOO_SHORT_MESSAGE),
 });
 
 type CompanySignupForm = z.infer<typeof companySignupSchema>;
@@ -99,8 +109,9 @@ export default function SignupPage() {
       return;
     }
 
-    if (p.length < 8) {
-      setSubmitError("パスワードは8文字以上で入力してください。");
+    const passwordCheck = validateNewPassword(p);
+    if (!passwordCheck.ok) {
+      setSubmitError(passwordCheck.message);
       return;
     }
     if (!fullName.trim()) {
@@ -308,7 +319,7 @@ export default function SignupPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="8文字以上"
+                  placeholder={PASSWORD_PLACEHOLDER}
                   disabled={isLoading}
                   className="w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper placeholder-graphite/50 rounded-none px-3 py-2"
                 />
@@ -479,7 +490,7 @@ export default function SignupPage() {
                 <label className="block text-ink font-bold text-sm mb-2">パスワード</label>
                 <Input
                   type="password"
-                  placeholder="パスワードを入力（6文字以上）"
+                  placeholder={`パスワードを入力（${PASSWORD_PLACEHOLDER}）`}
                   {...register("password")}
                   disabled={isLoading}
                   className={errors.password ? "border-seal" : ""}
