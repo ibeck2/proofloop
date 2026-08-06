@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { MessageSquare, Repeat } from "lucide-react";
+import { Repeat } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 
@@ -164,21 +164,6 @@ export default function LoginPage() {
 
           {tab === "student" && (
             <form className="space-y-6" onSubmit={handleStudentSubmit}>
-              <button
-                type="button"
-                className="w-full py-4 px-4 flex items-center justify-center gap-2 bg-[#2d5a3d] text-white font-bold text-sm hover:bg-[#244a32] transition-colors"
-              >
-                <MessageSquare className="w-5 h-5" aria-hidden="true" />
-                LINEでログイン
-              </button>
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-rule" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-paper px-2 text-graphite">または</span>
-                </div>
-              </div>
               <div className="space-y-5">
                 <div>
                   <label

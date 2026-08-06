@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { SITE_URL } from "@/lib/site-url";
 import { buildOrgDescription, buildOrgTitle } from "@/lib/organizations/pageMetadata";
 import OrganizationDetailClient from "./OrganizationDetailClient";
+import ListingNotice from "@/components/legal/ListingNotice";
 
 export type EventRow = {
   id: string;
@@ -115,11 +116,14 @@ export default async function OrganizationPage({
   if (orgError || !org) notFound();
 
   return (
-    <OrganizationDetailClient
-      org={org}
-      events={(events as EventRow[]) ?? []}
-      photos={(photos as OrganizationPhotoRow[]) ?? []}
-      approvedReviews={(reviews as ReviewRow[]) ?? []}
-    />
+    <>
+      <OrganizationDetailClient
+        org={org}
+        events={(events as EventRow[]) ?? []}
+        photos={(photos as OrganizationPhotoRow[]) ?? []}
+        approvedReviews={(reviews as ReviewRow[]) ?? []}
+      />
+      <ListingNotice />
+    </>
   );
 }

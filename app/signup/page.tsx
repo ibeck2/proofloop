@@ -439,6 +439,18 @@ export default function SignupPage() {
                 </p>
               )}
 
+              <p className="text-xs text-graphite leading-relaxed">
+                登録することで、
+                <Link href="/terms" className="text-ink underline">
+                  利用規約
+                </Link>
+                および
+                <Link href="/privacy" className="text-ink underline">
+                  プライバシーポリシー
+                </Link>
+                に同意したものとみなします。
+              </p>
+
               <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
                 {isLoading ? "処理中..." : "登録"}
               </Button>
@@ -480,6 +492,17 @@ export default function SignupPage() {
                 </Link>
               </div>
               {submitError && <p className="text-sm text-seal" role="alert">{submitError}</p>}
+              <p className="text-xs text-graphite leading-relaxed">
+                登録することで、
+                <Link href="/terms" className="text-ink underline">
+                  利用規約
+                </Link>
+                および
+                <Link href="/privacy" className="text-ink underline">
+                  プライバシーポリシー
+                </Link>
+                に同意したものとみなします。
+              </p>
               <Button type="submit" variant="primary" className="w-full" disabled={isLoading}>
                 {isLoading ? "処理中..." : "登録"}
               </Button>
