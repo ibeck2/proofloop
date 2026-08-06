@@ -505,21 +505,20 @@ export default function ForClubsPage() {
             登録無料・5分で完了・クレジットカード不要。
             いつでも削除できます。
           </p>
-          <Link href="/signup"
-            className="inline-flex items-center justify-center gap-2 bg-seal px-10 py-4 text-base font-black text-paper shadow-lg shadow-seal/20 transition hover:bg-[#600000] hover:shadow-xl">
-            無料で団体を登録する
-            <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/signup"
+              className="inline-flex items-center justify-center gap-2 bg-seal px-10 py-4 text-base font-black text-paper shadow-lg shadow-seal/20 transition hover:bg-[#600000] hover:shadow-xl">
+              無料で団体を登録する
+              <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+            </Link>
+            <Link href="/manual" className="text-sm font-bold text-ink/70 underline underline-offset-4 transition hover:text-ink">
+              登録後の使い方を見る
+            </Link>
+          </div>
           <p className="mt-6 text-sm text-graphite/70">
             すでにアカウントをお持ちの方は{" "}
             <Link href="/login" className="font-bold text-ink hover:underline underline-offset-4">
               ログイン
-            </Link>
-          </p>
-          <p className="mt-3 text-sm text-graphite/70">
-            使い方を確認したい方は{" "}
-            <Link href="/manual" className="font-bold text-ink hover:underline underline-offset-4">
-              運営マニュアル
             </Link>
           </p>
         </div>

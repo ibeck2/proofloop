@@ -11,7 +11,8 @@ const GUIDE_LINKS = [
   { href: "/guide/circle", label: "サークル" },
 ];
 
-// /for-students リンクは該当ページが存在しないため削除（404）。ページ実装時にここで復活させる。
+// /for-students は作らない方針（2026-08-06 決定）。学生向けの入口は /guide ハブ・
+// /gpa・/baito が担っており、専用ページを作ると内容が重複するため。
 const ABOUT_LINKS = [
   { href: "/about", label: "運営者情報" },
   { href: "/for-clubs", label: "サークル・学生団体の方へ" },
