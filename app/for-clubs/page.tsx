@@ -4,7 +4,7 @@ import { SITE_URL } from "@/lib/site-url";
 import {
   ArrowRight, CalendarDays, Inbox, Kanban,
   MessageSquare, Rss, Sparkles, Users,
-  CheckCircle2, TrendingUp, Shield, Zap,
+  CheckCircle2, TrendingUp, Shield, Zap, Wallet,
 } from "lucide-react";
 import FinanceDemo from "@/components/for-clubs/FinanceDemo";
 
@@ -186,6 +186,35 @@ function MockTasksInvite() {
   );
 }
 
+function MockFinance() {
+  return (
+    <div className="flex flex-col overflow-hidden border border-rule bg-mist">
+      <MockChrome path="/clubfinance" />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="border border-rule bg-paper p-3">
+          <p className="text-[10px] text-graphite">現在の残高</p>
+          <p className="font-numeric tabular-nums text-xl font-black text-ink">¥229,800</p>
+        </div>
+        <div className="flex flex-col gap-2 border border-rule bg-paper p-3">
+          <p className="text-[10px] font-bold text-ink">費目別の予算対比</p>
+          {[
+            { name: "会場費", ratio: 0.36 },
+            { name: "備品費", ratio: 0.4 },
+            { name: "交通費", ratio: 0.31 },
+          ].map((r) => (
+            <div key={r.name} className="flex flex-col gap-1">
+              <span className="text-[10px] text-graphite">{r.name}</span>
+              <div className="h-1.5 w-full bg-mist">
+                <div className="h-1.5 bg-ink" style={{ width: `${r.ratio * 100}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────
 // Page
 // ─────────────────────────────────────────────
@@ -284,11 +313,41 @@ export default function ForClubsPage() {
       {/* ── 機能紹介 Zレイアウト ── */}
       <div id="features" className="max-w-6xl mx-auto px-6 py-20 md:py-32 space-y-24 md:space-y-36">
 
+        {/* ① 会計・財務 */}
+        <section className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+          <div className="order-2 space-y-6 lg:order-1">
+            <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
+              <Wallet className="size-3.5 shrink-0" aria-hidden="true" />01 ／ 会計・財務
+            </div>
+            <h2 className="font-mincho text-2xl font-black leading-snug text-ink md:text-3xl">
+              代替わりで消える帳簿を、<br />なくす。
+            </h2>
+            <p className="text-base leading-relaxed text-graphite">
+              大学へ提出する年次の収支報告は、紙のレシートと手集計で毎年つくり直しになります。ProofLoopなら記録した時点で残高・費目別集計・予算対比が出そろい、そのままExcelで書き出せます。
+            </p>
+            <ul className="flex flex-col gap-2">
+              {["出納帳・費目別集計・予算対比を自動で計算", "領収書の写真を取引に添付", "収支報告書と出納帳をExcelで出力", "会計担当だけが記録／閲覧は全員（透明性）"].map(f => (
+                <li key={f} className="flex items-center gap-2 text-sm text-graphite">
+                  <CheckCircle2 className="size-4 shrink-0 text-ink" aria-hidden="true" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <a href="#demo" className="inline-block text-sm font-bold text-ink underline underline-offset-4">
+              上のデモで実際に試す
+            </a>
+          </div>
+          <div className="order-1 lg:order-2">
+            <MockFinance />
+            <p className="mt-3 text-center text-xs text-graphite/70">会計・財務の画面イメージ</p>
+          </div>
+        </section>
+
         {/* ① 応募管理 */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <MessageSquare className="size-3.5 shrink-0" aria-hidden="true" />01 ／ 応募・採用管理
+              <MessageSquare className="size-3.5 shrink-0" aria-hidden="true" />02 ／ 応募・採用管理
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               「あの子、もう連絡した？」を<br />なくす。
@@ -319,7 +378,7 @@ export default function ForClubsPage() {
           </div>
           <div className="order-2 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <Rss className="size-3.5 shrink-0" aria-hidden="true" />02 ／ タイムライン発信
+              <Rss className="size-3.5 shrink-0" aria-hidden="true" />05 ／ タイムライン発信
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               4月だけじゃない。<br />年間を通じて目に留まる。
@@ -342,7 +401,7 @@ export default function ForClubsPage() {
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />03 ／ イベント告知・集客
+              <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />04 ／ イベント告知・集客
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               新歓も、公演も、勉強会も。<br />人が集まる仕組みを作る。
@@ -373,7 +432,7 @@ export default function ForClubsPage() {
           </div>
           <div className="order-2 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <Users className="size-3.5 shrink-0" aria-hidden="true" />04 ／ タスク・メンバー管理
+              <Users className="size-3.5 shrink-0" aria-hidden="true" />03 ／ タスク・メンバー管理
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               「誰が何をやるか」を<br />全員で見える化する。
@@ -425,6 +484,7 @@ export default function ForClubsPage() {
               { q: "登録から公開までどのくらいかかりますか？", a: "アカウント作成・団体情報の入力・プロフィール設定まで最短5分で完了します。登録後すぐに団体ページが公開されます。" },
               { q: "どんな団体でも登録できますか？", a: "サークル・部活・学生NPO・ゼミ・インカレ団体など、学生が主体となって活動する団体であれば基本的にご利用いただけます。" },
               { q: "既存のSNSやLINEと併用できますか？", a: "もちろん可能です。ProofLoopをメンバー管理・タスク管理の中心にしつつ、拡散はSNSで行うというハイブリッドな使い方をされている団体が多いです。" },
+              { q: "会計担当以外にも帳簿が見えてしまいませんか？", a: "記録・編集ができるのは会計担当の権限を持つ方だけですが、閲覧はメンバー全員が可能です。お金の流れが見えることは学生団体の信頼の土台になるため、あえてこの設計にしています。" },
             ].map((item, i) => (
               <div key={i} className="py-5">
                 <p className="font-bold text-ink text-sm mb-2">{item.q}</p>
