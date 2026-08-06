@@ -7,6 +7,16 @@ import {
   CheckCircle2, TrendingUp, Shield, Zap, Wallet,
 } from "lucide-react";
 import FinanceDemo from "@/components/for-clubs/FinanceDemo";
+import { aggregateByCategory, summarize } from "@/lib/finance/aggregate";
+import {
+  DEMO_BUDGETS,
+  DEMO_CATEGORIES,
+  DEMO_OPENING_BALANCE,
+  DEMO_ORG_NAME,
+  DEMO_TRANSACTIONS,
+} from "@/lib/for-clubs/financeDemoData";
+
+const yen = new Intl.NumberFormat("ja-JP");
 
 export const metadata: Metadata = {
   // 末尾に「| ProofLoop」を付けない。app/layout.tsx が
@@ -59,7 +69,9 @@ function MockInboxKanban() {
         <div className="flex w-[38%] flex-col gap-2 border border-rule bg-paper p-3">
           <div className="flex items-center gap-2 text-ink">
             <Inbox className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-            <span className="text-[11px] font-bold">応募 4件</span>
+            <span className="text-[11px] font-bold">
+              応募 <span className="font-numeric tabular-nums">4</span>件
+            </span>
           </div>
           {DEMO_APPLICANTS.map((a) => (
             <div key={a.name} className="border border-rule bg-mist p-2">
@@ -96,9 +108,9 @@ function MockInboxKanban() {
 }
 
 const DEMO_POSTS = [
-  { title: "夏合宿、無事に終わりました！", meta: "8月2日 ・ いいね 24" },
-  { title: "新歓公演のリハーサル風景", meta: "7月28日 ・ いいね 17" },
-  { title: "初心者歓迎の体験練習やります", meta: "7月21日 ・ いいね 31" },
+  { title: "夏合宿、無事に終わりました！", date: "8月2日", likes: 24 },
+  { title: "新歓公演のリハーサル風景", date: "7月28日", likes: 17 },
+  { title: "初心者歓迎の体験練習やります", date: "7月21日", likes: 31 },
 ];
 
 function MockTimeline() {
@@ -110,9 +122,11 @@ function MockTimeline() {
           <div key={p.title} className="flex gap-3 border border-rule bg-paper p-3">
             <div className="size-9 shrink-0 border border-rule bg-mist" />
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold text-ink">桜丘大学 ダンスサークル</p>
+              <p className="text-[11px] font-bold text-ink">{DEMO_ORG_NAME}</p>
               <p className="truncate text-[11px] text-graphite">{p.title}</p>
-              <p className="mt-1 text-[10px] text-graphite/70">{p.meta}</p>
+              <p className="mt-1 text-[10px] text-graphite/70">
+                {p.date} ・ いいね <span className="font-numeric tabular-nums">{p.likes}</span>
+              </p>
             </div>
           </div>
         ))}
@@ -122,9 +136,9 @@ function MockTimeline() {
 }
 
 const DEMO_EVENTS = [
-  { day: "9/14", title: "新歓体験練習", place: "第2体育館", count: "参加 18人" },
-  { day: "9/21", title: "OB・OG交流会", place: "学生会館 3F", count: "参加 12人" },
-  { day: "10/5", title: "学祭ステージ本番", place: "中央広場", count: "参加 36人" },
+  { day: "9/14", title: "新歓体験練習", place: "第2体育館", participants: 18 },
+  { day: "9/21", title: "OB・OG交流会", place: "学生会館 3F", participants: 12 },
+  { day: "10/5", title: "学祭ステージ本番", place: "中央広場", participants: 36 },
 ];
 
 function MockCalendarEvent() {
@@ -143,7 +157,9 @@ function MockCalendarEvent() {
               <p className="truncate text-[11px] font-bold text-ink">{e.title}</p>
               <p className="text-[10px] text-graphite">{e.place}</p>
             </div>
-            <span className="shrink-0 text-[10px] text-graphite">{e.count}</span>
+            <span className="shrink-0 text-[10px] text-graphite">
+              参加 <span className="font-numeric tabular-nums">{e.participants}</span>人
+            </span>
           </div>
         ))}
       </div>
@@ -187,28 +203,31 @@ function MockTasksInvite() {
 }
 
 function MockFinance() {
+  const summary = summarize(DEMO_OPENING_BALANCE, DEMO_TRANSACTIONS);
+  const rows = aggregateByCategory(DEMO_CATEGORIES, DEMO_TRANSACTIONS, DEMO_BUDGETS);
   return (
     <div className="flex flex-col overflow-hidden border border-rule bg-mist">
       <MockChrome path="/clubfinance" />
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="border border-rule bg-paper p-3">
           <p className="text-[10px] text-graphite">現在の残高</p>
-          <p className="font-numeric tabular-nums text-xl font-black text-ink">¥229,800</p>
+          <p className="font-numeric tabular-nums text-xl font-black text-ink">
+            ¥{yen.format(summary.closingBalance)}
+          </p>
         </div>
         <div className="flex flex-col gap-2 border border-rule bg-paper p-3">
           <p className="text-[10px] font-bold text-ink">費目別の予算対比</p>
-          {[
-            { name: "会場費", ratio: 0.36 },
-            { name: "備品費", ratio: 0.4 },
-            { name: "交通費", ratio: 0.31 },
-          ].map((r) => (
-            <div key={r.name} className="flex flex-col gap-1">
-              <span className="text-[10px] text-graphite">{r.name}</span>
-              <div className="h-1.5 w-full bg-mist">
-                <div className="h-1.5 bg-ink" style={{ width: `${r.ratio * 100}%` }} />
+          {rows.map((r) => {
+            const ratio = r.planned > 0 ? Math.min(r.actual / r.planned, 1) : 0;
+            return (
+              <div key={r.category_id} className="flex flex-col gap-1">
+                <span className="text-[10px] text-graphite">{r.category_name}</span>
+                <div className="h-1.5 w-full bg-mist">
+                  <div className="h-1.5 bg-ink" style={{ width: `${ratio * 100}%` }} />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -315,7 +334,7 @@ export default function ForClubsPage() {
 
         {/* ① 会計・財務 */}
         <section className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-          <div className="order-2 space-y-6 lg:order-1">
+          <div className="order-2 space-y-6 lg:order-2">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
               <Wallet className="size-3.5 shrink-0" aria-hidden="true" />01 ／ 会計・財務
             </div>
@@ -337,13 +356,13 @@ export default function ForClubsPage() {
               上のデモで実際に試す
             </a>
           </div>
-          <div className="order-1 lg:order-2">
+          <div className="order-1 lg:order-1">
             <MockFinance />
             <p className="mt-3 text-center text-xs text-graphite/70">会計・財務の画面イメージ</p>
           </div>
         </section>
 
-        {/* ① 応募管理 */}
+        {/* ② 応募管理 */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
@@ -370,7 +389,7 @@ export default function ForClubsPage() {
           </div>
         </section>
 
-        {/* ② タイムライン */}
+        {/* ③ タイムライン */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-1">
             <MockTimeline />
@@ -378,7 +397,7 @@ export default function ForClubsPage() {
           </div>
           <div className="order-2 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <Rss className="size-3.5 shrink-0" aria-hidden="true" />05 ／ タイムライン発信
+              <Rss className="size-3.5 shrink-0" aria-hidden="true" />03 ／ タイムライン発信
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               4月だけじゃない。<br />年間を通じて目に留まる。
@@ -397,7 +416,7 @@ export default function ForClubsPage() {
           </div>
         </section>
 
-        {/* ③ イベント */}
+        {/* ④ イベント */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
@@ -407,7 +426,7 @@ export default function ForClubsPage() {
               新歓も、公演も、勉強会も。<br />人が集まる仕組みを作る。
             </h2>
             <p className="text-base text-graphite leading-relaxed">
-              メンバー募集だけでなく、学園祭・定期公演・セミナーなどのイベント告知もProofLoopで一元化。カレンダーページで同じ大学の学生に向けて効果的に発信できます。
+              メンバー募集だけでなく、学園祭・定期公演・セミナーなどのイベント告知もProofLoopで一元化。イベント一覧ページで同じ大学の学生に向けて効果的に発信できます。
             </p>
             <ul className="flex flex-col gap-2">
               {["イベントページをワンクリックで作成", "日時・場所・参加申込フォームを設定", "学内の学生のカレンダーに表示される"].map(f => (
@@ -420,28 +439,28 @@ export default function ForClubsPage() {
           </div>
           <div className="order-1 lg:order-2">
             <MockCalendarEvent />
-            <p className="mt-3 text-center text-xs text-graphite/70">イベントカレンダーと詳細ページ（イメージ）</p>
+            <p className="mt-3 text-center text-xs text-graphite/70">イベント一覧（イメージ）</p>
           </div>
         </section>
 
-        {/* ④ タスク・メンバー管理 */}
+        {/* ⑤ タスク・メンバー管理 */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-1">
             <MockTasksInvite />
-            <p className="mt-3 text-center text-xs text-graphite/70">タスク管理ボードとメンバー招待（イメージ）</p>
+            <p className="mt-3 text-center text-xs text-graphite/70">タスク一覧と進捗状況（イメージ）</p>
           </div>
           <div className="order-2 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <Users className="size-3.5 shrink-0" aria-hidden="true" />03 ／ タスク・メンバー管理
+              <Users className="size-3.5 shrink-0" aria-hidden="true" />05 ／ タスク・メンバー管理
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               「誰が何をやるか」を<br />全員で見える化する。
             </h2>
             <p className="text-base text-graphite leading-relaxed">
-              運営メンバーを招待し、権限を分けて安全にアカウントを共有。タスクをカンバンで管理することで「言った・言ってない」をなくし、代替わりの引き継ぎも格段にスムーズになります。
+              運営メンバーを招待し、権限を分けて安全にアカウントを共有。タスクに担当者と完了状況を紐づけて一覧管理することで「言った・言ってない」をなくし、代替わりの引き継ぎも格段にスムーズになります。
             </p>
             <ul className="flex flex-col gap-2">
-              {["複数メンバーを招待・権限設定", "タスクをカンバンで全員と共有", "引き継ぎ資料として活用できる"].map(f => (
+              {["複数メンバーを招待・権限設定", "タスクを担当者・完了状況つきで全員に共有", "引き継ぎ資料として活用できる"].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-graphite">
                   <CheckCircle2 className="size-4 text-ink shrink-0" aria-hidden="true" />
                   {f}

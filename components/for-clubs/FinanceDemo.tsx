@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { aggregateByCategory, summarize } from "@/lib/finance/aggregate";
+import { sortForLedger } from "@/lib/finance/balance";
 import type { FinanceKind, FinanceTransaction } from "@/lib/finance/types";
 import {
   DEMO_BUDGETS,
@@ -37,10 +38,7 @@ export default function FinanceDemo() {
     () => aggregateByCategory(DEMO_CATEGORIES, txns, DEMO_BUDGETS),
     [txns]
   );
-  const recent = useMemo(
-    () => [...txns].sort((a, b) => (a.occurred_on < b.occurred_on ? 1 : -1)).slice(0, 5),
-    [txns]
-  );
+  const recent = useMemo(() => sortForLedger(txns).reverse().slice(0, 5), [txns]);
 
   const selectable = DEMO_CATEGORIES.filter((c) => c.kind === kind);
 
