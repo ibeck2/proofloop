@@ -141,6 +141,13 @@ export default function ManualPage() {
             ProofLoopをサークル・学生団体で使うための手順書です。登録から新歓の応募管理までを、実際に触る順番で並べています。
             上から順にやれば設定は終わります。分からないところだけ読む使い方でも構いません。
           </p>
+          <p className="mt-3 text-sm text-graphite">
+            何ができるのかを先に知りたい方は{" "}
+            <Link href="/for-clubs" className="font-bold text-ink underline">
+              サークル・学生団体の方へ
+            </Link>{" "}
+            をご覧ください。会計機能は登録なしでその場で試せます。
+          </p>
         </section>
 
         {/* ── 最初にやること ── */}

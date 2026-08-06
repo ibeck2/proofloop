@@ -2,10 +2,21 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site-url";
 import {
-  ArrowRight, CalendarDays, Inbox, Kanban, LayoutGrid,
-  ListTodo, MessageSquare, Rss, Sparkles, UserPlus, Users,
-  CheckCircle2, TrendingUp, Shield, Zap,
+  ArrowRight, CalendarDays, Inbox, Kanban,
+  MessageSquare, Rss, Sparkles, Users,
+  CheckCircle2, TrendingUp, Shield, Zap, Wallet,
 } from "lucide-react";
+import FinanceDemo from "@/components/for-clubs/FinanceDemo";
+import { aggregateByCategory, summarize } from "@/lib/finance/aggregate";
+import {
+  DEMO_BUDGETS,
+  DEMO_CATEGORIES,
+  DEMO_OPENING_BALANCE,
+  DEMO_ORG_NAME,
+  DEMO_TRANSACTIONS,
+} from "@/lib/for-clubs/financeDemoData";
+
+const yen = new Intl.NumberFormat("ja-JP");
 
 export const metadata: Metadata = {
   // 末尾に「| ProofLoop」を付けない。app/layout.tsx が
@@ -14,14 +25,14 @@ export const metadata: Metadata = {
   // （openGraph.title にはテンプレートが効かないので、そちらは明示する）
   title: "サークル・学生団体の運営を、もっとスマートに",
   description:
-    "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。LINEのDM管理・バラバラのスプレッドシートから卒業しよう。ProofLoop——サークル・学生団体のための無料プラットフォーム。",
+    "会計・新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。LINEのDM管理・バラバラのスプレッドシートから卒業しよう。ProofLoop——サークル・学生団体のための無料プラットフォーム。",
   openGraph: {
     type: "website",
     url: `${SITE_URL}/for-clubs`,
     siteName: "ProofLoop",
     title: "サークル・学生団体の運営を、もっとスマートに | ProofLoop",
     description:
-      "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。サークル・学生団体のための無料プラットフォームです。",
+      "会計・新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。サークル・学生団体のための無料プラットフォームです。",
     locale: "ja_JP",
   },
   alternates: { canonical: `${SITE_URL}/for-clubs` },
@@ -30,53 +41,63 @@ export const metadata: Metadata = {
 // ─────────────────────────────────────────────
 // Mock UI Components
 // ─────────────────────────────────────────────
-function MockChrome() {
+function MockChrome({ path }: { path: string }) {
   return (
-    <div className="rounded-t-lg border-b border-rule bg-mist px-3 py-2 flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 border-b border-rule bg-mist px-3 py-2">
       <span className="size-2.5 rounded-full bg-rule" />
       <span className="size-2.5 rounded-full bg-rule" />
       <span className="size-2.5 rounded-full bg-rule" />
-      <span className="ml-2 text-[10px] text-graphite/70 font-medium tracking-wide">proofloop.app</span>
+      <span className="ml-2 text-[10px] font-medium tracking-wide text-graphite/70">
+        proofloop.jp{path}
+      </span>
     </div>
   );
 }
+
+const DEMO_APPLICANTS = [
+  { name: "佐藤 みなみ", faculty: "文学部1年", stage: "新規" },
+  { name: "鈴木 大地", faculty: "経済学部2年", stage: "面談中" },
+  { name: "高橋 あやか", faculty: "理工学部1年", stage: "面談中" },
+  { name: "田中 りく", faculty: "法学部1年", stage: "内定" },
+];
 
 function MockInboxKanban() {
   return (
-    <div className="bg-mist rounded-xl aspect-video shadow-inner border border-rule overflow-hidden flex flex-col">
-      <MockChrome />
-      <div className="flex-1 p-4 flex gap-3 min-h-0">
-        <div className="w-[38%] rounded-lg bg-paper shadow-sm border border-rule p-3 flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-graphite">
-            <Inbox className="size-4 shrink-0 text-ink" strokeWidth={2} aria-hidden="true" />
-            <span className="text-[11px] font-bold">Inbox</span>
+    <div className="flex flex-col overflow-hidden border border-rule bg-mist">
+      <MockChrome path="/clubats" />
+      <div className="flex min-h-0 flex-1 gap-3 p-4">
+        <div className="flex w-[38%] flex-col gap-2 border border-rule bg-paper p-3">
+          <div className="flex items-center gap-2 text-ink">
+            <Inbox className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+            <span className="text-[11px] font-bold">
+              応募 <span className="font-numeric tabular-nums">4</span>件
+            </span>
           </div>
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-md bg-mist border border-rule p-2 flex gap-2">
-              <div className="size-8 rounded-full bg-rule shrink-0" />
-              <div className="flex-1 space-y-1">
-                <div className="h-2 w-3/4 rounded bg-rule" />
-                <div className="h-1.5 w-1/2 rounded bg-mist" />
-              </div>
+          {DEMO_APPLICANTS.map((a) => (
+            <div key={a.name} className="border border-rule bg-mist p-2">
+              <p className="text-[11px] font-bold text-ink">{a.name}</p>
+              <p className="text-[10px] text-graphite">{a.faculty}</p>
             </div>
           ))}
         </div>
-        <div className="flex-1 rounded-lg bg-paper shadow-sm border border-rule p-3 flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-graphite">
-            <Kanban className="size-4 shrink-0 text-ink" strokeWidth={2} aria-hidden="true" />
+        <div className="flex flex-1 flex-col gap-2 border border-rule bg-paper p-3">
+          <div className="flex items-center gap-2 text-ink">
+            <Kanban className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             <span className="text-[11px] font-bold">採用ボード</span>
           </div>
-          <div className="flex-1 flex gap-2 min-h-0">
-            {["新規", "面談中", "内定"].map((label, idx) => (
-              <div key={label} className="flex-1 rounded-md bg-mist border border-dashed border-rule p-2">
-                <span className="text-[9px] font-bold text-graphite/70 uppercase tracking-wider">{label}</span>
-                {idx === 0 && <div className="mt-2 h-14 rounded bg-paper border border-rule shadow-sm" />}
-                {idx === 1 && (
-                  <div className="mt-2 space-y-2">
-                    <div className="h-10 rounded bg-paper border border-rule" />
-                    <div className="h-10 rounded bg-paper border border-rule" />
-                  </div>
-                )}
+          <div className="flex min-h-0 flex-1 gap-2">
+            {["新規", "面談中", "内定"].map((stage) => (
+              <div key={stage} className="flex-1 border border-dashed border-rule bg-mist p-2">
+                <span className="text-[9px] font-bold tracking-wider text-graphite/70">
+                  {stage}
+                </span>
+                <div className="mt-2 flex flex-col gap-1.5">
+                  {DEMO_APPLICANTS.filter((a) => a.stage === stage).map((a) => (
+                    <div key={a.name} className="border border-rule bg-paper px-2 py-1.5">
+                      <p className="truncate text-[10px] font-bold text-ink">{a.name}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -85,110 +106,128 @@ function MockInboxKanban() {
     </div>
   );
 }
+
+const DEMO_POSTS = [
+  { title: "夏合宿、無事に終わりました！", date: "8月2日", likes: 24 },
+  { title: "新歓公演のリハーサル風景", date: "7月28日", likes: 17 },
+  { title: "初心者歓迎の体験練習やります", date: "7月21日", likes: 31 },
+];
 
 function MockTimeline() {
   return (
-    <div className="bg-mist rounded-xl aspect-video shadow-inner border border-rule overflow-hidden flex flex-col">
-      <MockChrome />
-      <div className="flex-1 p-4 overflow-hidden">
-        <div className="flex items-center gap-2 mb-3 text-graphite">
-          <Rss className="size-4 text-ink" strokeWidth={2} aria-hidden="true" />
-          <span className="text-[11px] font-bold">タイムライン</span>
-        </div>
-        <div className="space-y-3">
-          {[1, 2].map((i) => (
-            <div key={i} className="rounded-xl bg-paper border border-rule shadow-sm p-3">
-              <div className="flex gap-3">
-                <div className="size-10 rounded-full bg-rule shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2.5 w-24 rounded bg-rule" />
-                    <div className="h-2 w-12 rounded-full bg-mist" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="h-2 w-full rounded bg-mist" />
-                    <div className="h-2 w-[90%] rounded bg-mist" />
-                    <div className="h-2 w-[70%] rounded bg-mist" />
-                  </div>
-                </div>
-              </div>
+    <div className="flex flex-col overflow-hidden border border-rule bg-mist">
+      <MockChrome path="/timeline" />
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        {DEMO_POSTS.map((p) => (
+          <div key={p.title} className="flex gap-3 border border-rule bg-paper p-3">
+            <div className="size-9 shrink-0 border border-rule bg-mist" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[11px] font-bold text-ink">{DEMO_ORG_NAME}</p>
+              <p className="truncate text-[11px] text-graphite">{p.title}</p>
+              <p className="mt-1 text-[10px] text-graphite/70">
+                {p.date} ・ いいね <span className="font-numeric tabular-nums">{p.likes}</span>
+              </p>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
+
+const DEMO_EVENTS = [
+  { day: "9/14", title: "新歓体験練習", place: "第2体育館", participants: 18 },
+  { day: "9/21", title: "OB・OG交流会", place: "学生会館 3F", participants: 12 },
+  { day: "10/5", title: "学祭ステージ本番", place: "中央広場", participants: 36 },
+];
 
 function MockCalendarEvent() {
   return (
-    <div className="bg-mist rounded-xl aspect-video shadow-inner border border-rule overflow-hidden flex flex-col">
-      <MockChrome />
-      <div className="flex-1 p-4 flex gap-3 min-h-0">
-        <div className="w-[52%] rounded-lg bg-paper border border-rule shadow-sm p-3">
-          <div className="flex items-center gap-2 text-graphite mb-3">
-            <CalendarDays className="size-4 text-ink" strokeWidth={2} aria-hidden="true" />
-            <span className="text-[11px] font-bold">イベントカレンダー</span>
+    <div className="flex flex-col overflow-hidden border border-rule bg-mist">
+      <MockChrome path="/clubevents" />
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        {DEMO_EVENTS.map((e) => (
+          <div key={e.title} className="flex items-center gap-3 border border-rule bg-paper p-3">
+            <div className="flex size-11 shrink-0 flex-col items-center justify-center border border-rule bg-mist">
+              <span className="font-numeric tabular-nums text-[11px] font-black text-ink">
+                {e.day}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[11px] font-bold text-ink">{e.title}</p>
+              <p className="text-[10px] text-graphite">{e.place}</p>
+            </div>
+            <span className="shrink-0 text-[10px] text-graphite">
+              参加 <span className="font-numeric tabular-nums">{e.participants}</span>人
+            </span>
           </div>
-          <div className="grid grid-cols-7 gap-1 text-center text-[8px] text-graphite/70 font-medium mb-1">
-            {["日","月","火","水","木","金","土"].map((d) => <span key={d}>{d}</span>)}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: 28 }).map((_, i) => (
-              <div key={i}
-                className={`aspect-square rounded text-[9px] flex items-center justify-center ${
-                  i === 10 ? "bg-ink text-paper font-bold shadow" : "bg-mist text-graphite/70"
-                }`}>
-                {i + 1}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="flex-1 rounded-lg bg-paper border border-rule shadow-sm p-3 flex flex-col">
-          <div className="h-20 rounded-lg bg-mist mb-3 flex items-center justify-center">
-            <LayoutGrid className="size-8 text-graphite/40" strokeWidth={1.5} aria-hidden="true" />
-          </div>
-          <div className="h-2.5 w-3/4 rounded bg-rule mb-2" />
-          <div className="h-2 w-full rounded bg-mist mb-1" />
-          <div className="h-2 w-[85%] rounded bg-mist" />
-        </div>
+        ))}
       </div>
     </div>
   );
 }
 
+const DEMO_TASKS = [
+  { title: "学祭の申請書を提出", owner: "田中", done: true },
+  { title: "衣装の見積もりを取る", owner: "佐藤", done: true },
+  { title: "音源を編集して共有", owner: "鈴木", done: false },
+  { title: "OB会の案内を送る", owner: "高橋", done: false },
+];
+
 function MockTasksInvite() {
   return (
-    <div className="bg-mist rounded-xl aspect-video shadow-inner border border-rule overflow-hidden flex flex-col">
-      <MockChrome />
-      <div className="flex-1 p-4 flex gap-3 min-h-0">
-        <div className="flex-1 rounded-lg bg-paper border border-rule shadow-sm p-3 flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-graphite">
-            <ListTodo className="size-4 text-ink" strokeWidth={2} aria-hidden="true" />
-            <span className="text-[11px] font-bold">タスク</span>
+    <div className="flex flex-col overflow-hidden border border-rule bg-mist">
+      <MockChrome path="/clubtasks" />
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        {DEMO_TASKS.map((t) => (
+          <div key={t.title} className="flex items-center gap-3 border border-rule bg-paper p-2.5">
+            <span
+              className={`size-3.5 shrink-0 border ${
+                t.done ? "border-ink bg-ink" : "border-rule bg-paper"
+              }`}
+              aria-hidden="true"
+            />
+            <p
+              className={`min-w-0 flex-1 truncate text-[11px] ${
+                t.done ? "text-graphite/60 line-through" : "text-ink"
+              }`}
+            >
+              {t.title}
+            </p>
+            <span className="shrink-0 text-[10px] text-graphite">{t.owner}</span>
           </div>
-          <div className="flex gap-2 flex-1 min-h-0">
-            {["未対応", "進行中"].map((t) => (
-              <div key={t} className="flex-1 rounded-md bg-mist border border-rule p-2">
-                <span className="text-[9px] text-graphite/70 font-bold">{t}</span>
-                <div className="mt-2 space-y-2">
-                  <div className="h-8 rounded border border-rule bg-paper" />
-                  <div className="h-8 rounded border border-rule bg-paper" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MockFinance() {
+  const summary = summarize(DEMO_OPENING_BALANCE, DEMO_TRANSACTIONS);
+  const rows = aggregateByCategory(DEMO_CATEGORIES, DEMO_TRANSACTIONS, DEMO_BUDGETS);
+  return (
+    <div className="flex flex-col overflow-hidden border border-rule bg-mist">
+      <MockChrome path="/clubfinance" />
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        <div className="border border-rule bg-paper p-3">
+          <p className="text-[10px] text-graphite">現在の残高</p>
+          <p className="font-numeric tabular-nums text-xl font-black text-ink">
+            ¥{yen.format(summary.closingBalance)}
+          </p>
+        </div>
+        <div className="flex flex-col gap-2 border border-rule bg-paper p-3">
+          <p className="text-[10px] font-bold text-ink">費目別の予算対比</p>
+          {rows.map((r) => {
+            const ratio = r.planned > 0 ? Math.min(r.actual / r.planned, 1) : 0;
+            return (
+              <div key={r.category_id} className="flex flex-col gap-1">
+                <span className="text-[10px] text-graphite">{r.category_name}</span>
+                <div className="h-1.5 w-full bg-mist">
+                  <div className="h-1.5 bg-ink" style={{ width: `${ratio * 100}%` }} />
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-        <div className="w-[40%] rounded-lg bg-paper border border-rule shadow-sm p-3 flex flex-col">
-          <div className="flex items-center gap-2 text-graphite mb-2">
-            <UserPlus className="size-4 text-ink" strokeWidth={2} aria-hidden="true" />
-            <span className="text-[11px] font-bold">招待</span>
-          </div>
-          <div className="rounded-lg border-2 border-dashed border-rule flex-1 flex flex-col items-center justify-center gap-2 p-2">
-            <Users className="size-10 text-graphite/40" strokeWidth={1.25} aria-hidden="true" />
-            <div className="h-6 w-full max-w-[100px] rounded bg-mist" />
-            <div className="h-5 w-16 rounded bg-ink/90" />
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -215,7 +254,7 @@ export default function ForClubsPage() {
             LINEのDM管理、もう限界じゃないですか。
           </h1>
           <p className="mt-6 text-lg md:text-xl text-ink font-bold">
-            新メンバー募集・タスク管理・イベント告知を、一つの画面で。
+            会計・新メンバー募集・タスク管理・イベント告知を、一つの画面で。
           </p>
           <p className="mt-4 max-w-2xl mx-auto text-base text-graphite leading-relaxed">
             「返信漏れで候補者を逃した」「誰が何をやっているかわからない」「毎年の新歓で同じ失敗を繰り返す」——
@@ -250,6 +289,21 @@ export default function ForClubsPage() {
         </div>
       </section>
 
+      {/* ── 触れる会計デモ ── */}
+      <section id="demo" className="border-b border-rule bg-paper py-16 md:py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-8 text-center">
+            <h2 className="font-mincho text-2xl font-black leading-snug text-ink md:text-3xl">
+              まず、触ってみてください。
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-graphite">
+              下は会計機能のデモです。金額を入れて「記録する」を押すと、残高・費目別の集計・予算対比がその場で動きます。登録もログインも要りません。
+            </p>
+          </div>
+          <FinanceDemo />
+        </div>
+      </section>
+
       {/* ── 課題提起：Before ── */}
       <section className="bg-mist border-b border-rule py-16 md:py-20">
         <div className="max-w-4xl mx-auto px-6">
@@ -278,11 +332,41 @@ export default function ForClubsPage() {
       {/* ── 機能紹介 Zレイアウト ── */}
       <div id="features" className="max-w-6xl mx-auto px-6 py-20 md:py-32 space-y-24 md:space-y-36">
 
-        {/* ① 応募管理 */}
+        {/* ① 会計・財務 */}
+        <section className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+          <div className="order-2 space-y-6 lg:order-2">
+            <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
+              <Wallet className="size-3.5 shrink-0" aria-hidden="true" />01 ／ 会計・財務
+            </div>
+            <h2 className="font-mincho text-2xl font-black leading-snug text-ink md:text-3xl">
+              代替わりで消える帳簿を、<br />なくす。
+            </h2>
+            <p className="text-base leading-relaxed text-graphite">
+              大学へ提出する年次の収支報告は、紙のレシートと手集計で毎年つくり直しになります。ProofLoopなら記録した時点で残高・費目別集計・予算対比が出そろい、そのままExcelで書き出せます。
+            </p>
+            <ul className="flex flex-col gap-2">
+              {["出納帳・費目別集計・予算対比を自動で計算", "領収書の写真を取引に添付", "収支報告書と出納帳をExcelで出力", "会計担当だけが記録／閲覧は全員（透明性）"].map(f => (
+                <li key={f} className="flex items-center gap-2 text-sm text-graphite">
+                  <CheckCircle2 className="size-4 shrink-0 text-ink" aria-hidden="true" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <a href="#demo" className="inline-block text-sm font-bold text-ink underline underline-offset-4">
+              上のデモで実際に試す
+            </a>
+          </div>
+          <div className="order-1 lg:order-1">
+            <MockFinance />
+            <p className="mt-3 text-center text-xs text-graphite/70">会計・財務の画面イメージ</p>
+          </div>
+        </section>
+
+        {/* ② 応募管理 */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <MessageSquare className="size-3.5 shrink-0" aria-hidden="true" />01 ／ 応募・採用管理
+              <MessageSquare className="size-3.5 shrink-0" aria-hidden="true" />02 ／ 応募・採用管理
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               「あの子、もう連絡した？」を<br />なくす。
@@ -305,7 +389,7 @@ export default function ForClubsPage() {
           </div>
         </section>
 
-        {/* ② タイムライン */}
+        {/* ③ タイムライン */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-1">
             <MockTimeline />
@@ -313,7 +397,7 @@ export default function ForClubsPage() {
           </div>
           <div className="order-2 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <Rss className="size-3.5 shrink-0" aria-hidden="true" />02 ／ タイムライン発信
+              <Rss className="size-3.5 shrink-0" aria-hidden="true" />03 ／ タイムライン発信
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               4月だけじゃない。<br />年間を通じて目に留まる。
@@ -332,17 +416,17 @@ export default function ForClubsPage() {
           </div>
         </section>
 
-        {/* ③ イベント */}
+        {/* ④ イベント */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />03 ／ イベント告知・集客
+              <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />04 ／ イベント告知・集客
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               新歓も、公演も、勉強会も。<br />人が集まる仕組みを作る。
             </h2>
             <p className="text-base text-graphite leading-relaxed">
-              メンバー募集だけでなく、学園祭・定期公演・セミナーなどのイベント告知もProofLoopで一元化。カレンダーページで同じ大学の学生に向けて効果的に発信できます。
+              メンバー募集だけでなく、学園祭・定期公演・セミナーなどのイベント告知もProofLoopで一元化。イベント一覧ページで同じ大学の学生に向けて効果的に発信できます。
             </p>
             <ul className="flex flex-col gap-2">
               {["イベントページをワンクリックで作成", "日時・場所・参加申込フォームを設定", "学内の学生のカレンダーに表示される"].map(f => (
@@ -355,28 +439,28 @@ export default function ForClubsPage() {
           </div>
           <div className="order-1 lg:order-2">
             <MockCalendarEvent />
-            <p className="mt-3 text-center text-xs text-graphite/70">イベントカレンダーと詳細ページ（イメージ）</p>
+            <p className="mt-3 text-center text-xs text-graphite/70">イベント一覧（イメージ）</p>
           </div>
         </section>
 
-        {/* ④ タスク・メンバー管理 */}
+        {/* ⑤ タスク・メンバー管理 */}
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-1">
             <MockTasksInvite />
-            <p className="mt-3 text-center text-xs text-graphite/70">タスク管理ボードとメンバー招待（イメージ）</p>
+            <p className="mt-3 text-center text-xs text-graphite/70">タスク一覧と進捗状況（イメージ）</p>
           </div>
           <div className="order-2 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <Users className="size-3.5 shrink-0" aria-hidden="true" />04 ／ タスク・メンバー管理
+              <Users className="size-3.5 shrink-0" aria-hidden="true" />05 ／ タスク・メンバー管理
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               「誰が何をやるか」を<br />全員で見える化する。
             </h2>
             <p className="text-base text-graphite leading-relaxed">
-              運営メンバーを招待し、権限を分けて安全にアカウントを共有。タスクをカンバンで管理することで「言った・言ってない」をなくし、代替わりの引き継ぎも格段にスムーズになります。
+              運営メンバーを招待し、権限を分けて安全にアカウントを共有。タスクに担当者と完了状況を紐づけて一覧管理することで「言った・言ってない」をなくし、代替わりの引き継ぎも格段にスムーズになります。
             </p>
             <ul className="flex flex-col gap-2">
-              {["複数メンバーを招待・権限設定", "タスクをカンバンで全員と共有", "引き継ぎ資料として活用できる"].map(f => (
+              {["複数メンバーを招待・権限設定", "タスクを担当者・完了状況つきで全員に共有", "引き継ぎ資料として活用できる"].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-graphite">
                   <CheckCircle2 className="size-4 text-ink shrink-0" aria-hidden="true" />
                   {f}
@@ -419,6 +503,7 @@ export default function ForClubsPage() {
               { q: "登録から公開までどのくらいかかりますか？", a: "アカウント作成・団体情報の入力・プロフィール設定まで最短5分で完了します。登録後すぐに団体ページが公開されます。" },
               { q: "どんな団体でも登録できますか？", a: "サークル・部活・学生NPO・ゼミ・インカレ団体など、学生が主体となって活動する団体であれば基本的にご利用いただけます。" },
               { q: "既存のSNSやLINEと併用できますか？", a: "もちろん可能です。ProofLoopをメンバー管理・タスク管理の中心にしつつ、拡散はSNSで行うというハイブリッドな使い方をされている団体が多いです。" },
+              { q: "会計担当以外にも帳簿が見えてしまいませんか？", a: "記録・編集ができるのは会計担当の権限を持つ方だけですが、閲覧はメンバー全員が可能です。お金の流れが見えることは学生団体の信頼の土台になるため、あえてこの設計にしています。" },
             ].map((item, i) => (
               <div key={i} className="py-5">
                 <p className="font-bold text-ink text-sm mb-2">{item.q}</p>
@@ -439,21 +524,20 @@ export default function ForClubsPage() {
             登録無料・5分で完了・クレジットカード不要。
             いつでも削除できます。
           </p>
-          <Link href="/signup"
-            className="inline-flex items-center justify-center gap-2 bg-seal px-10 py-4 text-base font-black text-paper shadow-lg shadow-seal/20 transition hover:bg-[#600000] hover:shadow-xl">
-            無料で団体を登録する
-            <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/signup"
+              className="inline-flex items-center justify-center gap-2 bg-seal px-10 py-4 text-base font-black text-paper shadow-lg shadow-seal/20 transition hover:bg-[#600000] hover:shadow-xl">
+              無料で団体を登録する
+              <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+            </Link>
+            <Link href="/manual" className="text-sm font-bold text-ink/70 underline underline-offset-4 transition hover:text-ink">
+              登録後の使い方を見る
+            </Link>
+          </div>
           <p className="mt-6 text-sm text-graphite/70">
             すでにアカウントをお持ちの方は{" "}
             <Link href="/login" className="font-bold text-ink hover:underline underline-offset-4">
               ログイン
-            </Link>
-          </p>
-          <p className="mt-3 text-sm text-graphite/70">
-            使い方を確認したい方は{" "}
-            <Link href="/manual" className="font-bold text-ink hover:underline underline-offset-4">
-              運営マニュアル
             </Link>
           </p>
         </div>
