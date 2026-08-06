@@ -6,6 +6,7 @@ import {
   ListTodo, MessageSquare, Rss, Sparkles, UserPlus, Users,
   CheckCircle2, TrendingUp, Shield, Zap,
 } from "lucide-react";
+import FinanceDemo from "@/components/for-clubs/FinanceDemo";
 
 export const metadata: Metadata = {
   // 末尾に「| ProofLoop」を付けない。app/layout.tsx が
@@ -14,14 +15,14 @@ export const metadata: Metadata = {
   // （openGraph.title にはテンプレートが効かないので、そちらは明示する）
   title: "サークル・学生団体の運営を、もっとスマートに",
   description:
-    "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。LINEのDM管理・バラバラのスプレッドシートから卒業しよう。ProofLoop——サークル・学生団体のための無料プラットフォーム。",
+    "会計・新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。LINEのDM管理・バラバラのスプレッドシートから卒業しよう。ProofLoop——サークル・学生団体のための無料プラットフォーム。",
   openGraph: {
     type: "website",
     url: `${SITE_URL}/for-clubs`,
     siteName: "ProofLoop",
     title: "サークル・学生団体の運営を、もっとスマートに | ProofLoop",
     description:
-      "新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。サークル・学生団体のための無料プラットフォームです。",
+      "会計・新メンバー募集・タスク管理・イベント告知まで一つの画面で完結。サークル・学生団体のための無料プラットフォームです。",
     locale: "ja_JP",
   },
   alternates: { canonical: `${SITE_URL}/for-clubs` },
@@ -215,7 +216,7 @@ export default function ForClubsPage() {
             LINEのDM管理、もう限界じゃないですか。
           </h1>
           <p className="mt-6 text-lg md:text-xl text-ink font-bold">
-            新メンバー募集・タスク管理・イベント告知を、一つの画面で。
+            会計・新メンバー募集・タスク管理・イベント告知を、一つの画面で。
           </p>
           <p className="mt-4 max-w-2xl mx-auto text-base text-graphite leading-relaxed">
             「返信漏れで候補者を逃した」「誰が何をやっているかわからない」「毎年の新歓で同じ失敗を繰り返す」——
@@ -247,6 +248,21 @@ export default function ForClubsPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── 触れる会計デモ ── */}
+      <section id="demo" className="border-b border-rule bg-paper py-16 md:py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-8 text-center">
+            <h2 className="font-mincho text-2xl font-black leading-snug text-ink md:text-3xl">
+              まず、触ってみてください。
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-base leading-relaxed text-graphite">
+              下は会計機能のデモです。金額を入れて「記録する」を押すと、残高・費目別の集計・予算対比がその場で動きます。登録もログインも要りません。
+            </p>
+          </div>
+          <FinanceDemo />
         </div>
       </section>
 
