@@ -17,14 +17,20 @@ import {
 
 const yen = new Intl.NumberFormat("ja-JP");
 
+const DEFAULT_KIND: FinanceKind = "expense";
+const DEFAULT_CATEGORY_ID = "cat-venue";
+const DEFAULT_AMOUNT = "8000";
+const DEFAULT_MEMO = "スタジオ利用料（7月）";
+
 export default function FinanceDemo() {
   const [txns, setTxns] = useState<FinanceTransaction[]>(DEMO_TRANSACTIONS);
   const [seq, setSeq] = useState(0);
   const [date, setDate] = useState(DEMO_DEFAULT_DATE);
-  const [kind, setKind] = useState<FinanceKind>("expense");
-  const [categoryId, setCategoryId] = useState("cat-venue");
-  const [amount, setAmount] = useState("8000");
-  const [memo, setMemo] = useState("スタジオ利用料（7月）");
+  const [kind, setKind] = useState<FinanceKind>(DEFAULT_KIND);
+  const [categoryId, setCategoryId] = useState(DEFAULT_CATEGORY_ID);
+  const [amount, setAmount] = useState(DEFAULT_AMOUNT);
+  const [memo, setMemo] = useState(DEFAULT_MEMO);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const summary = useMemo(() => summarize(DEMO_OPENING_BALANCE, txns), [txns]);
   const rows = useMemo(
@@ -47,7 +53,10 @@ export default function FinanceDemo() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const value = Number(amount);
-    if (!Number.isFinite(value) || value <= 0) return;
+    if (!Number.isFinite(value) || value <= 0) {
+      setErrorMessage("金額は1円以上の数値で入力してください。");
+      return;
+    }
     const next = seq + 1;
     setSeq(next);
     setTxns((prev) => [
@@ -63,15 +72,17 @@ export default function FinanceDemo() {
     ]);
     setAmount("");
     setMemo("");
+    setErrorMessage("");
   }
 
   function handleReset() {
     setTxns(DEMO_TRANSACTIONS);
     setSeq(0);
     setDate(DEMO_DEFAULT_DATE);
-    handleKindChange("expense");
-    setAmount("8000");
-    setMemo("スタジオ利用料（7月）");
+    handleKindChange(DEFAULT_KIND);
+    setAmount(DEFAULT_AMOUNT);
+    setMemo(DEFAULT_MEMO);
+    setErrorMessage("");
   }
 
   const field =
@@ -185,6 +196,11 @@ export default function FinanceDemo() {
               onChange={(e) => setMemo(e.target.value)}
               className={field}
             />
+            {errorMessage && (
+              <p role="alert" className="bg-mist px-3 py-2 text-xs text-ink">
+                {errorMessage}
+              </p>
+            )}
             <div className="flex items-center gap-3">
               <button
                 type="submit"
