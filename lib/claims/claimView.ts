@@ -35,8 +35,15 @@ export function resolveClaimView(args: {
   isLoggedIn: boolean;
   isMemberOfOrg: boolean; // already_claimed のときだけ意味を持つ
   appliedInThisBrowser: boolean;
+  // already_claimed のときだけ意味を持つ。organization_members への問い合わせが
+  // まだ完了していない（＝preview.organization_id についてまだ確認していない）
+  // ことを示す。getSession() は get_claim_preview より先に解決するのが典型的な
+  // 順序で、その間 preview はまだ null なので isMemberOfOrg は常に false（既定値）
+  // になる。この引数がないと、その一瞬を「確認不要だったから確認済み」として
+  // claimed_by_other 側に倒してしまい、承認された本人に誤表示が出る。
+  membershipCheckPending: boolean;
 }): ClaimView {
-  const { preview, sessionResolved, isLoggedIn, isMemberOfOrg, appliedInThisBrowser } = args;
+  const { preview, sessionResolved, isLoggedIn, isMemberOfOrg, appliedInThisBrowser, membershipCheckPending } = args;
 
   if (!preview) return "loading";
 
@@ -45,6 +52,7 @@ export function resolveClaimView(args: {
   // claim された以上、それが「自分の申請が承認された結果」なのか
   // 「別人が管理している」のかは organization_members の実際の所属で判定する。
   if (preview.reason === "already_claimed") {
+    if (membershipCheckPending) return "loading";
     return isMemberOfOrg ? "owned_by_me" : "claimed_by_other";
   }
 

@@ -17,6 +17,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: true,
         isMemberOfOrg: false,
         appliedInThisBrowser: false,
+        membershipCheckPending: false,
       })
     ).toBe("loading");
   });
@@ -29,6 +30,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: true,
         isMemberOfOrg: true,
         appliedInThisBrowser: true, // 過去に自分が申請したフラグが残っていても owned_by_me が優先
+        membershipCheckPending: false,
       })
     ).toBe("owned_by_me");
   });
@@ -41,6 +43,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: true,
         isMemberOfOrg: false,
         appliedInThisBrowser: false,
+        membershipCheckPending: false,
       })
     ).toBe("claimed_by_other");
   });
@@ -53,8 +56,87 @@ describe("resolveClaimView", () => {
         isLoggedIn: false,
         isMemberOfOrg: false,
         appliedInThisBrowser: false,
+        membershipCheckPending: false,
       })
     ).toBe("claimed_by_other");
+  });
+
+  it("already_claimed かつ membershipCheckPending:true → loading（getSession() が先に解決する間、確認不要と誤確定させない）", () => {
+    expect(
+      resolveClaimView({
+        preview: { ok: false, reason: "already_claimed", organization_id: "org-1" },
+        sessionResolved: true,
+        isLoggedIn: true,
+        isMemberOfOrg: false, // まだ確認できていないため既定値だが、pending が優先される
+        appliedInThisBrowser: false,
+        membershipCheckPending: true,
+      })
+    ).toBe("loading");
+  });
+
+  it("already_claimed かつ確認完了・メンバー → owned_by_me", () => {
+    expect(
+      resolveClaimView({
+        preview: { ok: false, reason: "already_claimed", organization_id: "org-1" },
+        sessionResolved: true,
+        isLoggedIn: true,
+        isMemberOfOrg: true,
+        appliedInThisBrowser: false,
+        membershipCheckPending: false,
+      })
+    ).toBe("owned_by_me");
+  });
+
+  it("already_claimed かつ確認完了・非メンバー → claimed_by_other", () => {
+    expect(
+      resolveClaimView({
+        preview: { ok: false, reason: "already_claimed", organization_id: "org-1" },
+        sessionResolved: true,
+        isLoggedIn: true,
+        isMemberOfOrg: false,
+        appliedInThisBrowser: false,
+        membershipCheckPending: false,
+      })
+    ).toBe("claimed_by_other");
+  });
+
+  it("already_claimed 以外では membershipCheckPending:true でも影響しない（form）", () => {
+    expect(
+      resolveClaimView({
+        preview: basePreview,
+        sessionResolved: true,
+        isLoggedIn: true,
+        isMemberOfOrg: false,
+        appliedInThisBrowser: false,
+        membershipCheckPending: true,
+      })
+    ).toBe("form");
+  });
+
+  it("already_claimed 以外では membershipCheckPending:true でも影響しない（need_login）", () => {
+    expect(
+      resolveClaimView({
+        preview: basePreview,
+        sessionResolved: true,
+        isLoggedIn: false,
+        isMemberOfOrg: false,
+        appliedInThisBrowser: false,
+        membershipCheckPending: true,
+      })
+    ).toBe("need_login");
+  });
+
+  it("already_claimed 以外では membershipCheckPending:true でも影響しない（invalid）", () => {
+    expect(
+      resolveClaimView({
+        preview: { ok: false, reason: "invalid" },
+        sessionResolved: true,
+        isLoggedIn: true,
+        isMemberOfOrg: false,
+        appliedInThisBrowser: false,
+        membershipCheckPending: true,
+      })
+    ).toBe("invalid");
   });
 
   it('ok:false, reason:"invalid" → invalid', () => {
@@ -65,6 +147,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: true,
         isMemberOfOrg: false,
         appliedInThisBrowser: false,
+        membershipCheckPending: false,
       })
     ).toBe("invalid");
   });
@@ -77,6 +160,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: true,
         isMemberOfOrg: false,
         appliedInThisBrowser: false,
+        membershipCheckPending: false,
       })
     ).toBe("invalid");
   });
@@ -89,6 +173,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: false,
         isMemberOfOrg: false,
         appliedInThisBrowser: false,
+        membershipCheckPending: false,
       })
     ).toBe("loading");
   });
@@ -101,6 +186,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: false,
         isMemberOfOrg: false,
         appliedInThisBrowser: false,
+        membershipCheckPending: false,
       })
     ).toBe("need_login");
   });
@@ -113,6 +199,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: true,
         isMemberOfOrg: false,
         appliedInThisBrowser: false,
+        membershipCheckPending: false,
       })
     ).toBe("form");
   });
@@ -125,6 +212,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: true,
         isMemberOfOrg: false,
         appliedInThisBrowser: true,
+        membershipCheckPending: false,
       })
     ).toBe("applied");
   });
@@ -137,6 +225,7 @@ describe("resolveClaimView", () => {
         isLoggedIn: false,
         isMemberOfOrg: false,
         appliedInThisBrowser: true,
+        membershipCheckPending: false,
       })
     ).toBe("applied");
   });

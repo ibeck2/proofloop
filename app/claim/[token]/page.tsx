@@ -29,8 +29,13 @@ export default function ClaimPage() {
   // localStorage ではなく organization_members を実際に引いて判定する
   // （承認後に本人が再訪すると「管理者に招待を依頼してください」と本人に
   // 案内してしまうバグの修正）。
-  const [membership, setMembership] = useState<{ checked: boolean; isMember: boolean }>({
-    checked: false,
+  // checkedForOrgId は「どの団体について確認済みか」を持つ。汎用の
+  // boolean だと、preview がまだ null の間に effect が「確認不要だったから
+  // 確認済み」を確定させてしまい、直後に already_claimed だと判明しても
+  // stale な checked:true を見て誤表示が出る（getSession() が
+  // get_claim_preview より先に解決する典型的な順序で発生する）。
+  const [membership, setMembership] = useState<{ checkedForOrgId: string | null; isMember: boolean }>({
+    checkedForOrgId: null,
     isMember: false,
   });
   const [appliedInThisBrowser, setAppliedInThisBrowser] = useState(false);
@@ -80,44 +85,53 @@ export default function ClaimPage() {
   useEffect(() => {
     if (!sessionResolved) return;
     if (preview?.reason !== "already_claimed" || !preview.organization_id) {
-      setMembership({ checked: true, isMember: false });
+      // already_claimed 以外では membership は意味を持たないため確認しない。
       return;
     }
     if (!userId) {
-      setMembership({ checked: true, isMember: false });
+      setMembership({ checkedForOrgId: preview.organization_id, isMember: false });
       return;
     }
+    const organizationId = preview.organization_id;
     let cancelled = false;
-    setMembership({ checked: false, isMember: false });
     supabase
       .from("organization_members")
       .select("role")
-      .eq("organization_id", preview.organization_id)
+      .eq("organization_id", organizationId)
       .eq("user_id", userId)
       .maybeSingle()
       .then(({ data }) => {
         if (cancelled) return;
-        setMembership({ checked: true, isMember: !!data });
+        setMembership({ checkedForOrgId: organizationId, isMember: !!data });
       });
     return () => {
       cancelled = true;
     };
   }, [preview, userId, sessionResolved]);
 
-  // already_claimed の判定が membership の問い合わせ完了待ちのあいだは
-  // 「owned_by_me」と「claimed_by_other」がちらつかないよう loading 扱いにする。
-  const membershipPending =
-    preview?.reason === "already_claimed" && (!sessionResolved || (!!userId && !membership.checked));
+  // preview.organization_id について確認が済んでいるかどうか。「確認中」の分岐は
+  // resolveClaimView 側に集約し、UI にはこの一時的な値だけを渡す。
+  const membershipCheckPending =
+    preview?.reason === "already_claimed" &&
+    !!preview.organization_id &&
+    membership.checkedForOrgId !== preview.organization_id;
 
-  const view = membershipPending
-    ? "loading"
-    : resolveClaimView({
-        preview,
-        sessionResolved,
-        isLoggedIn: !!userId,
-        isMemberOfOrg: membership.isMember,
-        appliedInThisBrowser,
-      });
+  // membershipCheckPending が true の間は membership.isMember が別の団体（または
+  // 未確認）の値かもしれないため、resolveClaimView には渡さず既定値で丸める。
+  const isMemberOfOrg =
+    !membershipCheckPending &&
+    !!preview?.organization_id &&
+    membership.checkedForOrgId === preview.organization_id &&
+    membership.isMember;
+
+  const view = resolveClaimView({
+    preview,
+    sessionResolved,
+    isLoggedIn: !!userId,
+    isMemberOfOrg,
+    appliedInThisBrowser,
+    membershipCheckPending,
+  });
 
   /** ログイン後にこのページへ戻れるよう、遷移前にトークンを控える */
   const rememberReturn = () => {
@@ -190,7 +204,7 @@ export default function ClaimPage() {
               </p>
               <Link
                 href="/clubdashboard"
-                className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-ink text-paper hover:bg-[#001f45] border-0 px-6 py-2.5 text-sm w-full text-center"
+                className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-ink text-paper hover:opacity-90 border-0 px-6 py-2.5 text-sm w-full text-center"
               >
                 団体ダッシュボードへ
               </Link>
