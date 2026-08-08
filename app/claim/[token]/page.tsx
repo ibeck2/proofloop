@@ -7,14 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Repeat } from "lucide-react";
 import { Button, Input, Textarea } from "@/components/ui";
-
-type Preview = {
-  ok: boolean;
-  reason?: "invalid" | "already_claimed";
-  organization_id?: string;
-  organization_name?: string | null;
-  already_applied?: boolean;
-};
+import { resolveClaimView, claimErrorMessage, type ClaimPreview } from "@/lib/claims/claimView";
 
 const RETURN_KEY = "proofloop.claim.returnTo";
 /** このブラウザから「自分が」申請済みかどうかを覚えておくためのキー接頭辞。
@@ -29,40 +22,41 @@ export default function ClaimPage() {
   const raw = params?.token;
   const token = typeof raw === "string" ? raw : Array.isArray(raw) ? raw[0] : "";
 
-  const [loading, setLoading] = useState(true);
-  const [preview, setPreview] = useState<Preview | null>(null);
+  const [preview, setPreview] = useState<ClaimPreview | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [sessionResolved, setSessionResolved] = useState(false);
+  // already_claimed のときだけ意味を持つ。本人が団体の実際のメンバーかどうかは
+  // localStorage ではなく organization_members を実際に引いて判定する
+  // （承認後に本人が再訪すると「管理者に招待を依頼してください」と本人に
+  // 案内してしまうバグの修正）。
+  const [membership, setMembership] = useState<{ checked: boolean; isMember: boolean }>({
+    checked: false,
+    isMember: false,
+  });
+  const [appliedInThisBrowser, setAppliedInThisBrowser] = useState(false);
   const [role, setRole] = useState("");
   const [note, setNote] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
 
   const load = useCallback(async () => {
     if (!token) {
       setPreview({ ok: false, reason: "invalid" });
-      setLoading(false);
       return;
     }
     const { data, error } = await supabase.rpc("get_claim_preview", { p_token: token });
     if (error) {
       setPreview({ ok: false, reason: "invalid" });
-    } else {
-      const p = data as Preview;
-      setPreview(p);
-      // 「誰かが申請済み」＝「自分が申請済み」ではない。このブラウザで実際に
-      // apply_for_claim が成功したときだけ完了画面を出す。
-      let iApplied = false;
-      try {
-        // 審査には数日かかるとフォーム上で案内しているため、タブを閉じても
-        // 判定結果が引き継がれるよう localStorage を使う（sessionStorage不可）。
-        iApplied = localStorage.getItem(appliedKey(token)) === "1";
-      } catch {
-        // 参照できない環境では通常のフォームに倒す
-      }
-      if (p.already_applied && iApplied) setDone(true);
+      return;
     }
-    setLoading(false);
+    setPreview(data as ClaimPreview);
+    try {
+      // 審査には数日かかるとフォーム上で案内しているため、タブを閉じても
+      // 判定結果が引き継がれるよう localStorage を使う（sessionStorage不可）。
+      setAppliedInThisBrowser(localStorage.getItem(appliedKey(token)) === "1");
+    } catch {
+      // 参照できない環境では通常のフォームに倒す
+    }
   }, [token]);
 
   useEffect(() => {
@@ -72,12 +66,58 @@ export default function ClaimPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUserId(session?.user?.id ?? null);
+      setSessionResolved(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
       setUserId(s?.user?.id ?? null);
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // already_claimed のときだけ、自分がその団体のメンバーかどうかを実際に問い合わせる。
+  // organization_members の SELECT ポリシーは「自分の所属先」だけ読めるので、
+  // 行が返れば＝自分がその団体を管理している、で判定できる。
+  useEffect(() => {
+    if (!sessionResolved) return;
+    if (preview?.reason !== "already_claimed" || !preview.organization_id) {
+      setMembership({ checked: true, isMember: false });
+      return;
+    }
+    if (!userId) {
+      setMembership({ checked: true, isMember: false });
+      return;
+    }
+    let cancelled = false;
+    setMembership({ checked: false, isMember: false });
+    supabase
+      .from("organization_members")
+      .select("role")
+      .eq("organization_id", preview.organization_id)
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setMembership({ checked: true, isMember: !!data });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [preview, userId, sessionResolved]);
+
+  // already_claimed の判定が membership の問い合わせ完了待ちのあいだは
+  // 「owned_by_me」と「claimed_by_other」がちらつかないよう loading 扱いにする。
+  const membershipPending =
+    preview?.reason === "already_claimed" && (!sessionResolved || (!!userId && !membership.checked));
+
+  const view = membershipPending
+    ? "loading"
+    : resolveClaimView({
+        preview,
+        sessionResolved,
+        isLoggedIn: !!userId,
+        isMemberOfOrg: membership.isMember,
+        appliedInThisBrowser,
+      });
 
   /** ログイン後にこのページへ戻れるよう、遷移前にトークンを控える */
   const rememberReturn = () => {
@@ -103,19 +143,7 @@ export default function ClaimPage() {
       }
       const r = data as { ok: boolean; error?: string };
       if (!r?.ok) {
-        if (r?.error === "already_claimed") {
-          toast.error("この団体は既に引き取られています");
-        } else if (r?.error === "already_applied_by_other") {
-          // このトークンには既に別の人物から申請が届いている。
-          // 上書きさせず、運営の確認に委ねる。
-          toast.error(
-            "この団体には既に別の方から申請が届いています。運営が内容を確認します。"
-          );
-        } else if (r?.error === "not_authenticated") {
-          toast.error("ログインが必要です");
-        } else {
-          toast.error("この申請リンクは無効です");
-        }
+        toast.error(claimErrorMessage(r?.error));
         return;
       }
       try {
@@ -123,7 +151,7 @@ export default function ClaimPage() {
       } catch {
         // 記録できなくても申請自体は成功しているため致命ではない
       }
-      setDone(true);
+      setAppliedInThisBrowser(true);
     } finally {
       setSubmitting(false);
     }
@@ -143,9 +171,9 @@ export default function ClaimPage() {
             <p className="text-graphite text-sm mt-2">団体ページの引き取り</p>
           </div>
 
-          {loading ? (
+          {view === "loading" ? (
             <p className="text-graphite text-sm">読み込み中...</p>
-          ) : done ? (
+          ) : view === "applied" ? (
             <div className="space-y-4">
               <p className="text-ink font-bold">申請を受け付けました</p>
               <p className="text-graphite text-sm leading-relaxed">
@@ -154,7 +182,20 @@ export default function ClaimPage() {
               </p>
               <Link href="/" className="text-sm text-ink hover:underline">トップへ戻る</Link>
             </div>
-          ) : preview?.reason === "already_claimed" ? (
+          ) : view === "owned_by_me" ? (
+            <div className="space-y-4">
+              <p className="text-graphite text-sm leading-relaxed">
+                <strong className="text-ink">{orgName}</strong>{" "}
+                はあなたが管理しています。
+              </p>
+              <Link
+                href="/clubdashboard"
+                className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-ink text-paper hover:bg-[#001f45] border-0 px-6 py-2.5 text-sm w-full text-center"
+              >
+                団体ダッシュボードへ
+              </Link>
+            </div>
+          ) : view === "claimed_by_other" ? (
             <div className="space-y-4">
               <p className="text-graphite text-sm leading-relaxed">
                 <strong className="text-ink">{orgName}</strong>{" "}
@@ -163,7 +204,7 @@ export default function ClaimPage() {
               <p className="text-graphite text-sm leading-relaxed">
                 メンバーとして参加したい場合は、団体の管理者に招待を依頼してください。
               </p>
-              {preview.organization_id && (
+              {preview?.organization_id && (
                 <Link
                   href={`/organizations/${preview.organization_id}`}
                   className="text-sm text-ink hover:underline"
@@ -172,10 +213,10 @@ export default function ClaimPage() {
                 </Link>
               )}
             </div>
-          ) : !preview?.ok ? (
+          ) : view === "invalid" ? (
             // 無効・期限切れ・取消を区別しない（総当たりに情報を与えない）
-            <p className="text-graphite text-sm">このリンクは無効です。</p>
-          ) : !userId ? (
+            <p className="text-graphite text-sm">このリンクは無効です</p>
+          ) : view === "need_login" ? (
             <div className="space-y-4">
               <p className="text-graphite text-sm leading-relaxed">
                 <strong className="text-ink">{orgName}</strong>{" "}
@@ -201,7 +242,7 @@ export default function ClaimPage() {
                 登録後、このページに戻って申請を続けられます。
               </p>
             </div>
-          ) : (
+          ) : view === "form" && preview ? (
             <div className="space-y-5">
               <p className="text-graphite text-sm leading-relaxed">
                 <strong className="text-ink">{orgName}</strong>{" "}
@@ -268,7 +309,7 @@ export default function ClaimPage() {
                 お知らせします。
               </p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
