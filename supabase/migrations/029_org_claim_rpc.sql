@@ -511,6 +511,10 @@ REVOKE UPDATE ON TABLE public.organizations FROM authenticated, anon;
 -- 団体が自分で編集してよい列だけを列挙する。
 -- 範囲は OrganizationProfileForm の update payload（user_id は除外済み）と、
 -- /clubats が個別に更新する planned_hire_count / step_target_rates。
+--
+-- ⚠ 列レベルGRANTは ALTER TABLE ADD COLUMN に追従しない。
+--   団体が編集する列を追加したら、必ずここにも足すこと。忘れると保存時に
+--   permission denied for table organizations が出る。RLS由来と誤診しやすい。
 GRANT UPDATE (
   name, university, category, description,
   x_id, instagram_id, line_url, website_url, logo_url,
