@@ -35,7 +35,7 @@ export type ReviewRow = {
 };
 
 const ORG_COLUMNS =
-  "id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process, selection_flow, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, x_id, instagram_id, line_url, website_url";
+  "id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process, selection_flow, gender_ratio, grade_composition, location_detail, fee_entry, fee_annual, x_id, instagram_id, line_url, website_url, claim_status";
 
 /**
  * generateMetadata と本体レンダリングの両方から団体行を使うため、リクエスト単位でメモ化する。
@@ -119,6 +119,7 @@ export default async function OrganizationPage({
     <>
       <OrganizationDetailClient
         org={org}
+        claimStatus={org.claim_status ?? null}
         events={(events as EventRow[]) ?? []}
         photos={(photos as OrganizationPhotoRow[]) ?? []}
         approvedReviews={(reviews as ReviewRow[]) ?? []}
