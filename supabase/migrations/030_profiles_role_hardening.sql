@@ -35,11 +35,10 @@
 -- ============================================
 
 -- --------------------------------------------
--- 1. UPDATE: テーブル単位を一旦 REVOKE してから、role 以外の11列だけ GRANT し直す
---    role 以外の全11列：
+-- 1. UPDATE: テーブル単位を一旦 REVOKE してから、許可する10列だけ GRANT し直す
+--    profiles は全12列。role（閉じる）と id（主キーなので更新させない）を除いた10列：
 --    email, display_name, university, faculty, enrollment_year, updated_at,
 --    contact_email, graduation_year, full_name, admission_year
---    （id は主キーであり、本人が自分の行を更新する理由が無いため UPDATE には含めない）
 -- --------------------------------------------
 REVOKE UPDATE ON TABLE public.profiles FROM authenticated, anon;
 
@@ -51,8 +50,8 @@ GRANT UPDATE (
 -- --------------------------------------------
 -- 2. INSERT: 同様にテーブル単位を REVOKE してから、role 以外の11列（id を含む）を
 --    GRANT し直す。app/mypage/page.tsx・app/signup/page.tsx の upsert は
---    INSERT ... ON CONFLICT DO UPDATE として実行されるため、初回行作成の
---    主キー（id）は INSERT 側にだけ必要。
+--    INSERT ... ON CONFLICT DO UPDATE として実行されるため、初回の行作成に
+--    主キー（id）が要る。UPDATE 側に id が無いのはこの非対称のため。
 -- --------------------------------------------
 REVOKE INSERT ON TABLE public.profiles FROM authenticated, anon;
 
