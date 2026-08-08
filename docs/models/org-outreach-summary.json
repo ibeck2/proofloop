@@ -1,0 +1,1150 @@
+{
+  "generatedFrom": "本番Supabase（is_approved=true）",
+  "total": 2421,
+  "reachable": 2354,
+  "unreachable": 67,
+  "universities": [
+    [
+      "慶應義塾大学",
+      439
+    ],
+    [
+      "早稲田大学",
+      404
+    ],
+    [
+      "上智大学",
+      300
+    ],
+    [
+      "京都大学",
+      171
+    ],
+    [
+      "東京大学",
+      160
+    ],
+    [
+      "一橋大学",
+      133
+    ],
+    [
+      "大阪大学",
+      131
+    ],
+    [
+      "北海道大学",
+      123
+    ],
+    [
+      "九州大学",
+      121
+    ],
+    [
+      "名古屋大学",
+      119
+    ],
+    [
+      "東北大学",
+      119
+    ],
+    [
+      "国際基督教大学",
+      74
+    ],
+    [
+      "東京科学大学",
+      60
+    ]
+  ],
+  "batch1Universities": [
+    [
+      "慶應義塾大学",
+      38
+    ],
+    [
+      "早稲田大学",
+      35
+    ],
+    [
+      "上智大学",
+      26
+    ],
+    [
+      "京都大学",
+      14
+    ],
+    [
+      "東京大学",
+      14
+    ],
+    [
+      "一橋大学",
+      11
+    ],
+    [
+      "大阪大学",
+      11
+    ],
+    [
+      "北海道大学",
+      10
+    ],
+    [
+      "九州大学",
+      10
+    ],
+    [
+      "名古屋大学",
+      10
+    ],
+    [
+      "東北大学",
+      10
+    ],
+    [
+      "国際基督教大学",
+      6
+    ],
+    [
+      "東京科学大学",
+      5
+    ]
+  ],
+  "batch1Categories": [
+    [
+      "運動系（スポーツ・アウトドア）",
+      138
+    ],
+    [
+      "文化系（音楽・演劇・アート）",
+      25
+    ],
+    [
+      "イベント・企画（インカレ・学園祭等）",
+      13
+    ],
+    [
+      "趣味・その他",
+      9
+    ],
+    [
+      "国際交流・語学",
+      8
+    ],
+    [
+      "学術・研究（ゼミ・研究会・勉強会）",
+      4
+    ],
+    [
+      "メディア・出版",
+      2
+    ],
+    [
+      "ボランティア・NPO",
+      1
+    ]
+  ],
+  "top100": [
+    {
+      "order": 1,
+      "batch": 1,
+      "name": "硬式庭球部（薬学部）",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 200,
+      "channels": "X/Instagram/Web",
+      "score": 95
+    },
+    {
+      "order": 2,
+      "batch": 1,
+      "name": "理工展連絡会",
+      "university": "早稲田大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": 257,
+      "channels": "X/Instagram/Web",
+      "score": 98
+    },
+    {
+      "order": 3,
+      "batch": 1,
+      "name": "Sophia Sustainable Coffee Movement (SSCM)",
+      "university": "上智大学",
+      "category": "趣味・その他",
+      "mc": 200,
+      "channels": "X/Instagram/Web",
+      "score": 77
+    },
+    {
+      "order": 4,
+      "batch": 1,
+      "name": "ゴルフ部（理工学部）",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 150,
+      "channels": "X/Instagram/Web",
+      "score": 95
+    },
+    {
+      "order": 5,
+      "batch": 1,
+      "name": "ローバース",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 2716,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 6,
+      "batch": 1,
+      "name": "硬式庭球同好会フリーク",
+      "university": "京都大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 190,
+      "channels": "X/Instagram/Web",
+      "score": 80
+    },
+    {
+      "order": 7,
+      "batch": 1,
+      "name": "東京大学工学部モーター同好会",
+      "university": "東京大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 150,
+      "channels": "X/Instagram/Web",
+      "score": 79
+    },
+    {
+      "order": 8,
+      "batch": 1,
+      "name": "体育会ハンドボール部",
+      "university": "上智大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 22,
+      "channels": "X/Instagram/Web",
+      "score": 77
+    },
+    {
+      "order": 9,
+      "batch": 1,
+      "name": "アルメリア・ローン・テニスクラブ",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 140,
+      "channels": "X/Instagram/Web",
+      "score": 95
+    },
+    {
+      "order": 10,
+      "batch": 1,
+      "name": "aka Wa.Se.Da.",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 2170,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 11,
+      "batch": 1,
+      "name": "端艇部",
+      "university": "一橋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 54,
+      "channels": "X/Instagram/Web",
+      "score": 73
+    },
+    {
+      "order": 12,
+      "batch": 1,
+      "name": "アルティメット部",
+      "university": "大阪大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 60,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 13,
+      "batch": 1,
+      "name": "男子バレーボール部",
+      "university": "北海道大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 39,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 14,
+      "batch": 1,
+      "name": "フィルハーモニーオーケストラ",
+      "university": "九州大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 60,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 15,
+      "batch": 1,
+      "name": "アメリカンフットボール部",
+      "university": "名古屋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 108,
+      "channels": "X/Instagram/Web",
+      "score": 77
+    },
+    {
+      "order": 16,
+      "batch": 1,
+      "name": "川内バドミントン同好会",
+      "university": "東北大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 80,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 17,
+      "batch": 1,
+      "name": "バドミントン愛好会",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 125,
+      "channels": "X/Instagram/Web",
+      "score": 95
+    },
+    {
+      "order": 18,
+      "batch": 1,
+      "name": "バドミントン同好会",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 200,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 19,
+      "batch": 1,
+      "name": "上南戦実行委員会",
+      "university": "上智大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 77
+    },
+    {
+      "order": 20,
+      "batch": 1,
+      "name": "陸上競技同好会",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 100,
+      "channels": "X/Instagram/Web",
+      "score": 95
+    },
+    {
+      "order": 21,
+      "batch": 1,
+      "name": "軽音サークルZETS",
+      "university": "京都大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 200,
+      "channels": "X/Instagram/Web",
+      "score": 75
+    },
+    {
+      "order": 22,
+      "batch": 1,
+      "name": "陸上競技同好会",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 165,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 23,
+      "batch": 1,
+      "name": "弓術部",
+      "university": "東京大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 70,
+      "channels": "X/Instagram/Web",
+      "score": 74
+    },
+    {
+      "order": 24,
+      "batch": 1,
+      "name": "ソフィア祭実行委員会",
+      "university": "上智大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 77
+    },
+    {
+      "order": 25,
+      "batch": 1,
+      "name": "ICU祭実行委員会",
+      "university": "国際基督教大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": 40,
+      "channels": "X/Instagram/Web",
+      "score": 69
+    },
+    {
+      "order": 26,
+      "batch": 1,
+      "name": "弓道同好会",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 96,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 27,
+      "batch": 1,
+      "name": "パディ・ゴルフクラブ",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 158,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 28,
+      "batch": 1,
+      "name": "体育会弓道部",
+      "university": "一橋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 41,
+      "channels": "X/Instagram/Web",
+      "score": 68
+    },
+    {
+      "order": 29,
+      "batch": 1,
+      "name": "環境サークルGECS",
+      "university": "大阪大学",
+      "category": "学術・研究（ゼミ・研究会・勉強会）",
+      "mc": 120,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 30,
+      "batch": 1,
+      "name": "スポーツ愛好会卓球部",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 89,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 31,
+      "batch": 1,
+      "name": "大学祭全学実行委員会",
+      "university": "北海道大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 32,
+      "batch": 1,
+      "name": "フォークソング部",
+      "university": "九州大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 60,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 33,
+      "batch": 1,
+      "name": "上智大学資格取得サークル(SCC)",
+      "university": "上智大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 200,
+      "channels": "Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 34,
+      "batch": 1,
+      "name": "ギター研究会",
+      "university": "東京科学大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 57,
+      "channels": "X/Instagram/Web",
+      "score": 63
+    },
+    {
+      "order": 35,
+      "batch": 1,
+      "name": "少林寺拳法部",
+      "university": "名古屋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 67,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 36,
+      "batch": 1,
+      "name": "山歩会",
+      "university": "東北大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 80,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 37,
+      "batch": 1,
+      "name": "早稲田大学フラッシュモ部",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 150,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 38,
+      "batch": 1,
+      "name": "剣道部",
+      "university": "京都大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 54,
+      "channels": "X/Instagram/Web",
+      "score": 75
+    },
+    {
+      "order": 39,
+      "batch": 1,
+      "name": "卓球部（理工学部）",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 89,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 40,
+      "batch": 1,
+      "name": "東京大学Diligent",
+      "university": "東京大学",
+      "category": "学術・研究（ゼミ・研究会・勉強会）",
+      "mc": 1000,
+      "channels": "X/Instagram/Web",
+      "score": 69
+    },
+    {
+      "order": 41,
+      "batch": 1,
+      "name": "早大テニスクラブ",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 120,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 42,
+      "batch": 1,
+      "name": "星空研究会",
+      "university": "上智大学",
+      "category": "学術・研究（ゼミ・研究会・勉強会）",
+      "mc": 50,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 43,
+      "batch": 1,
+      "name": "應援指導部",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 83,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 44,
+      "batch": 1,
+      "name": "国際学生友好会(WIC)",
+      "university": "早稲田大学",
+      "category": "国際交流・語学",
+      "mc": 120,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 45,
+      "batch": 1,
+      "name": "KODAIRA祭実行委員会",
+      "university": "一橋大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 68
+    },
+    {
+      "order": 46,
+      "batch": 1,
+      "name": "バスケットボール部",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 80,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 47,
+      "batch": 1,
+      "name": "オリエンテーリング部",
+      "university": "大阪大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 49,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 48,
+      "batch": 1,
+      "name": "上智女子ラグビークラブ",
+      "university": "上智大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 11,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 49,
+      "batch": 1,
+      "name": "E.M.B.G.",
+      "university": "京都大学",
+      "category": "趣味・その他",
+      "mc": 200,
+      "channels": "X/Instagram/Web",
+      "score": 70
+    },
+    {
+      "order": 50,
+      "batch": 1,
+      "name": "洋弓部",
+      "university": "北海道大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 62
+    },
+    {
+      "order": 51,
+      "batch": 1,
+      "name": "英語部 (WESA)",
+      "university": "早稲田大学",
+      "category": "国際交流・語学",
+      "mc": 120,
+      "channels": "X/Instagram/Web/LINE",
+      "score": 93
+    },
+    {
+      "order": 52,
+      "batch": 1,
+      "name": "サイクリング部",
+      "university": "九州大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 36,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 53,
+      "batch": 1,
+      "name": "Business Contest KING 実行委員会",
+      "university": "東京大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 69
+    },
+    {
+      "order": 54,
+      "batch": 1,
+      "name": "躰道部",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 80,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 55,
+      "batch": 1,
+      "name": "ボディビル部",
+      "university": "東北大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 80,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 56,
+      "batch": 1,
+      "name": "オリエンテーリング部",
+      "university": "名古屋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 67,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 57,
+      "batch": 1,
+      "name": "上智大学ダイビングクラブ海洋生態研究会",
+      "university": "上智大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 58,
+      "batch": 1,
+      "name": "アーチェリー部",
+      "university": "国際基督教大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 40,
+      "channels": "X/Instagram/Web",
+      "score": 64
+    },
+    {
+      "order": 59,
+      "batch": 1,
+      "name": "グリーンテニスクラブ",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 110,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 60,
+      "batch": 1,
+      "name": "九球テニスクラブ",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 70,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 61,
+      "batch": 1,
+      "name": "叡風会",
+      "university": "京都大学",
+      "category": "趣味・その他",
+      "mc": 70,
+      "channels": "X/Instagram/Web",
+      "score": 65
+    },
+    {
+      "order": 62,
+      "batch": 1,
+      "name": "競走部(医学部)",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 62,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 63,
+      "batch": 1,
+      "name": "城北テニスクラブ",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 107,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 64,
+      "batch": 1,
+      "name": "体育会女子グランドホッケー部",
+      "university": "上智大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 65,
+      "batch": 1,
+      "name": "一橋祭運営委員会",
+      "university": "一橋大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 68
+    },
+    {
+      "order": 66,
+      "batch": 1,
+      "name": "大学祭中央実行委員会",
+      "university": "大阪大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 67,
+      "batch": 1,
+      "name": "TEDxUTokyo実行委員会",
+      "university": "東京大学",
+      "category": "イベント・企画（インカレ・学園祭等）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 69
+    },
+    {
+      "order": 68,
+      "batch": 1,
+      "name": "競技ダンス部",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 60,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 69,
+      "batch": 1,
+      "name": "早大フォーティラブ",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 100,
+      "channels": "X/Instagram/Web/LINE",
+      "score": 93
+    },
+    {
+      "order": 70,
+      "batch": 1,
+      "name": "スケート部",
+      "university": "北海道大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 62
+    },
+    {
+      "order": 71,
+      "batch": 1,
+      "name": "フェンシング部",
+      "university": "九州大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 32,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 72,
+      "batch": 1,
+      "name": "体育会水泳部(竸泳・水球部門)",
+      "university": "上智大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 73,
+      "batch": 1,
+      "name": "アニメーション研究会",
+      "university": "東京科学大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 57,
+      "channels": "X/Instagram/Web",
+      "score": 63
+    },
+    {
+      "order": 74,
+      "batch": 1,
+      "name": "空手道部",
+      "university": "名古屋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 67,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 75,
+      "batch": 1,
+      "name": "卓球部",
+      "university": "東北大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 80,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 76,
+      "batch": 1,
+      "name": "水泳部(医学部)",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 55,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 77,
+      "batch": 1,
+      "name": "早稲田大学　下駄っぱーず",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 100,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 78,
+      "batch": 1,
+      "name": "民族舞踊研究会",
+      "university": "京都大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 40,
+      "channels": "X/Instagram/Web",
+      "score": 65
+    },
+    {
+      "order": 79,
+      "batch": 1,
+      "name": "ソフトテニス部",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 54,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 80,
+      "batch": 1,
+      "name": "上智大学フランス語倶楽部",
+      "university": "上智大学",
+      "category": "国際交流・語学",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 81,
+      "batch": 1,
+      "name": "早稲田大学バレエサークル　Ｃiel",
+      "university": "早稲田大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 100,
+      "channels": "X/Instagram/Web",
+      "score": 93
+    },
+    {
+      "order": 82,
+      "batch": 1,
+      "name": "東京大学文学研究会",
+      "university": "東京大学",
+      "category": "学術・研究（ゼミ・研究会・勉強会）",
+      "mc": 66,
+      "channels": "X/Instagram/Web",
+      "score": 64
+    },
+    {
+      "order": 83,
+      "batch": 1,
+      "name": "女子ラクロス部",
+      "university": "一橋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 1,
+      "channels": "X/Instagram/Web",
+      "score": 63
+    },
+    {
+      "order": 84,
+      "batch": 1,
+      "name": "山岳部",
+      "university": "大阪大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 7,
+      "channels": "X/Instagram/Web",
+      "score": 62
+    },
+    {
+      "order": 85,
+      "batch": 1,
+      "name": "クリケット部",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 50,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 86,
+      "batch": 1,
+      "name": "SEIREN",
+      "university": "早稲田大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 300,
+      "channels": "X/Instagram/Web",
+      "score": 88
+    },
+    {
+      "order": 87,
+      "batch": 1,
+      "name": "体育会フィギュアスケート部クリスタロス",
+      "university": "上智大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 88,
+      "batch": 1,
+      "name": "女子サッカー部（OFF-SIDES）",
+      "university": "国際基督教大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 40,
+      "channels": "X/Instagram/Web",
+      "score": 64
+    },
+    {
+      "order": 89,
+      "batch": 1,
+      "name": "合気会合気道部",
+      "university": "北海道大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 62
+    },
+    {
+      "order": 90,
+      "batch": 1,
+      "name": "ホッケー部",
+      "university": "京都大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 12,
+      "channels": "X/Instagram/Web",
+      "score": 65
+    },
+    {
+      "order": 91,
+      "batch": 1,
+      "name": "バレーボール同好会",
+      "university": "慶應義塾大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 50,
+      "channels": "X/Instagram/Web",
+      "score": 90
+    },
+    {
+      "order": 92,
+      "batch": 1,
+      "name": "スキー部",
+      "university": "九州大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 32,
+      "channels": "X/Instagram/Web",
+      "score": 67
+    },
+    {
+      "order": 93,
+      "batch": 1,
+      "name": "日本拳法部",
+      "university": "名古屋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 67,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 94,
+      "batch": 1,
+      "name": "アーチェリー部",
+      "university": "東北大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 80,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 95,
+      "batch": 1,
+      "name": "交響楽団",
+      "university": "早稲田大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 250,
+      "channels": "X/Instagram/Web",
+      "score": 88
+    },
+    {
+      "order": 96,
+      "batch": 1,
+      "name": "Revolve",
+      "university": "慶應義塾大学",
+      "category": "趣味・その他",
+      "mc": 600,
+      "channels": "X/Instagram/Web",
+      "score": 85
+    },
+    {
+      "order": 97,
+      "batch": 1,
+      "name": "日本模擬国連四ツ谷研究会（よつけん）",
+      "university": "上智大学",
+      "category": "国際交流・語学",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 72
+    },
+    {
+      "order": 98,
+      "batch": 1,
+      "name": "東京大学ロースクールサッカー部",
+      "university": "東京大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": 6,
+      "channels": "X/Instagram/Web",
+      "score": 64
+    },
+    {
+      "order": 99,
+      "batch": 1,
+      "name": "Street Corner Symphony",
+      "university": "早稲田大学",
+      "category": "文化系（音楽・演劇・アート）",
+      "mc": 200,
+      "channels": "X/Instagram/Web",
+      "score": 88
+    },
+    {
+      "order": 100,
+      "batch": 1,
+      "name": "体操部",
+      "university": "一橋大学",
+      "category": "運動系（スポーツ・アウトドア）",
+      "mc": null,
+      "channels": "X/Instagram/Web",
+      "score": 63
+    }
+  ]
+}

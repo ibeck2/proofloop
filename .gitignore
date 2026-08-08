@@ -43,3 +43,6 @@ next-env.d.ts
 scripts/waseda/data/import.json
 scripts/waseda/data/ins*.sql
 scripts/waseda/data/insert*.sql
+docs/models/claim-tokens-batch*.sql
+docs/models/claim-tokens-batch*.csv
+~$*
