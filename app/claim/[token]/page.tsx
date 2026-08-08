@@ -94,6 +94,11 @@ export default function ClaimPage() {
     }
     const organizationId = preview.organization_id;
     let cancelled = false;
+    // 問い合わせを始める前に「未確認」へ戻す。org は同じままユーザーだけが
+    // 変わったとき（別タブでログインすると onAuthStateChange がこのタブにも届く）、
+    // checkedForOrgId が一致したままになり、前のユーザーの isMember を見て
+    // オーナー本人に claimed_by_other を一瞬出してしまう。
+    setMembership({ checkedForOrgId: null, isMember: false });
     supabase
       .from("organization_members")
       .select("role")
@@ -116,13 +121,8 @@ export default function ClaimPage() {
     !!preview.organization_id &&
     membership.checkedForOrgId !== preview.organization_id;
 
-  // membershipCheckPending が true の間は membership.isMember が別の団体（または
-  // 未確認）の値かもしれないため、resolveClaimView には渡さず既定値で丸める。
   const isMemberOfOrg =
-    !membershipCheckPending &&
-    !!preview?.organization_id &&
-    membership.checkedForOrgId === preview.organization_id &&
-    membership.isMember;
+    membership.checkedForOrgId === preview?.organization_id && membership.isMember;
 
   const view = resolveClaimView({
     preview,
