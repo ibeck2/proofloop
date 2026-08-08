@@ -193,6 +193,14 @@ BEGIN
     RETURN jsonb_build_object('ok', false, 'error', 'bad_level');
   END IF;
 
+  -- applicant_user_id の FK は ON DELETE SET NULL。申請後に本人が退会すると NULL になる。
+  -- そのまま承認に進むと organization_members.user_id（NOT NULL）への INSERT が
+  -- not_null_violation で落ちる。下の EXCEPTION WHEN unique_violation では捕まらないので
+  -- admin に 500 が返る。承認する相手が居ないことを明示的に返す。
+  IF c.applicant_user_id IS NULL THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'invalid');
+  END IF;
+
   -- claim の status だけでは足りない。団体側の現在状態も見る。
   --   ・既に別 claim が承認済み → uniq_org_claims_approved に当たって 500 になる
   --   ・frozen（申立て対応中） → claimed に上書きすると未処理の申立てを残して凍結が解ける
@@ -321,9 +329,11 @@ BEGIN
   -- 一部だけ戻すと、大学名・カテゴリ・選考フロー・会費などの改ざんが凍結後も残る。
   -- snapshot は to_jsonb(o) の行全体なので jsonb_populate_record で型ごと復元できる
   -- （手書きのキャストは不要）。
-  -- id / created_at / user_id / is_approved / claim_status は復元しない：
-  -- 識別子と系統管理の列であり、掲載内容ではないため。claim_status を戻すと
-  -- 直後の frozen 書き込みと矛盾し、is_approved を戻すと掲載審査の結果が巻き戻る。
+  -- id / created_at / user_id / is_approved / is_verified / claim_status は復元しない：
+  -- 識別子と系統管理の列であり、掲載内容ではないため（§8 で団体に UPDATE を与えていない
+  -- 列と同じ集合）。claim_status を戻すと直後の frozen 書き込みと矛盾し、
+  -- is_approved / is_verified を戻すと運営が下した掲載審査・認証の結果が巻き戻る。
+  -- user_id は他テーブルのRLSポリシーが参照するアクセス権そのものなので触らない。
   IF snap IS NOT NULL THEN
     UPDATE public.organizations t SET
       name = r.name, university = r.university, category = r.category,
@@ -366,6 +376,7 @@ DECLARE
   snap jsonb;
   target_claim uuid;
   rv jsonb;
+  has_approved boolean;
 BEGIN
   IF NOT public.is_system_admin() THEN
     RETURN jsonb_build_object('ok', false, 'error', 'forbidden');
@@ -411,8 +422,10 @@ BEGIN
     ORDER BY s.created_at DESC LIMIT 1;
 
   -- submit_dispute と同じ範囲・同じ理由で全列を戻す。
-  -- id / created_at / user_id / is_approved / claim_status は識別子と系統管理の列なので
-  -- 復元しない（claim_status は直後に claimed を書く）。
+  -- id / created_at / user_id / is_approved / is_verified / claim_status は識別子と
+  -- 系統管理の列（§8 で団体に UPDATE を与えていない列と同じ集合）なので復元しない。
+  -- claim_status は直後に下の分岐で書き、is_approved / is_verified は運営が下した
+  -- 掲載審査・認証の結果、user_id は他テーブルのRLSが参照するアクセス権そのもの。
   IF snap IS NOT NULL THEN
     UPDATE public.organizations t SET
       name = r.name, university = r.university, category = r.category,
@@ -428,12 +441,28 @@ BEGIN
     WHERE t.id = d.organization_id;
   END IF;
 
-  UPDATE public.organizations SET claim_status='claimed' WHERE id = d.organization_id;
+  -- 却下でも無条件に claimed を書いてはいけない。申立てが open の間に admin が
+  -- revoke_claim を単独実行していると、承認済み claim も owner 行も無い状態で
+  -- 団体だけ claimed に戻り、以後 apply_for_claim / decide_claim が永久に
+  -- already_claimed を返して編集できる者がゼロの詰み状態になる。
+  -- 実際にオーナーが居るか（＝承認済み claim が実在するか）で戻す先を分ける。
+  SELECT EXISTS (
+    SELECT 1 FROM public.organization_claims oc
+    WHERE oc.organization_id = d.organization_id AND oc.status = 'approved'
+  ) INTO has_approved;
+
+  UPDATE public.organizations
+    SET claim_status = CASE WHEN has_approved THEN 'claimed' ELSE 'unclaimed' END
+    WHERE id = d.organization_id;
+
   UPDATE public.organization_disputes
     SET status='dismissed', resolved_by=auth.uid(), resolved_at=now(), resolution_note=p_note
     WHERE id = d.id;
 
-  RETURN jsonb_build_object('ok', true, 'resolution', 'dismissed');
+  RETURN jsonb_build_object(
+    'ok', true, 'resolution', 'dismissed',
+    'claim_status', CASE WHEN has_approved THEN 'claimed' ELSE 'unclaimed' END
+  );
 END;
 $$;
 
@@ -457,3 +486,47 @@ GRANT EXECUTE ON FUNCTION public.apply_for_claim(uuid,text,text) TO authenticate
 GRANT EXECUTE ON FUNCTION public.decide_claim(uuid,text,text,text,text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.revoke_claim(uuid,text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.resolve_dispute(uuid,text,text) TO authenticated;
+
+-- --------------------------------------------
+-- 8. organizations の列レベル UPDATE 権限
+--
+--    RLS ポリシー（028 の organizations_update_by_members）は「どの行を触れるか」しか
+--    縛らない。列は縛れない。そして authenticated には organizations の UPDATE が
+--    テーブル単位で付いており、全列が書ける状態だった。
+--
+--    決定的に危険なのは user_id。organizations.user_id = auth.uid() を条件にする
+--    ポリシーが applications / application_messages / profiles（応募者の個人情報）/
+--    tasks / events / reviews の6テーブル8本ある。claim で owner になった者が
+--    user_id = auth.uid() と書くだけで、limited 承認（can_manage_applications = false）
+--    でも応募者のPIIと応募DMに到達でき、そのアクセスは剥奪しても巻き戻しても残る。
+--    ＝ 029 が守ろうとしている「巻き戻し」「剥奪」「限定権限」の3つが同時に無効化される。
+--    is_approved が書けるのは、団体が自分で掲載承認を立てられることを意味する。
+--
+--    ⚠ Postgres の落とし穴：テーブルレベルの GRANT UPDATE が残ったまま
+--       REVOKE UPDATE (col) しても期待どおりに効かない。
+--       いったんテーブルレベルを REVOKE してから、許可する列だけを GRANT し直す。
+-- --------------------------------------------
+REVOKE UPDATE ON TABLE public.organizations FROM authenticated, anon;
+
+-- 団体が自分で編集してよい列だけを列挙する。
+-- 範囲は OrganizationProfileForm の update payload（user_id は除外済み）と、
+-- /clubats が個別に更新する planned_hire_count / step_target_rates。
+GRANT UPDATE (
+  name, university, category, description,
+  x_id, instagram_id, line_url, website_url, logo_url,
+  member_count, activity_frequency,
+  is_intercollege, target_grades,
+  selection_process, selection_flow,
+  gender_ratio, grade_composition, location_detail,
+  fee_entry, fee_annual,
+  planned_hire_count, step_target_rates
+) ON public.organizations TO authenticated;
+
+-- 意図的に含めない列と、その理由：
+--   id / created_at … 識別子。団体が書き換える正当な理由が無い
+--   user_id         … 他テーブル8本のRLSポリシーが参照するアクセス権そのもの。
+--                     フォームも update payload から除外している（新規作成時のみ設定）
+--   is_approved     … 掲載審査の結果。運営が管理する状態
+--   is_verified     … 運営が付ける認証。運営が管理する状態
+--   claim_status    … claim / 凍結の系統管理。書けると団体が自分で凍結を解除できる
+-- anon には UPDATE を一切与えない（未ログインが団体掲載を書き換える経路は存在しない）。
