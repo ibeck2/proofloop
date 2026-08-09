@@ -132,8 +132,52 @@ export async function fetchMyOrganizationMemberships(
   return { data: list, error: null };
 }
 
+/** 連絡先の選定に使うメンバー行の最小形 */
+export type ContactCandidate = {
+  user_id: string;
+  role: string | null;
+  created_at?: string | null;
+};
+
+/** role を優先度に写す。小さいほど優先。未知の role は member と同じ扱い */
+const CONTACT_ROLE_RANK: Record<string, number> = { owner: 0, admin: 1 };
+
 /**
- * 団体のオーナー（通知先など）— role = owner のメンバーの user_id
+ * 団体への連絡（DM）の宛先を1人選ぶ。
+ *
+ * owner だけを見ると宛先が消えるケースがある。claim を「限定」で承認された団体の
+ * 代表は role='member'（メンバー管理をDBレベルで禁じるため。033 を参照）であり、
+ * owner 行が存在しない。宛先が null になると「この団体に連絡」が黙って機能しなく
+ * なるので、owner → admin → その他の順に降りて、同順位なら最も早く参加した人を選ぶ。
+ */
+export function pickOrganizationContactUserId(
+  members: ContactCandidate[]
+): string | null {
+  let best: ContactCandidate | null = null;
+  let bestRank = Number.POSITIVE_INFINITY;
+
+  for (const m of members) {
+    if (!m.user_id) continue;
+    const rank = CONTACT_ROLE_RANK[m.role ?? ""] ?? 2;
+    if (rank < bestRank) {
+      best = m;
+      bestRank = rank;
+      continue;
+    }
+    // 同順位は参加が早い方。created_at が無い行は後回しにする（順序を安定させる）
+    if (rank === bestRank && best) {
+      const a = m.created_at ?? "";
+      const b = best.created_at ?? "";
+      if (a && (!b || a < b)) best = m;
+    }
+  }
+
+  return best?.user_id ?? null;
+}
+
+/**
+ * 団体のオーナー（通知先など）の user_id。
+ * owner が居なければ admin、それも居なければ最も早く参加したメンバーを返す。
  */
 export async function fetchOrganizationOwnerUserId(
   supabase: SupabaseClient,
@@ -141,14 +185,11 @@ export async function fetchOrganizationOwnerUserId(
 ): Promise<string | null> {
   const { data, error } = await supabase
     .from("organization_members")
-    .select("user_id")
-    .eq("organization_id", organizationId)
-    .eq("role", "owner")
-    .limit(1)
-    .maybeSingle();
+    .select("user_id, role, created_at")
+    .eq("organization_id", organizationId);
 
   if (error || !data) return null;
-  return (data as { user_id: string }).user_id;
+  return pickOrganizationContactUserId(data as ContactCandidate[]);
 }
 
 /** 内部リンク用: orgId をクエリに付与 */
