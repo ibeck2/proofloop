@@ -43,3 +43,17 @@ export type PermissionFlags = {
   can_manage_members: boolean;
   can_manage_applications: boolean;
 };
+
+/** list_open_disputes（031/032）の戻り値の1行。 */
+export type DisputeRow = {
+  id: string;
+  organization_id: string;
+  organization_name: string | null;
+  claim_id: string | null;
+  reporter_name: string;
+  reporter_contact: string;
+  body: string;
+  created_at: string;
+  /** 032 で追加。false の場合は自動凍結がレート制限で見送られ、記録のみ。 */
+  froze_organization: boolean;
+};
