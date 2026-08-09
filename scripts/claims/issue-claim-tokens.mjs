@@ -37,8 +37,19 @@ const iId = cols.indexOf("団体ID");
 const iChannel = cols.indexOf("主チャネル");
 const iHandle = cols.indexOf("主ハンドル");
 
-if (iChannel < 0 || iHandle < 0) {
-  console.error("主チャネル列がありません。先に build-org-outreach-list.mjs を実行してください");
+// 必要な列が1つでも欠けていたら、どれが無いのかを名指しで止める。
+// 見逃すと indexOf の -1 が Number(undefined)=NaN を生み、
+// 「バッチNの対象が0件です」という実際の原因と無関係なメッセージになる。
+const missing = [
+  ["バッチ", iBatch], ["団体ID", iId],
+  ["主チャネル", iChannel], ["主ハンドル", iHandle],
+].filter(([, i]) => i < 0).map(([name]) => name);
+
+if (missing.length > 0) {
+  console.error(
+    `CSVに必要な列がありません: ${missing.join(", ")}\n` +
+    "先に node docs/models/build-org-outreach-list.mjs を実行してください"
+  );
   process.exit(1);
 }
 
