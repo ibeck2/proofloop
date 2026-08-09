@@ -4,7 +4,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui";
-import { disputeErrorMessage, disputeCompletionMessage } from "@/lib/claims/disputeOutcome";
+import {
+  disputeErrorMessage,
+  disputeCompletionMessage,
+  didFreeze,
+} from "@/lib/claims/disputeOutcome";
 
 /**
  * claim 済みの団体ページにだけ出す「乗っ取り」の申告窓口。
@@ -13,8 +17,9 @@ import { disputeErrorMessage, disputeCompletionMessage } from "@/lib/claims/disp
  *
  * submit_dispute は 032 でレート制限を追加し、直近1時間の自動凍結が閾値に
  * 達しているときは凍結・巻き戻しを見送り、申立てだけを記録して
- * {"ok":true,"frozen":false} を返す。完了画面の文言分岐は lib/claims/disputeOutcome.ts
- * の純粋関数に切り出してあるので、ここでは分岐しない。
+ * {"ok":true,"frozen":false} を返す。frozen キーの解釈（didFreeze）と完了画面の
+ * 文言分岐（disputeCompletionMessage）はどちらも lib/claims/disputeOutcome.ts の
+ * 純粋関数に切り出してあるので、ここでは分岐しない。
  */
 export function DisputeForm({ organizationId }: { organizationId: string }) {
   const [open, setOpen] = useState(false);
@@ -42,11 +47,7 @@ export function DisputeForm({ organizationId }: { organizationId: string }) {
         toast.error(disputeErrorMessage(r?.error));
         return;
       }
-      // frozen キーが無い＝032 未適用の submit_dispute（029）が応答した。
-      // 029 は必ず凍結してから {"ok":true} を返すので、欠落は true 側に倒す。
-      // === true にすると「実際には凍結しているのに凍結していない文言」を
-      // 出してしまう（凍結中の団体を『そのまま公開中』と案内する誤り）。
-      setFrozen(r.frozen !== false);
+      setFrozen(didFreeze(r.frozen));
     } finally {
       setSending(false);
     }

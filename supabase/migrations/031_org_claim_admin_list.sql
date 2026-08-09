@@ -31,6 +31,13 @@ $$;
 ALTER TABLE public.organization_disputes
   ADD COLUMN IF NOT EXISTS froze_organization boolean NOT NULL DEFAULT false;
 
+-- froze_at も同様に 032 の列だが、froze_organization と対で扱う（片方だけ
+-- 存在する状態を作らない）。凍結した「時刻」を通報時刻（created_at）から
+-- 分離するための列で、032 のレート制限カウンタはこちらを基準に数える。
+-- 詳細な理由は 032 の先頭コメントを参照。
+ALTER TABLE public.organization_disputes
+  ADD COLUMN IF NOT EXISTS froze_at timestamptz;
+
 -- 戻り値の列を増やすため CREATE OR REPLACE では差し替えられない（旧定義が
 -- 残っている環境で "cannot change return type of existing function" になる）。
 DROP FUNCTION IF EXISTS public.list_open_disputes();
@@ -54,7 +61,16 @@ LANGUAGE sql SECURITY DEFINER STABLE SET search_path = public AS $$
   ORDER BY d.created_at ASC;
 $$;
 
+-- ⚠ Supabase では REVOKE ALL ... FROM PUBLIC が効かない（no-op）。public スキーマの
+--   デフォルト権限（pg_default_acl）により、新規関数には疑似ロール PUBLIC 経由ではなく
+--   anon / authenticated / service_role へ「直接」EXECUTE が付与されるため、
+--   PUBLIC への付与しか取り消さない FROM PUBLIC は届かない（032 §3・CLAUDE.md 参照）。
+--   この2関数は内部の is_system_admin() ガードで anon が呼んでも0行になるが、
+--   reporter_contact（通報者の連絡先）を返す関数なので、意図した権限モデルどおりに
+--   anon から明示的に剥奪する。「関数を足したら anon から呼べる」を既定にしない。
 REVOKE ALL ON FUNCTION public.list_pending_claims() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.list_open_disputes() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.list_pending_claims() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.list_open_disputes() FROM anon;
 GRANT EXECUTE ON FUNCTION public.list_pending_claims() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.list_open_disputes() TO authenticated;

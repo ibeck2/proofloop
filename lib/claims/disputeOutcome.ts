@@ -33,6 +33,20 @@ export function disputeErrorMessage(code: string | undefined): string {
   }
 }
 
+/**
+ * RPC レスポンスの `frozen` キーを「実際に凍結されたか」に解釈する。
+ *
+ * キーが欠落している（undefined）＝ 032 未適用の submit_dispute（029）が応答した、
+ * ということ。029 の submit_dispute はレート制限を持たず、成功したなら必ず凍結・
+ * 巻き戻しをしてから `{"ok":true}` を返す。したがって欠落は true 側に倒す。
+ *
+ * ここを `frozen === true` にすると、実際には凍結されているのに
+ * 「そのまま公開中」と案内してしまう（凍結中の団体を未凍結だと誤って伝える）。
+ */
+export function didFreeze(frozen: boolean | undefined): boolean {
+  return frozen !== false;
+}
+
 export type DisputeCompletionMessage = {
   title: string;
   body: string;

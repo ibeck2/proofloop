@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { disputeErrorMessage, disputeCompletionMessage } from "./disputeOutcome";
+import { disputeErrorMessage, disputeCompletionMessage, didFreeze } from "./disputeOutcome";
 
 describe("disputeErrorMessage", () => {
   it("missing_fields", () => {
@@ -27,6 +27,26 @@ describe("disputeErrorMessage", () => {
   it("未知のコードはフォールバックで「送信に失敗しました」", () => {
     expect(disputeErrorMessage("something_unexpected")).toBe("送信に失敗しました");
     expect(disputeErrorMessage(undefined)).toBe("送信に失敗しました");
+  });
+});
+
+describe("didFreeze", () => {
+  it("frozen:true → true（032 が凍結した）", () => {
+    expect(didFreeze(true)).toBe(true);
+  });
+
+  it("frozen:false → false（レート制限で凍結を見送った）", () => {
+    expect(didFreeze(false)).toBe(false);
+  });
+
+  it("キー欠落（undefined）→ true。032 未適用の 029 は必ず凍結して返すため", () => {
+    expect(didFreeze(undefined)).toBe(true);
+  });
+
+  it("欠落を false に倒すと凍結中の団体を未凍結と案内してしまうので、文言も凍結側になる", () => {
+    expect(disputeCompletionMessage(didFreeze(undefined)).body).toContain(
+      "引き取り前の状態に戻しました"
+    );
   });
 });
 

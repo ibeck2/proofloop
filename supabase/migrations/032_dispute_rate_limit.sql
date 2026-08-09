@@ -23,10 +23,32 @@
 ALTER TABLE public.organization_disputes
   ADD COLUMN IF NOT EXISTS froze_organization boolean NOT NULL DEFAULT false;
 
+-- 「いつ凍結したか」。created_at（＝通報が届いた時刻）とは別物である点が肝。
+--
+-- ⚠ カウンタを created_at で数えてはいけない。下の I-3（昇格）パスは、過去に
+--   作られた既存の申立て行の froze_organization を true に立てて凍結する。
+--   created_at はその通報が届いた時刻のまま（＝1時間より古いこともある）なので、
+--   created_at 基準のカウンタからはその凍結が永久に見えない。
+--   攻撃者は「1時間目にN団体へ申立て（5件だけ凍結、残りは open として蓄積）→
+--   1時間待つ → 残りへ再送」で、蓄えた申立てを全件その場で昇格・凍結できる。
+--   閾値5に対し8団体を連続凍結できることを本番DB上（ロールバック済み）で実証した。
+--
+--   そこで凍結時刻を通報時刻から分離し、カウンタも部分インデックスも froze_at を
+--   基準にする。created_at は通報時刻として維持する（resolve_dispute の
+--   「その申立て以降に作られた pre_freeze」の絞り込みは通報時刻が正しい基準）。
+--
+--   froze_at IS NOT NULL は froze_organization と等価になるが、「凍結したか否か」の
+--   判定は明示的な boolean のほうが読み手に優しく、list_open_disputes 等の既存の
+--   参照箇所も壊さないため両方を残す。⚠ 2つが食い違わないよう必ず同時に更新すること。
+ALTER TABLE public.organization_disputes
+  ADD COLUMN IF NOT EXISTS froze_at timestamptz;
+
 -- レート制限の判定は submit_dispute のたびに走る。件数は小さいはずだが、
 -- 「直近1時間の凍結」を数えるだけのために全行を走査させない（安い保険）。
+-- カウンタと同じく froze_at を基準にする（created_at のままだと索引が使われない）。
+DROP INDEX IF EXISTS public.idx_org_disputes_recent_freezes;
 CREATE INDEX IF NOT EXISTS idx_org_disputes_recent_freezes
-  ON public.organization_disputes (created_at)
+  ON public.organization_disputes (froze_at)
   WHERE froze_organization;
 
 -- --------------------------------------------
@@ -136,8 +158,12 @@ BEGIN
   -- 「直近1時間に自動凍結した件数」は froze_organization=true の行だけを数える。
   -- open件数（＝申立て総数）で数えると、閾値到達後に記録だけされた申立ても
   -- 誤って母数に含めてしまい、レート制限が意図せず永続的に効き続ける。
+  --
+  -- ⚠ 時刻の基準は created_at（通報時刻）ではなく froze_at（凍結時刻）。
+  --   昇格パスは古い行の froze_organization を立てるので、created_at で数えると
+  --   その凍結がカウンタから消え、レート制限を丸ごと素通りできる（先頭コメント参照）。
   SELECT count(*) INTO recent_freezes FROM public.organization_disputes
-    WHERE froze_organization AND created_at > now() - interval '1 hour';
+    WHERE froze_organization AND froze_at > now() - interval '1 hour';
 
   will_freeze := recent_freezes < freeze_threshold;
 
@@ -175,7 +201,28 @@ BEGIN
     PERFORM public.restore_organization_columns(p_org, snap);
 
     UPDATE public.organizations SET claim_status='frozen' WHERE id = p_org;
-    UPDATE public.organization_disputes SET froze_organization = true
+
+    -- 昇格では新しい申立て行を作れない（uniq_org_disputes_open）。だからといって
+    -- 今回の通報内容を捨てると、運営の手元に残る連絡先は既存の申立て（＝自作自演側の
+    -- 可能性がある）のものだけになり、画面は「運営が確認のうえ、ご連絡します」と
+    -- 表示するのに正当な通報者には連絡できない。032 冒頭の「通報の記録は必ず残す」に反する。
+    -- そこで既存 open 申立ての body に、後続の通報を区切り付きで追記する。
+    --   （既存のbody）
+    --   〈空行〉
+    --   --- 追加の申立て 2026-08-09T12:34:56Z ---
+    --   氏名: ○○
+    --   連絡先: ○○
+    --   本文: ○○
+    -- froze_at は必ず froze_organization と同時に打つ（片方だけ立てるとカウンタが狂う）。
+    UPDATE public.organization_disputes SET
+      froze_organization = true,
+      froze_at = now(),
+      body = body
+        || E'\n\n--- 追加の申立て '
+        || to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+        || E' ---\n氏名: ' || p_name
+        || E'\n連絡先: ' || p_contact
+        || E'\n本文: ' || p_body
       WHERE id = existing.id;
 
     RETURN jsonb_build_object('ok', true, 'frozen', true, 'escalated', true);
@@ -195,9 +242,13 @@ BEGIN
     UPDATE public.organizations SET claim_status='frozen' WHERE id = p_org;
   END IF;
 
+  -- froze_at は凍結したときだけ打つ（凍結しなかった申立ては NULL のまま）。
+  -- froze_organization と必ず対で書く。片方だけ立てるとカウンタが実態とずれる。
   INSERT INTO public.organization_disputes
-    (organization_id, claim_id, reporter_name, reporter_contact, reporter_user_id, body, froze_organization)
-  VALUES (p_org, active_claim, p_name, p_contact, auth.uid(), p_body, will_freeze);
+    (organization_id, claim_id, reporter_name, reporter_contact, reporter_user_id, body,
+     froze_organization, froze_at)
+  VALUES (p_org, active_claim, p_name, p_contact, auth.uid(), p_body,
+          will_freeze, CASE WHEN will_freeze THEN now() END);
 
   -- 既存の呼び出し側は {"ok":true} を成功として扱うため、そこは変えない。
   -- frozen は追加のキーで、凍結できたかどうかをUIに伝える。
