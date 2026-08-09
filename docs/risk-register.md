@@ -8,7 +8,7 @@
 > - 「判断者」が `オーナー` `専門家` のものは Claude が勝手に進めない
 > - 新しいリスクに気づいたら、根拠（ファイル名と行番号、または実測値）を添えて追記する
 
-**最終更新：2026-08-06**
+**最終更新：2026-08-09**
 
 ---
 
@@ -37,11 +37,15 @@
 
 | ID | 事象 | 根拠 | 影響 | 緊急 | 判断者 | 推奨対応 | 状態 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| S1 | `middleware.ts` が無く `/admin` にサーバーサイドゲートが無い。守っているのはRLSのみで、管理画面のHTML/JSは誰にでも配信される | `middleware.ts` 不在、`app/admin/page.tsx:73-76` の `useEffect` 内クライアント判定 | 中 | 中 | Claude実装 | `middleware.ts` または Server Component 化でサーバー側判定を入れる | 未対応 |
+| S1 | `middleware.ts` が無く `/admin` にサーバーサイドゲートが無い。守っているのはRLSのみで、管理画面のHTML/JSは誰にでも配信される | `middleware.ts` 不在、`app/admin/page.tsx:73-76` の `useEffect` 内クライアント判定 | 中 | **高**（2026-08-09 引き上げ） | Claude実装 | `middleware.ts` または Server Component 化でサーバー側判定を入れる。**`/admin/claims`（引き取り申請の承認）と `/admin/disputes`（乗っ取り申告の対応）が増え、admin配下の画面数と扱う権限操作が増えたためサーバーサイドゲート欠如の影響範囲が拡大した** | 未対応 |
 | S2 | パスワード規則が三重に不整合。学生は手書きチェックで8文字、zodスキーマは6文字、企業は6文字。さらに**ログイン画面が最小長を検証しており**、規則を引き上げると古い規則で登録した利用者が正しいパスワードでも締め出される事故につながる状態だった | `app/signup/page.tsx:27`（zod min 6）／`:102`（手書き8）／`:470`（企業6）／`app/login/page.tsx:55`（6） | 低 | 低 | Claude実装 | `lib/auth/password.ts` に閾値・文言・検証を集約し**新規登録を8文字に統一**。プレースホルダも定数から生成。**ログイン側の長さ検証は削除**（正否はサーバーが判定するため意味が無く、締め出しリスクだけが残るため）。テスト9件 | ✅対応済み（2026-08-06） |
 | S3 | RLSが唯一の防壁。ポリシーの抜けがそのまま情報漏えいになる | マイグレーション021・023の `profiles.role = 'admin'` 判定 | 低 | 中 | Claude運用 | `get_advisors(security)` の定期確認を運用に載せる | 未対応 |
 | S4 | 環境変数の秘匿 | `.gitignore:30` の `.env*.local` で除外、`git ls-files` で未追跡を確認（2026-08-06） | — | — | — | — | ✅問題なし |
 | S5 | 領収書画像の保護 | マイグレーション026。Storage `finance-receipts` は非公開バケット、表示は署名付きURL | — | — | — | — | ✅対応済み |
+| S6 | **claim トークンの漏洩。** DMの転送・アカウント譲渡で第三者に渡りうる | `/claim/[token]`、`organization_claims.token`（単回使用） | 中 | 低 | Claude運用 | 単回使用・90日期限・運営承認（`decide_claim`）・剥奪経路（`revoke_claim`）で緩和済み | 対応済み（残存リスクあり） |
+| S7 | **［既存・claim実装中に発見］`profiles.role` を本人が書き換えて admin へ自己昇格できた。** UPDATE/INSERTポリシーのWITH CHECKがnull・role列にauthenticated/anonがテーブル権限を持つ・CHECK制約もトリガーも0件（本番実測 2026-08-07）。028/029が admin に「団体オーナー権を配る力」を与えるため、これを塞ぐまで028/029は適用しなかった | マイグレーション030（`5938302`→`2c89a9b`） | 高 | — | — | 列レベルGRANTでrole列だけ閉じる（029のorganizations.user_idと同じ手法） | ✅対応済み（2026-08-08） |
+| S8 | **［既存・claim実装中に発見］`organizations.user_id` を書き換えて応募者PIIに到達できた。** authenticatedがorganizations.user_idをUPDATEでき、その列を条件にするポリシーがapplications・application_messages・profiles（応募者PII）など6テーブル8本ある。claimでownerになった者がuser_idを自分に書き換えれば、limited承認でも応募者の個人情報に到達でき、剥奪しても残っていた | マイグレーション029（`1d30fcc`） | 高 | — | — | テーブルレベルUPDATEをrevokeし、団体が編集してよい列だけを列レベルでgrantし直す | ✅対応済み（2026-08-08） |
+| S9 | **［既存・claim実装中に発見］未認証で全招待トークンを列挙できた。** `organization_invitations` のSELECTポリシー「Anyone can view invite by token」がqual:trueで、未認証でも全行読めていた。当時0件で実害は未発生だったが、団体が招待を使い始めた瞬間に全トークンが漏れる状態だった | マイグレーション028（`fea7a0b`） | 高 | — | — | 該当ポリシーをDROP。受諾は`get_invitation_preview` RPC経由のみに一本化（`organization_invitations_select_org_admins`で管理画面の一覧・招待APIは通ることを確認済み） | ✅対応済み（2026-08-08） |
 
 ---
 
@@ -55,6 +59,7 @@
 | R2 | `/login` の「LINEでログイン」が死にボタン。`onClick` が無く押しても何も起きない | `app/login/page.tsx:167-173` | 中 | 低 | Claude実装 | ボタンと区切り線を削除する | ✅対応済み（2026-08-06） |
 | R3 | `/for-students` が404なのにGA4で表示が発生している | GA4 28日（2026-07-09〜08-05）で6表示・4ユーザー | 低 | 低 | オーナー | **ページは作らない方針で決定（2026-08-06）。** 学生向けの入口は `/guide` ハブ・`/gpa`・`/baito` が担う。フッターのコメントに方針を明記した | ✅対応済み（2026-08-06） |
 | R6 | 空ディレクトリの残骸 | `app/clubdashborad`・`app/clubopenmission`・`app/clubprofile`（いずれも中身なし。gitは空ディレクトリを追跡しないため実害なし） | 無害 | 低 | Claude | ローカルから削除する | 未対応 |
+| R7 | **異議申立てによる妨害。** フォーム送信だけで団体を凍結できる（`submit_dispute` はanonから実行可） | 団体ページの申告窓口、マイグレーション032（`b1a3920`→`b47da9b`） | 中 | 低 | Claude運用 | 連絡先必須・同一団体1件（オープン申立ての重複防止）・自動凍結へのレート制限（1時間5件・超過分はopenで記録のみ）・運営へ即通知で緩和 | 対応済み（残存リスクあり） |
 
 ---
 

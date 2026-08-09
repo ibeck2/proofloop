@@ -107,8 +107,8 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
   ／`/clubfinance` **会計・財務** ✅2026-07-26 本番稼働（出納帳・費目/事業タグ設定・費目別予算・予算対比・領収書写真・Excel出力）
 - 企業側：`/companydashboard` `/companysearch` `/companymessage`
 - 学生個人：`/mypage`（`/messages` `/selection`）`/timeline` `/schedule` `/classinfo` `/search` `/organizations/[id]`
-- 参加・招待：`/signup` `/login` `/invite/[token]` `/events/[id]`
-- 運営・管理：`/admin`（`/reviews` `/requests` `/jobs` `/job`）
+- 参加・招待：`/signup` `/login` `/invite/[token]` `/events/[id]` ／`/claim/[token]` **掲載団体の引き取り** ✅2026-08-09 実装（トークン単回使用・90日期限・危険信号スクリーニング。`robots.ts` で除外）
+- 運営・管理：`/admin`（`/reviews` `/requests` `/jobs` `/job` `/claims` `/disputes`）
 - LP・資料：`/for-clubs` 学生団体向けLP ／ `/manual` 運営マニュアル
 
 ### 計測・SEO基盤（実装済み）
