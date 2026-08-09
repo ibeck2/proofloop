@@ -1,5 +1,5 @@
 /**
- * 掲載団体 2,354件の「声かけ優先順位」リストを生成する。
+ * 掲載団体（共有ハンドルを除く通知対象2,222件）の「声かけ優先順位」リストを生成する。
  *
  *   node docs/models/build-org-outreach-list.mjs
  *
@@ -25,6 +25,7 @@ import { createClient } from "@supabase/supabase-js";
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { findSharedHandles, pickPrimaryChannel } from "../../lib/claims/channels.ts";
 
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(DIR, "..", "..");
@@ -118,8 +119,13 @@ async function fetchAll() {
 const rows = await fetchAll();
 console.log(`取得: ${rows.length}件`);
 
-// 到達手段が1つも無い団体は声かけの対象外（DMも送れない）
-const reachable = rows.filter((o) => reachScore(o) > 0);
+// 共有ハンドル（他団体と同じ連絡先）を持つ団体は、誰に届くか保証できないので対象外
+const sharedHandles = findSharedHandles(rows);
+const withChannel = rows.map((o) => ({ o, primary: pickPrimaryChannel(o, sharedHandles) }));
+const reachable = withChannel.filter((r) => r.primary !== null).map((r) => r.o);
+const primaryByOrgId = new Map(
+  withChannel.filter((r) => r.primary).map((r) => [r.o.id, r.primary])
+);
 const unreachable = rows.length - reachable.length;
 
 const uniCount = {};
@@ -164,7 +170,7 @@ scored.forEach((o, i) => {
 });
 
 // ── CSV 出力 ────────────────────────────────────────────
-const HEAD = ["順位","バッチ","バッチ名","団体名","大学","カテゴリ","人数","到達手段",
+const HEAD = ["順位","バッチ","バッチ名","団体名","大学","カテゴリ","人数","到達手段","主チャネル","主ハンドル",
   "X","Instagram","公式サイト","スコア","到達点","大学点","需要点","規模点","大学内順位","団体ID","接触日","結果","メモ"];
 const esc = (v) => {
   const s = v === null || v === undefined ? "" : String(v);
@@ -174,6 +180,8 @@ const csv = [HEAD.join(",")].concat(
   scored.map((o) => [
     o.order, o.batch, o.batchLabel, o.name, o.university, o.category,
     o.mc ?? "", o.channels,
+    primaryByOrgId.get(o.id)?.channel ?? "",
+    primaryByOrgId.get(o.id)?.handle ?? "",
     o.x_id ? `https://x.com/${String(o.x_id).replace(/^@/, "")}` : "",
     o.instagram_id ? `https://instagram.com/${String(o.instagram_id).replace(/^@/, "")}` : "",
     o.website_url ?? "",

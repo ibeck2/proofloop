@@ -46,3 +46,4 @@ scripts/waseda/data/insert*.sql
 docs/models/claim-tokens-batch*.sql
 docs/models/claim-tokens-batch*.csv
 ~$*
+.superpowers/

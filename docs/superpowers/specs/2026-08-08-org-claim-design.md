@@ -345,6 +345,79 @@ RLS と RPC は Supabase MCP で実際に検証する。最低限：
 
 ---
 
+## 10.5 実装で確定した制約（設計時に読み切れていなかったこと）
+
+最終レビュー（2026-08-09・`.superpowers/sdd/final-review-2026-08-09.md`）で判明し、
+マイグレーション **033** で対処した／記録に留めた事項。**次にこの動線を触る人が最初に踏む地雷はここ。**
+
+### 10.5.1 「限定」承認は `role='member'` として実装した（033）
+
+§2.5 は「権限の粒度は `can_manage_*` フラグで表現できる」を前提にしていたが、**これは事実ではなかった。**
+本番の RLS を実測した結果：
+
+- `get_user_admin_organization_ids` は `role IN ('owner','admin')` のみを見る
+- `organization_members` / `organization_invitations` の書き込みポリシーはすべてこの関数か `om.role='owner'`
+- **`can_manage_members` を参照する RLS ポリシーは1本も存在しない**（`can_manage_*` を見るのは finance 系5本だけ）
+
+つまり `role='owner'` のまま `can_manage_members=false` にしても、PostgREST を直接叩けば
+limited 承認者がメンバー追加・招待発行をできた。**「赤信号が出た申請を limited なら安全として承認する」
+という運用の前提そのものが成立していなかった。**
+
+033 で `decide_claim` は limited のとき `role='member'` を書く。掲載内容の編集は
+`get_user_organization_ids`（role を問わない）経由で従来どおり通り、会計も
+`can_manage_finance` フラグ判定なので影響しない。失われるのはメンバー管理と招待発行だけ。
+
+> `get_user_admin_organization_ids` 側に `can_manage_members` を要求する案は採らなかった。
+> `OrganizationProfileForm.tsx:480` が自作団体の owner 行を権限フラグ無し（既定 false）で作るため、
+> **既存の自作団体オーナー全員がメンバー管理から締め出される**。
+
+副作用として、limited で引き取られた団体には `role='owner'` の行が存在しない。
+DM の宛先解決は `lib/organizationMembers.ts` の `pickOrganizationContactUserId`
+（owner → admin → 最も早く参加したメンバー）に変更した。
+
+### 10.5.2 剥奪はアクセス権も巻き戻す（033）
+
+旧 `revoke_claim` は申請者本人の membership 行しか消していなかった。乗っ取り犯が
+共犯を追加したり招待を発行していると、剥奪後も `claim_status='unclaimed'` の団体に
+書き込み権が残り、しかも `submit_dispute` が `claimed` 以外を弾くので**もう誰も凍結を発火できない**。
+033 で「承認時刻以降に作られたメンバー行」と「その団体の未受諾招待すべて」を消す。
+
+### 10.5.3 claim で owner になっても、応募（ATS・応募DM）には到達できない
+
+§2.1 の「`organizations.user_id` は権限判定に使われていない（実質的に死んだ列）」は
+**`organizations` の UPDATE ポリシーに限った話**だった。`applications` と
+`application_messages` のポリシーは `organizations.user_id = auth.uid()` を見ており、
+`organization_members` を見ていない。029 §8 が（正しく）`user_id` の UPDATE を閉じたため、
+**claim 経由のオーナーは `granted_level='full'` でも `/clubats` の応募一覧と応募DMが常に0件になる。**
+
+引き取ってもらった団体が新歓で応募を受け始めた瞬間に表面化する。本筋の解決は
+`applications` / `application_messages` のポリシーをメンバー起点に移すことで、**別タスク**。
+→ タスクボードの「claim動線・公開前」に計上。
+
+### 10.5.4 運営 admin の書き込み経路
+
+- `organizations` には既存の `Admins can update organizations`（`profiles.role='admin'`・`claim_status` 条件なし）がある。
+  PERMISSIVE ポリシーは OR なので、**運営 admin は frozen の団体も直接 UPDATE できる。**
+  運営オーバーライドとしては妥当だが「凍結＝一切書き込めない」ではない。
+- 一方で 029 §8 の `REVOKE UPDATE ON TABLE organizations FROM authenticated` により、
+  **運営 admin も `is_approved` / `is_verified` / `claim_status` を直接 UPDATE できなくなった**（実測確認済み）。
+  現行UIは `approve_admin_request`（SECURITY DEFINER）経由なので壊れていないが、
+  **今後 `/admin` に団体を直接編集する画面を作るとここでハマる。**
+
+### 10.5.5 `profiles` の upsert と列権限（033）
+
+030 が `profiles` の UPDATE 権限から主キー `id` を外したが、アプリ側は3箇所とも `upsert`。
+PostgREST の upsert は `ON CONFLICT (id) DO UPDATE SET <payloadの全列>` を生成し、
+Postgres は SET 対象列の権限を**実際に競合したかに関わらず**検査する。結果、
+**新規登録時のプロフィール作成と `/mypage` の保存が全滅していた**（本番実測で確認。
+030 適用後に `profiles` の更新が1件も発生していなかったため誰も気づいていなかった）。
+033 で `GRANT UPDATE (id)` を戻す。`role` は閉じたままで 030 の目的は損なわれない。
+
+> **教訓：列レベル GRANT を絞るときは、呼び出し側が `upsert` かどうかを必ず確認する。**
+> `upsert` は payload の全列に UPDATE 権限を要求する。
+
+---
+
 ## 11. ロードマップへの影響
 
 - 通知対象が **2,354 → 2,222 件**に減る。ただし6ヶ月で送る計画は 1,400 件なので**数値計画に影響しない**。

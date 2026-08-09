@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Briefcase, ClipboardCheck, MessageSquare, Star, Users } from "lucide-react";
+import { Briefcase, ClipboardCheck, Flag, MessageSquare, ShieldCheck, Star, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type AdminMenuItem = {
@@ -37,6 +37,18 @@ export default function AdminDashboardPage() {
         title: "求人管理",
         description: "バイト・インターン案件の追加・編集・削除・公開管理を行います。",
         Icon: Briefcase,
+      },
+      {
+        href: "/admin/claims",
+        title: "団体ページの引き取り申請",
+        description: "危険信号（共有ハンドル・大学ドメイン不整合等）を確認し、承認・却下を行います。",
+        Icon: ShieldCheck,
+      },
+      {
+        href: "/admin/disputes",
+        title: "異議申立て対応",
+        description: "掲載団体の乗っ取り申立てを確認し、認容（剥奪）・却下を判断します。",
+        Icon: Flag,
       },
     ],
     []

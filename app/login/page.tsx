@@ -82,6 +82,17 @@ export default function LoginPage() {
     try {
       const result = await signIn(acEmail, password);
       if (result.success) {
+        // claim ページから来ていれば、そこへ戻す
+        try {
+          const back = sessionStorage.getItem("proofloop.claim.returnTo");
+          if (back) {
+            sessionStorage.removeItem("proofloop.claim.returnTo");
+            router.replace(back);
+            return;
+          }
+        } catch {
+          // 参照できなくても通常のフローに落ちるだけ
+        }
         router.push("/mypage");
         return;
       }

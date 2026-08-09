@@ -75,7 +75,7 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
 | 色 | 値 | 用途 |
 | --- | --- | --- |
 | ink | `#002B5C` | 紺。見出し・面・ヘッダー/フッター地 |
-| seal | `#8B0000` | 深紅。「印」。**静止状態で1画面2箇所まで** |
+| seal | `#8B0000` | 深紅。「印」。**静止状態で1画面2箇所まで**（※適用範囲は下記） |
 | paper | `#FFFFFF` | 地 |
 | mist | `#F2F4F7` | 面の切り替え（青みのある紙色） |
 | rule | `#C9D2DC` | 罫線 |
@@ -84,6 +84,8 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
 書体：`mincho`（Shippori Mincho B1＝h1と主要セクション見出しのみ）／`body`（Noto Sans JP＝本文・UI）／`numeric`（Inter＝数値・ラベル）。
 
 新規ページ・コンポーネントは既存の `/guide` 配下のトーンとこのトークンに必ず合わせること。**色を足す前に既存6色で表現できないか必ず検討する。** `tailwind.config.ts` に残る旧色エイリアスは使わない。仕様は `docs/superpowers/specs/2026-07-23-ui-identity-design.md`。
+
+**深紅の「1画面2箇所まで」は、利用者に見える面（B2C・LP・団体/企業の管理画面）に対する制約。** ブランドの「印」を薄めないための規律なので、`/admin` 配下の運営内部ツールには適用しない。運営画面では深紅を**危険信号**として使う（例：`/admin/claims` の「要確認」バッジ、共有ハンドルの警告枠）。危険な項目が並ぶほど赤が増えるのは正しい挙動で、ここを抑えると審査画面としての機能が損なわれる。
 
 ---
 
@@ -105,8 +107,8 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
   ／`/clubfinance` **会計・財務** ✅2026-07-26 本番稼働（出納帳・費目/事業タグ設定・費目別予算・予算対比・領収書写真・Excel出力）
 - 企業側：`/companydashboard` `/companysearch` `/companymessage`
 - 学生個人：`/mypage`（`/messages` `/selection`）`/timeline` `/schedule` `/classinfo` `/search` `/organizations/[id]`
-- 参加・招待：`/signup` `/login` `/invite/[token]` `/events/[id]`
-- 運営・管理：`/admin`（`/reviews` `/requests` `/jobs` `/job`）
+- 参加・招待：`/signup` `/login` `/invite/[token]` `/events/[id]` ／`/claim/[token]` **掲載団体の引き取り** ✅2026-08-09 実装（トークン単回使用・90日期限・危険信号スクリーニング。`robots.ts` で除外）
+- 運営・管理：`/admin`（`/reviews` `/requests` `/jobs` `/job` `/claims` `/disputes`）
 - LP・資料：`/for-clubs` 学生団体向けLP ／ `/manual` 運営マニュアル
 
 ### 計測・SEO基盤（実装済み）
@@ -260,3 +262,4 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
 ### 落とし穴
 - CSVの行数を `wc -l` で数えると引用符内の改行を過大カウントする（団体データ取りこぼしの誤報の原因になった）。
 - `organizations.member_count` は **text型**（「46人」等）。数値として扱わない。
+- Supabaseでは **`REVOKE ALL ON FUNCTION ... FROM PUBLIC` が効かない**。`public` スキーマのデフォルト権限で `anon` / `authenticated` に直接EXECUTEが付くため（`PUBLIC` 経由の付与ではないので取り消せない）。`SECURITY DEFINER` の関数を作るときは **`REVOKE EXECUTE ... FROM anon, authenticated` を明示**するか、**関数内部で必ず認可を確認**すること。適用済みの `026` / `029` / `030` の `REVOKE ... FROM PUBLIC` はいずれもno-opになっている。

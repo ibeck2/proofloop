@@ -22,9 +22,11 @@ import {
 import { supabase } from "@/lib/supabase";
 import { fetchOrganizationOwnerUserId } from "@/lib/organizationMembers";
 import { Button } from "@/components/ui";
+import { DisputeForm } from "@/components/organizations/DisputeForm";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 import OrganizationPageViewTracker from "@/components/OrganizationPageViewTracker";
 import type { Application, ProfileForEntry } from "@/lib/types/application";
+import type { OrganizationClaimStatus } from "@/lib/claims/types";
 
 export type EventRow = {
   id: string;
@@ -134,6 +136,7 @@ const TABS = [
 
 type Props = {
   org: OrgDetailData;
+  claimStatus?: OrganizationClaimStatus | null;
   events?: EventRow[];
   photos?: OrganizationPhotoRow[];
   approvedReviews?: ReviewRow[];
@@ -218,6 +221,7 @@ function fireApplyNotificationEmail(opts: {
 
 export default function OrganizationDetailClient({
   org,
+  claimStatus = null,
   events = [],
   photos = [],
   approvedReviews = [],
@@ -942,6 +946,12 @@ export default function OrganizationDetailClient({
             </section>
           )}
         </div>
+
+        {claimStatus === "claimed" && (
+          <div className="pt-4 border-t border-rule">
+            <DisputeForm organizationId={org.id} />
+          </div>
+        )}
 
         {/* エントリーモーダル */}
         {entryModalOpen && (
