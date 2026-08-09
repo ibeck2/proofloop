@@ -116,6 +116,13 @@ export type ResolveDisputeSuccess =
  *   文言もそこに合わせる。
  * dismissed：凍結済みなら凍結前の状態へ復帰、未凍結なら掲載内容には
  *   一切触れていない。
+ *
+ * dismissed の claim_status も必ず伝える。032 は「却下時に承認済み claim が
+ * 実在しないなら unclaimed に戻す」分岐を持つ（無条件に claimed を書くと、
+ * オーナーも承認済み claim も無いのに claimed になり、以後 apply_for_claim /
+ * decide_claim が永久に already_claimed を返す詰み状態になるため）。
+ * これが発火したとき、その団体は管理者不在のまま残る。運営が知らないと
+ * 「却下したのだから元に戻ったはず」と誤解して放置される。
  */
 export function resolveDisputeSuccessMessage(
   result: ResolveDisputeSuccess,
@@ -127,8 +134,12 @@ export function resolveDisputeSuccessMessage(
       : "認容しました。管理権限を剥奪し、掲載を引き取り前の内容に戻しました。";
   }
   // dismissed
-  if (frozeOrganization) {
-    return "却下しました。凍結を解除し、凍結直前の掲載内容に復帰しました。";
+  const base = frozeOrganization
+    ? "却下しました。凍結を解除し、凍結直前の掲載内容に復帰しました。"
+    : "却下しました。この申立ては凍結を伴っていなかったため、掲載内容に変更はありません。";
+
+  if (result.claim_status === "unclaimed") {
+    return `${base} ただしこの団体には承認済みの管理者が居ないため、未取得の状態に戻しました。`;
   }
-  return "却下しました。この申立ては凍結を伴っていなかったため、掲載内容に変更はありません。";
+  return base;
 }

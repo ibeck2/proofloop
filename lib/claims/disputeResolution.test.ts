@@ -122,4 +122,32 @@ describe("resolveDisputeSuccessMessage", () => {
     );
     expect(msg).toContain("掲載内容に変更はありません");
   });
+
+  // 032 は「却下時に承認済み claim が無ければ unclaimed に戻す」分岐を持つ。
+  // これが発火した団体は管理者不在で残るので、運営に必ず伝える必要がある。
+  // 伝えないと「却下したのだから元に戻ったはず」と誤解して放置される。
+  it("dismissed・claim_status unclaimed → 管理者不在になったことを伝える", () => {
+    const frozen = resolveDisputeSuccessMessage(
+      { ok: true, resolution: "dismissed", claim_status: "unclaimed" },
+      true
+    );
+    expect(frozen).toContain("凍結直前の掲載内容に復帰");
+    expect(frozen).toContain("管理者が居ない");
+
+    const notFrozen = resolveDisputeSuccessMessage(
+      { ok: true, resolution: "dismissed", claim_status: "unclaimed" },
+      false
+    );
+    expect(notFrozen).toContain("管理者が居ない");
+  });
+
+  it("dismissed・claim_status claimed のときは管理者不在の注記を付けない", () => {
+    for (const froze of [true, false]) {
+      const msg = resolveDisputeSuccessMessage(
+        { ok: true, resolution: "dismissed", claim_status: "claimed" },
+        froze
+      );
+      expect(msg).not.toContain("管理者が居ない");
+    }
+  });
 });
