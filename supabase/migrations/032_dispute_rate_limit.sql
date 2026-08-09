@@ -43,6 +43,16 @@ ALTER TABLE public.organization_disputes
 ALTER TABLE public.organization_disputes
   ADD COLUMN IF NOT EXISTS froze_at timestamptz;
 
+-- 2つを対で保つことをDBに守らせる。手作業やバックフィルで
+-- froze_organization=true / froze_at IS NULL の行が生まれると、カウンタの
+-- froze_at > now()-'1h' が NULL 評価で偽になり、その凍結が数えられない
+-- ＝レート制限がフェイルオープンする。既存行は全て (false, NULL) なので即時追加できる。
+ALTER TABLE public.organization_disputes
+  DROP CONSTRAINT IF EXISTS chk_org_disputes_froze_pair;
+ALTER TABLE public.organization_disputes
+  ADD CONSTRAINT chk_org_disputes_froze_pair
+  CHECK ((froze_at IS NOT NULL) = froze_organization);
+
 -- レート制限の判定は submit_dispute のたびに走る。件数は小さいはずだが、
 -- 「直近1時間の凍結」を数えるだけのために全行を走査させない（安い保険）。
 -- カウンタと同じく froze_at を基準にする（created_at のままだと索引が使われない）。
@@ -162,6 +172,13 @@ BEGIN
   -- ⚠ 時刻の基準は created_at（通報時刻）ではなく froze_at（凍結時刻）。
   --   昇格パスは古い行の froze_organization を立てるので、created_at で数えると
   --   その凍結がカウンタから消え、レート制限を丸ごと素通りできる（先頭コメント参照）。
+  -- ⚠ 数える前に全体で直列化する。上の FOR UPDATE は「その団体の行」しか
+  --   押さえないため、別々の団体への同時リクエストは互いの未コミットの凍結を
+  --   見ず、それぞれが「まだ枠がある」と判断して閾値を超えて凍結できる
+  --   （同時実行数ぶんのオーバーシュート）。申立ては稀な操作なので、
+  --   全体を1本のロックで直列化しても実用上の待ちは生じない。
+  PERFORM pg_advisory_xact_lock(hashtext('proofloop.dispute_freeze_rate_limit'));
+
   SELECT count(*) INTO recent_freezes FROM public.organization_disputes
     WHERE froze_organization AND froze_at > now() - interval '1 hour';
 
