@@ -262,3 +262,4 @@ ProofLoopは「**学生個人向けメディア（B2C・集客）**」と「**�
 ### 落とし穴
 - CSVの行数を `wc -l` で数えると引用符内の改行を過大カウントする（団体データ取りこぼしの誤報の原因になった）。
 - `organizations.member_count` は **text型**（「46人」等）。数値として扱わない。
+- Supabaseでは **`REVOKE ALL ON FUNCTION ... FROM PUBLIC` が効かない**。`public` スキーマのデフォルト権限で `anon` / `authenticated` に直接EXECUTEが付くため（`PUBLIC` 経由の付与ではないので取り消せない）。`SECURITY DEFINER` の関数を作るときは **`REVOKE EXECUTE ... FROM anon, authenticated` を明示**するか、**関数内部で必ず認可を確認**すること。適用済みの `026` / `029` / `030` の `REVOKE ... FROM PUBLIC` はいずれもno-opになっている。

@@ -26,6 +26,7 @@ import { DisputeForm } from "@/components/organizations/DisputeForm";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 import OrganizationPageViewTracker from "@/components/OrganizationPageViewTracker";
 import type { Application, ProfileForEntry } from "@/lib/types/application";
+import type { OrganizationClaimStatus } from "@/lib/claims/types";
 
 export type EventRow = {
   id: string;
@@ -135,7 +136,7 @@ const TABS = [
 
 type Props = {
   org: OrgDetailData;
-  claimStatus?: string | null;
+  claimStatus?: OrganizationClaimStatus | null;
   events?: EventRow[];
   photos?: OrganizationPhotoRow[];
   approvedReviews?: ReviewRow[];

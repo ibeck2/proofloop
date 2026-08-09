@@ -34,7 +34,7 @@ export function DisputeForm({ organizationId }: { organizationId: string }) {
         p_body: body.trim(),
       });
       if (error) {
-        toast.error(error.message || "送信に失敗しました");
+        toast.error(error.message || disputeErrorMessage(undefined));
         return;
       }
       const r = data as { ok: boolean; error?: string; frozen?: boolean };
@@ -42,7 +42,11 @@ export function DisputeForm({ organizationId }: { organizationId: string }) {
         toast.error(disputeErrorMessage(r?.error));
         return;
       }
-      setFrozen(r.frozen === true);
+      // frozen キーが無い＝032 未適用の submit_dispute（029）が応答した。
+      // 029 は必ず凍結してから {"ok":true} を返すので、欠落は true 側に倒す。
+      // === true にすると「実際には凍結しているのに凍結していない文言」を
+      // 出してしまう（凍結中の団体を『そのまま公開中』と案内する誤り）。
+      setFrozen(r.frozen !== false);
     } finally {
       setSending(false);
     }
