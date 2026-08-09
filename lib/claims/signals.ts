@@ -10,8 +10,14 @@ const MIN_ACCOUNT_AGE_DAYS = 1;
  */
 export function evaluateSignals(r: RawSignals): EvaluatedSignals {
   return {
-    // 最重要。共有ハンドルは「誰に届いたか保証できない」ことを意味する
-    channelExclusive: r.channel_is_unique ? "green" : "red",
+    // 最重要。共有ハンドルは「誰に届いたか保証できない」ことを意味する。
+    // channel_is_unique はトークン発行時点の固定値なので、発行後・申請前に別団体が
+    // 同じハンドルを登録すると古いままになる。申請時に実データから数え直した
+    // shared_with と OR で見て、どちらかが共有を示したら赤にする
+    // （発行時の判定と承認画面の警告枠が食い違い、監査に残る verdict が
+    //   green になってしまう事故を防ぐ）。
+    channelExclusive:
+      r.channel_is_unique && (r.shared_with?.length ?? 0) === 0 ? "green" : "red",
     universityDomain: matchUniversityDomain(
       r.applicant_email,
       r.org_university,

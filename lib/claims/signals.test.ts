@@ -33,6 +33,15 @@ describe("evaluateSignals", () => {
     expect(s.channelExclusive).toBe("red");
   });
 
+  // 発行時は専有だったが、発行後・申請前に別団体が同じハンドルを登録した場合。
+  // ここを緑のままにすると、承認画面が「他3団体と共有」の警告枠を出しながら
+  // バッジは「危険信号なし」を出し、監査に残る verdict も green になる。
+  it("発行時は専有でも、申請時に共有が判明していれば赤", () => {
+    const s = evaluateSignals(raw({ channel_is_unique: true, shared_with: ["柔道部"] }));
+    expect(s.channelExclusive).toBe("red");
+    expect(resolveVerdict(s)).toBe("red");
+  });
+
   it("競合申請があれば赤", () => {
     expect(evaluateSignals(raw({ competing_claims: 1 })).competingClaims).toBe("red");
   });
