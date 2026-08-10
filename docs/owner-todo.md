@@ -12,6 +12,35 @@
 
 ---
 
+## 🚨 障害対応中（2026-08-10 発生・サイト全体が実質停止）
+
+- [ ] **Supabase プロジェクトが応答しない。ログイン・新規登録・DB参照がすべて不能**
+  - **症状**：`ibeckzoom@gmail.com` でログインすると **「failed to fetch」**。学生・企業タブとも同じ。
+  - **切り分け済みの事実（Claude が 2026-08-10 に実査）**：
+    - ✅ **コードは無罪。** `ibeckzoom@gmail.com` の `.ac.jp` 例外は `app/login/page.tsx:11,22` に存在し正しく動作する
+      （ドメイン判定で弾かれた場合は日本語のエラー文言が出るので、「failed to fetch」とは別物）
+    - 🔴 `signInWithPassword` が叩く **`/auth/v1/token?grant_type=password` が毎回 約20秒で HTTP 522**（Cloudflare「origin timeout」）。**4回試して4回とも同じ**
+    - 🔴 `/rest/v1/` も 522。Claude の Supabase MCP も `Connection terminated due to connection timeout` で断続的に不通
+    - ✅ ゲートウェイ自体は生存（apikey なしのリクエストは 401 を正しく返す）＝**詰まっているのは DB 側**
+    - ✅ **proofloop.jp は HTTP 200 で正常**。Vercel のデプロイも成功済み（`/claim/[token]` も配信されている）
+    - ✅ **Supabase 全体は "All Systems Operational"**＝プラットフォーム障害ではなく**このプロジェクト固有**
+    - 🔴 Postgres ログに**資源枯渇の兆候**：`autovacuum worker took too long to start; canceled` が何時間も連続、
+      `canceling statement due to statement timeout` 多数、`pg_database.datfrozenxid` のロック待ち 9.6秒、
+      **`archive command failed with exit code 1`**
+    - 🔴 認証ログの最後の成功は **2026-08-09 03:21 UTC**。以降まったく記録が無い
+  - **最有力の原因**：**ディスク枯渇**、または**インスタンスの計算資源不足**。
+    WAL アーカイブの失敗と autovacuum がワーカーすら起動できない状態が同時に出るのは、
+    ディスクが満杯になったときの典型的な壊れ方です。
+  - **確認していただきたい順**（すべて Supabase ダッシュボードの操作＝オーナー対応）：
+    1. **Database → Reports で「Disk usage」を見る。** 100%近ければこれが原因。**ディスクを増やす**
+    2. **Settings → General → Restart project** で再起動する（詰まりの解消として最初に試す価値がある）
+    3. Reports で CPU / Memory / IO の枯渇を確認。恒常的に振り切っているなら**コンピュートサイズの引き上げ**
+    4. 上記で戻らなければ Supabase サポートへ起票（プロジェクト ref `uhhofjcyotfyrlhaguvy` / region `ap-northeast-1`）
+  - ⚠️ **これが直るまで、サイトは閲覧はできるがログイン・登録・団体データの表示ができません。** 最優先です。
+  - 📌 復旧後に確認すること：`/mypage` の保存が通るか（033 で直したはずの upsert の実地確認が未了）
+
+---
+
 ## 🔴 最優先（信頼性の土台が欠けている・2026-08-07 追加）
 
 - [ ] **`contact@proofloop.jp` で「受信」ができるようにする**
