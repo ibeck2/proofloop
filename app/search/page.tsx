@@ -21,6 +21,9 @@ const CATEGORIES = [
   "趣味・その他",
 ] as const;
 
+/** キーワード入力が止まってから問い合わせるまでの待ち時間 */
+const KEYWORD_DEBOUNCE_MS = 400;
+
 export type OrgSearchRow = {
   id: string;
   name: string | null;
@@ -41,6 +44,8 @@ export default function SearchPage() {
   const initialUniversity = searchParams.get("university");
   const initialCategory = searchParams.get("category");
   const [keyword, setKeyword] = useState(initialQ);
+  // 実際に問い合わせに使うキーワード。入力から少し遅れて追従する（下の useEffect 参照）
+  const [appliedKeyword, setAppliedKeyword] = useState(initialQ);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialCategory ? [initialCategory] : []
   );
@@ -53,7 +58,7 @@ export default function SearchPage() {
 
   const fetchOrgs = useCallback(async () => {
     setLoading(true);
-    const trimmedKeyword = keyword.trim();
+    const trimmedKeyword = appliedKeyword.trim();
 
     let query = supabase
       .from("organizations")
@@ -86,11 +91,26 @@ export default function SearchPage() {
       setOrgs((data as OrgSearchRow[]) ?? []);
     }
     setLoading(false);
-  }, [keyword, selectedCategories, selectedUniversities]);
+  }, [appliedKeyword, selectedCategories, selectedUniversities]);
+
+  // 1文字打つたびに問い合わせない。この検索は承認済み2,400件超を丸ごと返すため
+  // 1回あたり約640kBあり、「テニス」と打つだけで3回・2MB近くを撃っていた。
+  // 打ち終わってから投げる。
+  useEffect(() => {
+    if (keyword === appliedKeyword) return;
+    const timer = setTimeout(() => setAppliedKeyword(keyword), KEYWORD_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [keyword, appliedKeyword]);
 
   useEffect(() => {
     fetchOrgs();
   }, [fetchOrgs]);
+
+  // 「検索する」は待たせない。入力が反映済みなら同じ条件でも撃ち直す。
+  const searchNow = () => {
+    if (keyword === appliedKeyword) fetchOrgs();
+    else setAppliedKeyword(keyword);
+  };
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
@@ -170,7 +190,7 @@ export default function SearchPage() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => fetchOrgs()}
+                onClick={searchNow}
                 className="w-full"
               >
                 検索する

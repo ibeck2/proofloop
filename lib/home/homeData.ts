@@ -6,9 +6,14 @@ import {
   type FieldCluster,
   type FieldRow,
 } from "./organizationField";
+import {
+  countByCategory,
+  countByUniversity,
+  type CategoryCount,
+  type UniversityCount,
+} from "./organizationCounts";
 
-export type UniversityCount = { university: string; count: number };
-export type CategoryCount = { category: string; label: string; count: number };
+export type { UniversityCount, CategoryCount };
 
 export type HomeData = {
   totalOrganizations: number;
@@ -61,62 +66,17 @@ export async function getHomeData(): Promise<HomeData> {
   try {
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    /** 承認済み団体の件数を数える。column/value を渡すとその条件で絞り込む */
-    const countApproved = async (
-      column?: "university" | "category",
-      value?: string
-    ): Promise<number> => {
-      let query = supabase
-        .from("organizations")
-        .select("id", { count: "exact", head: true })
-        .eq("is_approved", true);
-
-      if (column && value) {
-        query = query.eq(column, value);
-      }
-
-      const { count, error } = await query;
-
-      // supabase-js は Postgrest のエラーで throw しない。ここで握り潰すと
-      // 「取得に失敗した大学」が「0件の大学」と区別できなくなり、
-      // 実数として表示している数字が静かに嘘になる。
-      if (error) {
-        throw new Error(
-          `count query failed (${column ?? "total"}${value ? `=${value}` : ""}): ${error.message}`
-        );
-      }
-
-      return count ?? 0;
-    };
-
-    const [total, universityRaw, categoryRaw] = await Promise.all([
-      countApproved(),
-      Promise.all(
-        UNIVERSITY_OPTIONS.map(async (university) => ({
-          university,
-          count: await countApproved("university", university),
-        }))
-      ),
-      Promise.all(
-        DISPLAY_CATEGORIES.map(async ({ category, label }) => ({
-          category,
-          label,
-          count: await countApproved("category", category),
-        }))
-      ),
-    ]);
-
-    const universityCounts = universityRaw
-      .filter((u) => u.count > 0)
-      .sort((a, b) => b.count - a.count);
-
-    // 掲載団体を1回だけ全件引き、図とヒーローの両方に使う。
-    // 図は1団体1マークなので全件が要る。ヒーローもここからランダムに選ぶので、
-    // 大学ごとに別クエリを撃つ必要はない。
+    // 掲載団体を1回だけ全件引き、図・ヒーロー・件数のすべてに使う。
+    // 図は1団体1マークなので全件が要る。ヒーローもここからランダムに選ぶ。
+    // 件数も同じ行から数える：以前は大学14件＋分野4件＋合計の19本を
+    // `count: "exact"` で撃っていたが、`organizations` には is_approved にも
+    // university にも索引が無く、1本ごとに全件走査（しかも PostgREST の count は
+    // 同じ走査を2度行う）。トップ1描画で約4,700ブロックを読んでいた。
     // PostgREST は1リクエスト1,000行が上限なのでページングする。
     const PAGE_SIZE = 1000;
-    const MAX_ROWS = 5000;
+    const MAX_ROWS = 20000;
     const allRows: Array<HeroOrgRow & FieldRow> = [];
+    let complete = false;
 
     for (let from = 0; from < MAX_ROWS; from += PAGE_SIZE) {
       const { data, error } = await supabase
@@ -133,15 +93,24 @@ export async function getHomeData(): Promise<HomeData> {
 
       const page = (data ?? []) as Array<HeroOrgRow & FieldRow>;
       allRows.push(...page);
-      if (page.length < PAGE_SIZE) break;
+      if (page.length < PAGE_SIZE) {
+        complete = true;
+        break;
+      }
+    }
+
+    // 件数をこの行から数えるようになったので、取り切れていないと数字が静かに小さくなる。
+    // 旧実装は count クエリが別だったのでこの取りこぼしは数に出なかった。
+    if (!complete) {
+      throw new Error(
+        `organizations query truncated at ${MAX_ROWS} rows — 件数が実数とずれるため中断`
+      );
     }
 
     return {
-      totalOrganizations: total,
-      universityCounts,
-      categoryCounts: categoryRaw
-        .filter((c) => c.count > 0)
-        .sort((a, b) => b.count - a.count),
+      totalOrganizations: allRows.length,
+      universityCounts: countByUniversity(allRows, UNIVERSITY_OPTIONS),
+      categoryCounts: countByCategory(allRows, DISPLAY_CATEGORIES),
       heroOrganizations: pickHeroOrganizations(allRows, {
         limit: 4,
         excludeIds: HERO_EXCLUDED_IDS,
