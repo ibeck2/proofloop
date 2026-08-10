@@ -8,6 +8,7 @@ import { Button, Input } from "@/components/ui";
 import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 import { supabase } from "@/lib/supabase";
 import { UNIVERSITY_OPTIONS } from "@/constants/universities";
+import { summarizeSearchResults } from "@/lib/organizations/searchResultSummary";
 
 const CATEGORIES = [
   "運動系（スポーツ・アウトドア）",
@@ -23,6 +24,9 @@ const CATEGORIES = [
 
 /** キーワード入力が止まってから問い合わせるまでの待ち時間 */
 const KEYWORD_DEBOUNCE_MS = 400;
+
+/** 1回に取得する件数。PostgREST 側の上限と揃えている */
+const PAGE_SIZE = 1000;
 
 export type OrgSearchRow = {
   id: string;
@@ -49,6 +53,8 @@ export default function SearchPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     initialCategory ? [initialCategory] : []
   );
+  // 条件に一致する総数。返却行数の上限で orgs.length と食い違うため別に持つ
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>(
     initialUniversity ? [initialUniversity] : []
   );
@@ -62,7 +68,12 @@ export default function SearchPage() {
 
     let query = supabase
       .from("organizations")
-      .select("id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process")
+      // count を取るのは、返却行数に上限があって総数が分からなくなるため。
+      // PostgREST は打ち切っても Content-Range に総数を載せてくれる
+      .select(
+        "id, name, university, category, description, logo_url, member_count, activity_frequency, is_intercollege, target_grades, selection_process",
+        { count: "exact" }
+      )
       // トップページの件数は承認済みのみを数えている。ここで揃えないと、
       // 「440件」と書いたリンクの先で違う件数が出る。
       .eq("is_approved", true);
@@ -82,13 +93,20 @@ export default function SearchPage() {
       query = query.in("university", selectedUniversities);
     }
 
-    const { data, error } = await query.order("name", { ascending: true });
+    const { data, error, count } = await query
+      .order("name", { ascending: true })
+      // 上限は PostgREST 側にもあるが、コードに書いていないと
+      // 「なぜ1,000件で切れるのか」が読んでも分からない
+      .range(0, PAGE_SIZE - 1);
 
     if (error) {
       console.error("organizations fetch error:", error);
       setOrgs([]);
+      setTotalCount(null);
     } else {
-      setOrgs((data as OrgSearchRow[]) ?? []);
+      const rows = (data as OrgSearchRow[]) ?? [];
+      setOrgs(rows);
+      setTotalCount(count ?? null);
     }
     setLoading(false);
   }, [appliedKeyword, selectedCategories, selectedUniversities]);
@@ -111,6 +129,11 @@ export default function SearchPage() {
     if (keyword === appliedKeyword) fetchOrgs();
     else setAppliedKeyword(keyword);
   };
+
+  const resultSummary = summarizeSearchResults({
+    shown: orgs.length,
+    total: totalCount,
+  });
 
   const toggleCategory = (cat: string) => {
     setSelectedCategories((prev) =>
@@ -209,7 +232,14 @@ export default function SearchPage() {
                   "検索中..."
                 ) : (
                   <>
-                    全 <span className="font-numeric tabular-nums">{orgs.length}</span> 件の団体
+                    全 <span className="font-numeric tabular-nums">{resultSummary.total}</span> 件の団体
+                    {resultSummary.truncated && (
+                      <span className="text-graphite/70">
+                        （うち
+                        <span className="font-numeric tabular-nums">{resultSummary.shown}</span>
+                        件を表示。絞り込むと残りも見られます）
+                      </span>
+                    )}
                   </>
                 )}
               </div>
