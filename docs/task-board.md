@@ -103,12 +103,22 @@
 - 凍結中の団体への申立てが「まだ引き取られていません」と表示される（文言の食い違い）
 - 異議申立ての区切り行を通報者が偽装できる／CSVパーサがフィールド内改行に非対応
 
-**⚠️ オーナー判断が要るもの**
+**✅ オーナー判断は済んだ（2026-08-12）。次セッションの着手対象**
 
-- **claim で引き取った団体は、応募（ATS `/clubats`・応募DM）に一切到達できない。**
-  `applications` / `application_messages` のRLSが `organizations.user_id` を見ており、
-  claimオーナーはその列に載らないため常に0件になる。新歓で応募を受け始めた瞬間に表面化する。
-  解決はポリシーをメンバー起点に移す別タスク。**claim動線をどこまで公開するかの判断材料。**
+> **次セッションは `docs/superpowers/plans/2026-08-12-d9-d10-plan.md` から始める。**
+> 技術的な事実（対象ポリシー5本・移行リスクの実測・踏みやすい罠）を確定済みなので、再調査は不要。
+
+- **D9：応募RLSのメンバー起点移行 — 「あとから直すより今すぐやる。完璧な状態で世に出したい」**
+  claim で引き取った団体が応募（`/clubats`・応募DM）に到達できない問題。
+  `applications` / `application_messages` の**5本**のポリシーが `organizations.user_id` を見ている。
+  **いま応募データは0件・`user_id` を持つ団体は1件だけで、その人はメンバー行にも居る**ため移行リスクはほぼゼロ。
+  ⚠️ **`can_manage_applications` だけを条件にすると自作団体のオーナーが全員締め出される**
+  （既定値false・`OrganizationProfileForm.tsx:483` がフラグ無しでowner行を作る）。
+  条件は `role IN ('owner','admin') OR can_manage_applications`。C1 とまったく同じ罠。
+- **D10：`/organizations/[id]` の ISR — 「ISRを入れよう」**
+  ⚠️ `claim_status` はサーバー側で取得して props で渡しているため、**素の `revalidate` だけだと
+  凍結が最大N秒反映されない**。ISR ＋ claim状態変更時のオンデマンド再検証にする。
+  再検証APIを無防備にしないこと。
 
 詳細と月次の数値目標は `docs/roadmap-2026-08-to-2027-01.md`。
 

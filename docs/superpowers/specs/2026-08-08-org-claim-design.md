@@ -390,9 +390,16 @@ DM の宛先解決は `lib/organizationMembers.ts` の `pickOrganizationContactU
 `organization_members` を見ていない。029 §8 が（正しく）`user_id` の UPDATE を閉じたため、
 **claim 経由のオーナーは `granted_level='full'` でも `/clubats` の応募一覧と応募DMが常に0件になる。**
 
-引き取ってもらった団体が新歓で応募を受け始めた瞬間に表面化する。本筋の解決は
-`applications` / `application_messages` のポリシーをメンバー起点に移すことで、**別タスク**。
-→ タスクボードの「claim動線・公開前」に計上。
+引き取ってもらった団体が新歓で応募を受け始めた瞬間に表面化する。
+
+> ✅ **2026-08-12：オーナー判断により「後回しにせず今すぐ直す」で確定。**
+> `applications` / `application_messages` の5本のポリシーをメンバー起点へ移す（マイグレーション035）。
+> 条件は **`role IN ('owner','admin') OR can_manage_applications`**。
+> `can_manage_applications` だけを条件にすると、既定値が false かつ
+> `OrganizationProfileForm.tsx:483` がフラグ無しで owner 行を作るため、
+> **自作団体のオーナーが全員締め出される**（§10.5.1 と同じ罠）。
+> 応募データが0件のうちに直せるのが今やる最大の理由。
+> 計画：`docs/superpowers/plans/2026-08-12-d9-d10-plan.md`
 
 ### 10.5.4 運営 admin の書き込み経路
 
