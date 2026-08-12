@@ -91,3 +91,22 @@ SELECT
 
 本番へのマイグレーション適用（`apply_migration`）は、この結果をユーザーに提示し、
 明示的な適用の承認を得たうえで別ステップ（Task 3）として行う（CLAUDE.mdの方針）。
+
+---
+
+## 本番適用済み（2026-08-13）
+
+ユーザーの明示的な承認を得たうえで、`supabase/migrations/040_claim_reissue.sql`
+（本ファイル冒頭に記載の内容そのまま・無改変）を `mcp__claude_ai_Supabase__apply_migration`
+（`project_id: uhhofjcyotfyrlhaguvy`、`name: 040_claim_reissue`）で本番に適用した。
+
+適用後の確認：
+
+- `SELECT proname FROM pg_proc WHERE proname IN ('list_rejected_claims', 'reissue_claim_token') ORDER BY proname;`
+  → `list_rejected_claims`・`reissue_claim_token` の2行
+- `SELECT version, name FROM supabase_migrations.schema_migrations ORDER BY version DESC LIMIT 3;` →
+  最新行が `20260812163802 / 040_claim_reissue`（続いて `20260812152315 / 039_dispute_dismiss_owner_check`、
+  `20260812123706 / 038_claim_revocation`）
+
+いずれもブリーフの期待どおり。本番で `list_rejected_claims` / `reissue_claim_token` が
+新規作成され、却下済みclaimの再発行フローが使えるようになった。
