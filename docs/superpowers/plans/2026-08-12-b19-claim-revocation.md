@@ -318,6 +318,10 @@ BEGIN;
 -- ここから検証
 -- ============================================================
 CREATE TEMP TABLE _b19t (k text PRIMARY KEY, v uuid);
+-- 検証本体は SET LOCAL ROLE authenticated に切り替えて RPC を呼ぶため、
+-- 作成者ロール（このセッションの既定ロール）だけが読めるままだと
+-- 42501 permission denied for table _b19t になる。authenticated にも許可する。
+GRANT SELECT ON _b19t TO authenticated;
 
 INSERT INTO _b19t(k, v)
 SELECT 'admin', id FROM public.profiles WHERE role = 'admin' LIMIT 1;
