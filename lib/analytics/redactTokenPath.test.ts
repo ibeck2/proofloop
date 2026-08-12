@@ -40,4 +40,14 @@ describe("redactTokenPath", () => {
   it("末尾スラッシュがあっても丸める（トークンより後ろは落ちる）", () => {
     expect(redactTokenPath("/claim/abc123/")).toBe("/claim/[token]");
   });
+
+  it("大文字混じりのパスも丸める（404ページ経由の漏洩を防ぐ）", () => {
+    expect(redactTokenPath("/Claim/abc123")).toBe("/claim/[token]");
+    expect(redactTokenPath("/INVITE/abc123")).toBe("/invite/[token]");
+  });
+
+  it("文字列でない値が渡されても例外を投げない（useEffect内でのクラッシュを防ぐ防御的ガード）", () => {
+    expect(redactTokenPath(null as unknown as string)).toBe("");
+    expect(redactTokenPath(undefined as unknown as string)).toBe("");
+  });
 });

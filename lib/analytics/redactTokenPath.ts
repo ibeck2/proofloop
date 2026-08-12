@@ -1,4 +1,4 @@
-const TOKEN_ROUTE_RE = /^\/(claim|invite)\/[^/]+/;
+const TOKEN_ROUTE_RE = /^\/(claim|invite)\/[^/]+/i;
 
 /**
  * GA4に送るパス文字列から claim / invite のトークンを丸める。
@@ -14,7 +14,8 @@ const TOKEN_ROUTE_RE = /^\/(claim|invite)\/[^/]+/;
  * あちらは甘い判定だと事故が起きるので厳密に倒している）。
  */
 export function redactTokenPath(pathname: string): string {
+  if (typeof pathname !== "string") return "";
   const match = pathname.match(TOKEN_ROUTE_RE);
   if (!match) return pathname;
-  return `/${match[1]}/[token]`;
+  return `/${match[1].toLowerCase()}/[token]`;
 }

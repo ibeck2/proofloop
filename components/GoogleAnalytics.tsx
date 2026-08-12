@@ -34,12 +34,21 @@ function PageViewTracker() {
     const redactedPath = redactTokenPath(pathname);
     const query = searchParams.toString();
     const path = redactedPath + (query ? `?${query}` : "");
+    // window.location.href をそのまま送ると page_path を丸めても
+    // フルURL側に生トークンが残る。origin + 丸めたpath から組み立て直す。
+    const location = `${window.location.origin}${path}`;
 
+    // 🚨 この `gtag('set', ...)` を「page_view の引数と重複しているから」と
+    // 削除しないこと。gtag.js は user_engagement など、このページから自動送信
+    // する他の全イベントで `document.location` を直接読み直してURLを組み立てる。
+    // page_view イベントの引数だけを丸めても、それはこのイベント1件にしか
+    // 効かない。`gtag('set', ...)` でgtag.js自身が持つ「現在地」の基準値を
+    // 丸めた値に書き換えて初めて、以降このページから飛ぶ他の全イベントにも
+    // 丸めたURLが使われる（次のナビゲーションでこのeffectが再実行されるまで有効）。
+    w.gtag("set", { page_path: path, page_location: location });
     w.gtag("event", "page_view", {
       page_path: path,
-      // window.location.href をそのまま送ると page_path を丸めても
-      // フルURL側に生トークンが残る。origin + 丸めたpath から組み立て直す。
-      page_location: `${window.location.origin}${path}`,
+      page_location: location,
       page_title: document.title,
     });
   }, [pathname, searchParams]);
