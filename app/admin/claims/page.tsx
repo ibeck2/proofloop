@@ -5,10 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui";
+import { Button, Textarea } from "@/components/ui";
 import { evaluateSignals, resolveVerdict } from "@/lib/claims/signals";
 import { claimDecisionErrorMessage } from "@/lib/claims/claimDecision";
-import type { RawSignals, SignalColor } from "@/lib/claims/types";
+import {
+  claimRevocationErrorMessage,
+  canSubmitClaimRevocation,
+  revokeClaimSuccessMessage,
+} from "@/lib/claims/claimRevocation";
+import type { RawSignals, SignalColor, ApprovedClaimRow } from "@/lib/claims/types";
 
 type ClaimRow = {
   id: string;
@@ -43,6 +48,10 @@ export default function AdminClaimsPage() {
   const [rows, setRows] = useState<ClaimRow[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [approvedRows, setApprovedRows] = useState<ApprovedClaimRow[]>([]);
+  const [openRevokeId, setOpenRevokeId] = useState<string | null>(null);
+  const [revokeReasons, setRevokeReasons] = useState<Record<string, string>>({});
+  const [revokeBusyId, setRevokeBusyId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.rpc("list_pending_claims");
@@ -52,6 +61,16 @@ export default function AdminClaimsPage() {
       return;
     }
     setRows((data ?? []) as ClaimRow[]);
+  }, []);
+
+  const loadApproved = useCallback(async () => {
+    const { data, error } = await supabase.rpc("list_approved_claims");
+    if (error) {
+      toast.error("承認済み申請の取得に失敗しました");
+      setApprovedRows([]);
+      return;
+    }
+    setApprovedRows((data ?? []) as ApprovedClaimRow[]);
   }, []);
 
   useEffect(() => {
@@ -69,9 +88,9 @@ export default function AdminClaimsPage() {
         router.replace("/");
         return;
       }
-      await load();
+      await Promise.all([load(), loadApproved()]);
     })();
-  }, [router, load]);
+  }, [router, load, loadApproved]);
 
   const decide = async (
     row: ClaimRow,
@@ -112,6 +131,53 @@ export default function AdminClaimsPage() {
       await load();
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const revoke = async (row: ApprovedClaimRow) => {
+    const reason = revokeReasons[row.id] ?? "";
+    if (!canSubmitClaimRevocation(reason)) return;
+    setRevokeBusyId(row.id);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const res = await fetch("/api/claims/revoke", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token ?? ""}`,
+        },
+        body: JSON.stringify({
+          claimId: row.id,
+          organizationId: row.organization_id,
+          reason: reason.trim(),
+        }),
+      });
+      const r = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        removed_members?: number;
+        removed_invitations?: number;
+      };
+      if (!r?.ok) {
+        toast.error(
+          claimRevocationErrorMessage(r?.error ?? (res.ok ? undefined : "rpc_error"))
+        );
+        return;
+      }
+      toast.success(
+        revokeClaimSuccessMessage({
+          ok: true,
+          removed_members: r.removed_members ?? 0,
+          removed_invitations: r.removed_invitations ?? 0,
+        })
+      );
+      setOpenRevokeId(null);
+      setRevokeReasons((p) => ({ ...p, [row.id]: "" }));
+      await loadApproved();
+    } finally {
+      setRevokeBusyId(null);
     }
   };
 
@@ -226,6 +292,112 @@ export default function AdminClaimsPage() {
             })}
           </div>
         )}
+
+        <div className="mt-10">
+          <h2 className="text-xl font-bold text-ink mb-1">承認済み（発行の取消）</h2>
+          <p className="text-xs text-graphite/70 mb-4">
+            第三者からの異議申立てを待たずに、運営の判断で管理権限を取り消せます。
+            取り消すとメンバー・招待が削除され、掲載内容は引き取り前の状態に戻ります。
+          </p>
+
+          {approvedRows.length === 0 ? (
+            <p className="text-graphite text-sm bg-paper border border-rule p-6">
+              承認済みの申請はありません。
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {approvedRows.map((row) => {
+                const frozen = row.organization_claim_status === "frozen";
+                const isOpen = openRevokeId === row.id;
+                return (
+                  <div key={row.id} className="bg-paper border border-rule p-5">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                      <div>
+                        <Link
+                          href={`/organizations/${row.organization_id}`}
+                          className="text-ink font-bold hover:underline"
+                        >
+                          {row.organization_name || "（名称なし）"}
+                        </Link>
+                        <p className="text-xs text-graphite/70 mt-0.5">
+                          {row.organization_university} ／ {row.applicant_name || "（氏名不明）"}
+                          {row.applicant_email ? ` ・ ${row.applicant_email}` : ""}
+                        </p>
+                        <p className="text-xs text-graphite/50 mt-0.5">
+                          {row.decided_at
+                            ? `${new Date(row.decided_at).toLocaleString("ja-JP")} 承認`
+                            : ""}
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold px-2 py-1 bg-mist text-ink">
+                        {row.granted_level === "full" ? "フル権限" : "限定権限"}
+                      </span>
+                    </div>
+
+                    {frozen ? (
+                      <div className="bg-seal/10 border border-seal p-3 mt-3">
+                        <p className="text-xs font-bold text-seal mb-1">
+                          異議申立て対応中です
+                        </p>
+                        <p className="text-xs text-graphite">
+                          この団体は現在凍結中です。取消は{" "}
+                          <Link href="/admin/disputes" className="underline">
+                            /admin/disputes
+                          </Link>{" "}
+                          から対応してください。
+                        </p>
+                      </div>
+                    ) : isOpen ? (
+                      <div className="bg-mist border border-seal p-3 mt-3">
+                        <p className="text-xs font-bold text-seal mb-2">
+                          この操作は取り消せません。メンバー・招待が削除され、掲載内容は引き取り前の状態に戻ります。
+                        </p>
+                        <Textarea
+                          value={revokeReasons[row.id] ?? ""}
+                          onChange={(e) =>
+                            setRevokeReasons((p) => ({ ...p, [row.id]: e.target.value }))
+                          }
+                          placeholder="取消理由（必須・監査に残ります）"
+                          rows={2}
+                          className="mb-2"
+                        />
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={
+                              revokeBusyId === row.id ||
+                              !canSubmitClaimRevocation(revokeReasons[row.id] ?? "")
+                            }
+                            onClick={() => revoke(row)}
+                          >
+                            取り消しを実行
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            disabled={revokeBusyId === row.id}
+                            onClick={() => setOpenRevokeId(null)}
+                          >
+                            キャンセル
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outlineMuted"
+                        onClick={() => setOpenRevokeId(row.id)}
+                      >
+                        発行の取消
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
