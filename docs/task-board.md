@@ -71,8 +71,22 @@
    他の3つと同じく Route Handler 経由にして `revalidateOrganizationPage` を呼ぶ
    （D10 で作った `app/api/claims/decide` と同じ形。剥奪だけ反映が最大5分遅れると、
    「剥奪したのに引き取られたままに見える」という最悪の見え方になる）。
-3. **claimトークンがGA4に送信されている。** `/claim/<uuid>` の完全URLが記録され、GA4 を読める者が
-   生きたトークンを一覧できる。`lib/analytics/` に `redactTokenPath()` を置いて丸める（`/invite/` も同様）。
+3. 🟡 **claimトークンがGA4に送信される件 → コード対応済み・ゲートは未クローズ（2026-08-12）**
+   `lib/analytics/redactTokenPath.ts` を追加し、`components/GoogleAnalytics.tsx` の
+   page_view送信経路を一本化・トークンを丸める形に変更（コミット `08464e8`・`209d081`）。
+   最終レビューで見つかった「gtag.jsの`user_engagement`等の自動イベントには丸めた値が
+   効いていなかった」件も修正済み（コミット `8bfb5cc`）。設計は
+   `docs/superpowers/specs/2026-08-12-ga4-token-redaction-design.md`、計画は
+   `docs/superpowers/plans/2026-08-12-ga4-token-redaction-plan.md`。
+   ⚠️ **B18は「トークン発行前ゲート」なので、以下2点が終わるまでクローズしない：**
+   - 実際のGA4プロパティ（測定ID `G-6DW8LF5H7Q`）に対する再検証。ローカルの
+     `next dev` とダミー測定IDでの確認は「自前のコードが丸めた値を送っていること」までしか
+     証明できず、「GA4が実際に受け取る内容」の証明にはならない（DebugView等、実プロパティへの
+     アクセスが要る。この環境からはできない）
+   - GA4管理画面の「拡張計測機能」→「ページの変更（履歴ベース）」設定の確認。ONだと
+     `router.replace()` 経由の遷移（例：`/login` からclaimページへ戻る導線）でgtag.jsが
+     独自にpage_viewを発火し、アプリ側の対策を素通りしてトークンを送りうる。
+     オーナー確認事項として `docs/owner-todo.md` に追記済み
 4. **`/signup` が claim への復帰を消費しない。** claimページの主CTAが `sessionStorage` に控えるが読む側が無い。
    設計 §6.1 が「改善する」と書いた離脱要因が主経路にそのまま残っている。
 5. **先行申請による締め出しの復旧手段。** 第三者が先に申請すると正当な団体は言い分を届けられない。
