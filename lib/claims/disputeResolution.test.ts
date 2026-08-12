@@ -86,6 +86,12 @@ describe("resolveDisputeErrorMessage", () => {
     expect(resolveDisputeErrorMessage("something_unexpected")).toBe("処理に失敗しました");
     expect(resolveDisputeErrorMessage(undefined)).toBe("処理に失敗しました");
   });
+
+  it("rpc_error は既定と区別し、サーバログを見る先を示す", () => {
+    const msg = resolveDisputeErrorMessage("rpc_error");
+    expect(msg).not.toBe(resolveDisputeErrorMessage(undefined));
+    expect(msg).toContain("サーバログ");
+  });
 });
 
 describe("resolveDisputeSuccessMessage", () => {

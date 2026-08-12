@@ -28,6 +28,12 @@ describe("disputeErrorMessage", () => {
     expect(disputeErrorMessage("something_unexpected")).toBe("送信に失敗しました");
     expect(disputeErrorMessage(undefined)).toBe("送信に失敗しました");
   });
+
+  it("rpc_error は既定と区別し、再送を促す（申告が記録されていない可能性があるため）", () => {
+    const msg = disputeErrorMessage("rpc_error");
+    expect(msg).not.toBe(disputeErrorMessage(undefined));
+    expect(msg).toContain("もう一度");
+  });
 });
 
 describe("didFreeze", () => {

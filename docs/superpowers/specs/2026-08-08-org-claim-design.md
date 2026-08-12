@@ -392,13 +392,35 @@ DM の宛先解決は `lib/organizationMembers.ts` の `pickOrganizationContactU
 
 引き取ってもらった団体が新歓で応募を受け始めた瞬間に表面化する。
 
-> ✅ **2026-08-12：オーナー判断により「後回しにせず今すぐ直す」で確定。**
-> `applications` / `application_messages` の5本のポリシーをメンバー起点へ移す（マイグレーション035）。
-> 条件は **`role IN ('owner','admin') OR can_manage_applications`**。
+> ✅ **解決済み・本番適用済み（マイグレーション035・2026-08-12）。**
+> `applications` / `application_messages` の5本のポリシーをメンバー起点へ移した。
+> 条件は **`role IN ('owner','admin') OR can_manage_applications`**、判定は
+> SECURITY DEFINER 関数 `can_view_org_applications(uuid)` に集約。
 > `can_manage_applications` だけを条件にすると、既定値が false かつ
 > `OrganizationProfileForm.tsx:483` がフラグ無しで owner 行を作るため、
 > **自作団体のオーナーが全員締め出される**（§10.5.1 と同じ罠）。
-> 応募データが0件のうちに直せるのが今やる最大の理由。
+> 応募データが0件のうちに直せるのが今やる最大の理由だった。
+>
+> 検証（`BEGIN; … ROLLBACK;`）で、適用前は claim フル承認が 0 件、適用後は 1 件、
+> **限定承認は適用後も 0 件**を確認済み。実測値は
+> `docs/superpowers/plans/2026-08-12-d9-d10-verification.md`。
+>
+> ⚠️ **これで成立したのは「`applications` / `application_messages` への到達を塞ぐ」ところまで。**
+> 「限定は他人の個人情報に触れさせない」という §3 の目標は**まだ達成していない**。
+> 応募者の個人情報そのものは `profiles` にあり、本番実測（2026-08-12）では
+> `Public profiles are viewable by everyone` が `authenticated` に対し `qual: true`、
+> かつ `authenticated` は `email` / `contact_email` を含む全列に SELECT を持つ。
+> つまり**ログインしている全ユーザーが全員のメールアドレスを読める**（リスク台帳 S12・claim とは別件）。
+> `Clubs can view applicant profiles` も `get_user_organization_ids`（role を見ない）起点なので、
+> role='member' の限定オーナーはこの経路も通る。
+> **⚠️ 上記は037適用（下記）より前の状態の記述。** `profiles`の無条件公開ポリシー自体は037で塞いだため、
+> 「応募テーブルを塞いだから個人情報に届かない」という一段飛ばしの推論は誤りだったが、
+> 結論（限定承認オーナーが無関係の第三者の個人情報を読めるか）は037適用後は塞がっている。
+> §10.5.6 も参照。
+>
+> 🔴 検証中に、`organization_members_role_check` が `'member'` を許しておらず
+> **限定承認（033 が `role='member'` を書く）が本番で一度も成立しない**状態だったことが判明。
+> 035 で制約を緩めて同時に直した。
 > 計画：`docs/superpowers/plans/2026-08-12-d9-d10-plan.md`
 
 ### 10.5.4 運営 admin の書き込み経路
@@ -422,6 +444,30 @@ Postgres は SET 対象列の権限を**実際に競合したかに関わらず*
 
 > **教訓：列レベル GRANT を絞るときは、呼び出し側が `upsert` かどうかを必ず確認する。**
 > `upsert` は payload の全列に UPDATE 権限を要求する。
+
+### 10.5.6 「限定」承認で実際に付く権限（確定版・2026-08-12）
+
+035（応募RLS）・036（掲載編集・投稿の制限）・037（`profiles`公開ポリシーの是正）を
+すべて適用した後の、限定承認の実際の権限範囲。
+
+限定（`role='member'`）で**到達できないもの**：
+
+- メンバー追加・招待発行（`get_user_admin_organization_ids` が `role IN ('owner','admin')`）
+- `applications` / `application_messages`（035）
+- `organizations` のUPDATE（掲載内容の編集）／`organization_posts` の書き込み（036・オーナー判断：
+  「学生向けに出される情報は限定承認では書き換えられない」）
+- 無関係の第三者の `profiles`（037。ただし団体の同僚・応募者⇔団体の関係にある相手は引き続き見える）
+
+限定でも**到達できるもの**（学生向けではない内部管理と判断し、対象外のまま）：
+
+| 対象 | 経路 | 理由 |
+| --- | --- | --- |
+| `tasks` の全操作 | `tasks_*_own_org` → `get_user_organization_ids`（role を見ない） | 内部のタスク管理で学生向けではない |
+| `finance_*` | `can_manage_org_finance` | `decide_claim` は limited でも `can_manage_finance = true` を書く（`lib/claims/permissions.ts` の判断：財務DXのKPIを塞がないため） |
+| 閲覧（掲載内容・投稿・団体内プロフィール） | 各SELECTポリシー | 書き込みだけを絞る方針（036）のため、読むこと自体は制限していない |
+
+これで「限定＝応募者の個人情報とメンバー管理には触れない、学生向けに出る情報は書き換えられない」が
+DBレベルで成立している。内部管理（タスク・会計）は引き続き開いたまま（意図どおり）。
 
 ---
 

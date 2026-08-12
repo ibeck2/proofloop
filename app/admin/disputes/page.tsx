@@ -54,18 +54,34 @@ export default function AdminDisputesPage() {
   const resolve = async (row: DisputeRow, resolution: "uphold" | "dismiss") => {
     setBusyId(row.id);
     try {
-      const { data, error } = await supabase.rpc("resolve_dispute", {
-        p_dispute_id: row.id,
-        p_resolution: resolution,
-        p_note: notes[row.id]?.trim() || null,
+      // RPC を直接ではなく Route Handler 経由で呼ぶ。認容・却下のどちらでも
+      // claim_status が変わるので、その団体ページ（ISR）を同じ処理の中で再検証する。
+      // 認可は resolve_dispute 自身の is_system_admin() が持つ。
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const res = await fetch("/api/disputes/resolve", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token ?? ""}`,
+        },
+        body: JSON.stringify({
+          disputeId: row.id,
+          organizationId: row.organization_id,
+          resolution,
+          note: notes[row.id]?.trim() || null,
+        }),
       });
-      if (error) {
-        toast.error(error.message || "処理に失敗しました");
-        return;
-      }
-      const r = data as { ok: boolean; error?: string } & Partial<ResolveDisputeSuccess>;
+      const r = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+      } & Partial<ResolveDisputeSuccess>;
       if (!r?.ok) {
-        toast.error(resolveDisputeErrorMessage(r?.error));
+        // 502 等で本文がJSONでないときは r が {} になる。既知コードと一時障害を区別する。
+        toast.error(
+          resolveDisputeErrorMessage(r?.error ?? (res.ok ? undefined : "rpc_error"))
+        );
         return;
       }
       toast.success(

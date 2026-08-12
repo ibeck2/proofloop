@@ -16,7 +16,9 @@ export type SubmitDisputeError =
   | "missing_fields"
   | "not_found"
   | "not_claimed"
-  | "already_open";
+  | "already_open"
+  /** Route Handler が RPC の失敗を畳んだコード。生のPostgresメッセージは外へ出さない */
+  | "rpc_error";
 
 export function disputeErrorMessage(code: string | undefined): string {
   switch (code as SubmitDisputeError | undefined) {
@@ -28,6 +30,10 @@ export function disputeErrorMessage(code: string | undefined): string {
       return "この団体はまだ引き取られていません";
     case "already_open":
       return "この団体については既に対応中です";
+    case "rpc_error":
+      // 申告そのものが記録されていない可能性があるので、再送を促す文言にする。
+      // 「送信に失敗しました」だけだと、諦めて乗っ取りが放置されうる。
+      return "一時的に送信できませんでした。少し時間をおいて、もう一度お試しください";
     default:
       return "送信に失敗しました";
   }

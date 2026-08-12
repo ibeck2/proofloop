@@ -77,7 +77,9 @@ export type ResolveDisputeErrorCode =
   | "forbidden"
   | "bad_resolution"
   | "invalid"
-  | "revoke_failed";
+  | "revoke_failed"
+  /** Route Handler が RPC の失敗を畳んだコード。詳細はサーバログにある */
+  | "rpc_error";
 
 /**
  * resolve_dispute の error コードの文言化。
@@ -97,6 +99,10 @@ export function resolveDisputeErrorMessage(code: string | undefined): string {
       return "この申立てはすでに処理済みか、存在しません";
     case "revoke_failed":
       return "管理権限の剥奪に失敗しました。申立ては未処理のままです";
+    case "rpc_error":
+      // 生の Postgres メッセージは外へ返さずサーバログに残している。
+      // 「処理に失敗しました」と区別し、ログを見に行けば分かることを伝える。
+      return "一時的に処理できませんでした。繰り返すときはサーバログを確認してください";
     default:
       return "処理に失敗しました";
   }

@@ -67,6 +67,10 @@
    （`profiles` の upsert が `permission denied`）。適用後に実測で解消を確認済み。
 2. **`revoke_claim` のUI**（`/admin/claims` に「発行の取消」）。設計 §6.2 の4アクション目が未実装で、
    申立てが無いと運営が自力で剥奪できない。付けるときは「却下が乗っ取り後の内容を復元しうる」件も同時に直す。
+   ⚠️ **同時に、団体ページ（ISR）の再検証も足すこと。** 剥奪は `claim_status` を変えるので、
+   他の3つと同じく Route Handler 経由にして `revalidateOrganizationPage` を呼ぶ
+   （D10 で作った `app/api/claims/decide` と同じ形。剥奪だけ反映が最大5分遅れると、
+   「剥奪したのに引き取られたままに見える」という最悪の見え方になる）。
 3. **claimトークンがGA4に送信されている。** `/claim/<uuid>` の完全URLが記録され、GA4 を読める者が
    生きたトークンを一覧できる。`lib/analytics/` に `redactTokenPath()` を置いて丸める（`/invite/` も同様）。
 4. **`/signup` が claim への復帰を消費しない。** claimページの主CTAが `sessionStorage` に控えるが読む側が無い。
@@ -79,8 +83,8 @@
    - **`/search` が2,421件を「全1000件」と表示していた**のを修正（PostgRESTの返却行数上限に静かに当たっていた）
    - マイグレーション **034 を本番適用**（索引7本）。閲覧数取得が49ブロック走査 → Index Only Scan 7バッファ
    - `organizations` と `claim_status` には**あえて索引を作っていない**（測った結果、効かない・使われていない）
-   - 🟡 **残：`/organizations/[id]` の ISR。** 単独で最大のレバーだが `claim_status` の表示が最大N秒古くなる。
-     **オーナー判断待ち。** 見送るならトークン第1バッチを**分割して負荷を見ながら**送る
+   - ✅ **`/organizations/[id]` の ISR は完了**（2026-08-12・D10）。MISS→HIT で 0.45s → 0.005〜0.02s。
+     `claim_status` の変化は3本の Route Handler からオンデマンド再検証するので古くならない
    - 🟡 残：`/search` のページング（現状は絞り込みで到達可能なため見送り）
 
    <details><summary>当初の課題設定（2026-08-10）</summary>
@@ -103,22 +107,48 @@
 - 凍結中の団体への申立てが「まだ引き取られていません」と表示される（文言の食い違い）
 - 異議申立ての区切り行を通報者が偽装できる／CSVパーサがフィールド内改行に非対応
 
-**✅ オーナー判断は済んだ（2026-08-12）。次セッションの着手対象**
+**✅ D9・D10・付随のS12/S13は本番適用済み（2026-08-12）。実測は `docs/superpowers/plans/2026-08-12-d9-d10-verification.md`**
 
-> **次セッションは `docs/superpowers/plans/2026-08-12-d9-d10-plan.md` から始める。**
-> 技術的な事実（対象ポリシー5本・移行リスクの実測・踏みやすい罠）を確定済みなので、再調査は不要。
+- ✅ **D9：応募RLSのメンバー起点移行 → マイグレーション035（本番適用済み）**
+  `applications` / `application_messages` の5本を `can_view_org_applications(uuid)` 起点に移した。
+  条件は `role IN ('owner','admin') OR can_manage_applications`。
+  `BEGIN; … ROLLBACK;` の検証で、claim フル承認が 0件 → 1件、**限定承認は 0件のまま**、
+  自作団体オーナーの既存アクセスは維持を確認。
+  🔴 **検証中に別の不具合が出た。** `organization_members_role_check` が `'member'` を
+  許しておらず、033 の限定承認（`role='member'` を書く）が本番で一度も成立しない状態だった。
+  035 で同時に修正。claim 未発行のため実害なし。
+  ℹ️ `organizations.user_id` を見るポリシーは本番に9本あった（残り4本の扱いは 035 の末尾コメント）。
+  うち `reviews` の「口コミへの返信」だけは冗長ではないが、返信UIが未実装なので実害なし。
+- ✅ **S13：限定承認による掲載編集・投稿の書き換えを制限 → マイグレーション036（本番適用済み）**
+  「学生向けに出される情報は限定承認では書き換えられない」というオーナー方針で確定。
+  `can_edit_profile`/`can_manage_posts`フラグを参照するRLSポリシーが実は1本も無かった
+  （033のC1・035と同型の穴）ため、035と同じ形の判定関数で新設してゲート。
+  tasks・finance（学生向けではない）は対象外のまま。閲覧は制限しない。
+- ✅ **S12：全ログインユーザーが全ユーザーのメールを読めた穴を修正 → マイグレーション037（本番適用済み）**
+  `profiles`の無条件公開ポリシーを1本削除。列権限は触っていない（emailは正当な関係で必要なため）。
+  削除前に「限定承認団体宛の通知メールがこの無条件ポリシーに依存していた」ことを発見し、
+  `get_owner_user_ids_for_applied_orgs`のrole制限もあわせて外した（通知フローは壊していない）。
+- ✅ **D10：`/organizations/[id]` の ISR ＋ オンデマンド再検証**
+  ⚠️ `revalidate` だけでは効かず、`generateStaticParams` と `unstable_cache` の**両方**が要った
+  （supabase-js が fetch に AbortSignal を渡すため）。実測で MISS → HIT、0.45s → 0.005〜0.02s。
+  単独の再検証APIは作らず、状態を変える3つのRPCを Route Handler で包み、
+  成功したときだけ対象団体の1ページを再検証する。
 
-- **D9：応募RLSのメンバー起点移行 — 「あとから直すより今すぐやる。完璧な状態で世に出したい」**
-  claim で引き取った団体が応募（`/clubats`・応募DM）に到達できない問題。
-  `applications` / `application_messages` の**5本**のポリシーが `organizations.user_id` を見ている。
-  **いま応募データは0件・`user_id` を持つ団体は1件だけで、その人はメンバー行にも居る**ため移行リスクはほぼゼロ。
-  ⚠️ **`can_manage_applications` だけを条件にすると自作団体のオーナーが全員締め出される**
-  （既定値false・`OrganizationProfileForm.tsx:483` がフラグ無しでowner行を作る）。
-  条件は `role IN ('owner','admin') OR can_manage_applications`。C1 とまったく同じ罠。
-- **D10：`/organizations/[id]` の ISR — 「ISRを入れよう」**
-  ⚠️ `claim_status` はサーバー側で取得して props で渡しているため、**素の `revalidate` だけだと
-  凍結が最大N秒反映されない**。ISR ＋ claim状態変更時のオンデマンド再検証にする。
-  再検証APIを無防備にしないこと。
+**D9・D10 のレビューで積み残した follow-up（急がないが落とさない）**
+
+- **最初のトークンを発行するとき、「凍結の直後に待たずに表示が変わる」を一度だけ端から端で確認する。**
+  発火には本番への実際の書き込みが要るので `BEGIN; … ROLLBACK;` では代替できず、現時点で未実測。
+- **`decide_claim` / `resolve_dispute` の戻り値に `organization_id` を足す。**
+  いま Route Handler は再検証の対象をクライアントから受け取っている（`organization_claims` /
+  `organization_disputes` に authenticated 向け SELECT ポリシーが1本も無く、サーバ側で引けないため）。
+  現状は「RPCを呼ぶ前に必須の入力として検証する」ことで無言の失敗は塞いでいるが、
+  RPCが返すようにすれば信頼そのものが不要になる。監査ログの観点でも有益。
+- **`/api/claims/decide` と `/api/disputes/resolve` は `/admin` の Basic 認証（S1）の外にある。**
+  認可は RPC 内の `is_system_admin()` が持つので穴ではないが、S1 で足した二層目がこの2本には無い。
+  `middleware.ts` の matcher に足すかを検討する。
+- **団体ページの反映は、タグで無効化されない変更（掲載編集・写真・イベント・口コミ承認）だと
+  最大で約10分遅れる**（フルルートキャッシュ300秒＋データキャッシュ300秒が独立）。
+  運営が「反映されない」と混乱しやすいので、`/admin/reviews` にも再検証を足すか運営マニュアルに書く。
 
 詳細と月次の数値目標は `docs/roadmap-2026-08-to-2027-01.md`。
 

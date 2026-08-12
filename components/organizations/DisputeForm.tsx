@@ -32,19 +32,36 @@ export function DisputeForm({ organizationId }: { organizationId: string }) {
   const submit = async () => {
     setSending(true);
     try {
-      const { data, error } = await supabase.rpc("submit_dispute", {
-        p_org: organizationId,
-        p_name: name.trim(),
-        p_contact: contact.trim(),
-        p_body: body.trim(),
+      // RPC を直接ではなく Route Handler 経由で呼ぶ。凍結が起きたときに
+      // 団体ページ（ISR）を即座に再検証する必要があり、その再検証を
+      // 「実際に凍結した」ことと不可分にするため（app/api/organizations/[id]/dispute）。
+      // 未ログインでも申告できる仕様なので、セッションがあるときだけ Bearer を付ける。
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const res = await fetch(`/api/organizations/${organizationId}/dispute`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token
+            ? { Authorization: `Bearer ${session.access_token}` }
+            : {}),
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          contact: contact.trim(),
+          body: body.trim(),
+        }),
       });
-      if (error) {
-        toast.error(error.message || disputeErrorMessage(undefined));
-        return;
-      }
-      const r = data as { ok: boolean; error?: string; frozen?: boolean };
+      const r = (await res.json().catch(() => ({}))) as {
+        ok?: boolean;
+        error?: string;
+        frozen?: boolean;
+      };
       if (!r?.ok) {
-        toast.error(disputeErrorMessage(r?.error));
+        // 502 や 504 で本文がJSONでないときは r が {} になる。RPCの既知コードと
+        // 一時的な障害を区別しないと「送信に失敗しました」だけが出て再送を諦められる。
+        toast.error(disputeErrorMessage(r?.error ?? (res.ok ? undefined : "rpc_error")));
         return;
       }
       setFrozen(didFreeze(r.frozen));

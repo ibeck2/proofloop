@@ -49,6 +49,9 @@ function roleLabel(role: string): string {
   const r = role.toLowerCase();
   if (r === "owner") return "Owner（代表者）";
   if (r === "admin") return "Admin（一般管理者）";
+  // claim を「限定」で承認された代表。035 で DB の check 制約が 'member' を
+  // 許すようになり、この画面に実際に並ぶようになった。
+  if (r === "member") return "Member（限定）";
   return role;
 }
 

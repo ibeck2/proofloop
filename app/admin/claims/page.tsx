@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui";
 import { evaluateSignals, resolveVerdict } from "@/lib/claims/signals";
+import { claimDecisionErrorMessage } from "@/lib/claims/claimDecision";
 import type { RawSignals, SignalColor } from "@/lib/claims/types";
 
 type ClaimRow = {
@@ -81,20 +82,30 @@ export default function AdminClaimsPage() {
     try {
       // 判定色は TypeScript 側の責務。RPC は受け取った値をそのまま監査に残す
       const verdict = resolveVerdict(evaluateSignals(row.signals));
-      const { data, error } = await supabase.rpc("decide_claim", {
-        p_claim_id: row.id,
-        p_decision: decision,
-        p_level: level,
-        p_note: notes[row.id]?.trim() || null,
-        p_verdict: verdict,
+      // RPC を直接ではなく Route Handler 経由で呼ぶ。承認で claim_status が
+      // 変わるので、その団体ページ（ISR）を同じ処理の中で再検証する。
+      // 認可は decide_claim 自身の is_system_admin() が持つ。
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const res = await fetch("/api/claims/decide", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token ?? ""}`,
+        },
+        body: JSON.stringify({
+          claimId: row.id,
+          organizationId: row.organization_id,
+          decision,
+          level,
+          note: notes[row.id]?.trim() || null,
+          verdict,
+        }),
       });
-      if (error) {
-        toast.error(error.message || "処理に失敗しました");
-        return;
-      }
-      const r = data as { ok: boolean; error?: string };
+      const r = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!r?.ok) {
-        toast.error(r?.error === "forbidden" ? "権限がありません" : "処理に失敗しました");
+        toast.error(claimDecisionErrorMessage(r?.error ?? (res.ok ? undefined : "rpc_error")));
         return;
       }
       toast.success(decision === "approve" ? "承認しました" : "却下しました");
