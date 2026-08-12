@@ -13,7 +13,16 @@ import {
   canSubmitClaimRevocation,
   revokeClaimSuccessMessage,
 } from "@/lib/claims/claimRevocation";
-import type { RawSignals, SignalColor, ApprovedClaimRow } from "@/lib/claims/types";
+import {
+  claimUrlFromToken,
+  reissueClaimTokenErrorMessage,
+} from "@/lib/claims/claimReissue";
+import type {
+  RawSignals,
+  SignalColor,
+  ApprovedClaimRow,
+  RejectedClaimRow,
+} from "@/lib/claims/types";
 
 type ClaimRow = {
   id: string;
@@ -52,6 +61,9 @@ export default function AdminClaimsPage() {
   const [openRevokeId, setOpenRevokeId] = useState<string | null>(null);
   const [revokeReasons, setRevokeReasons] = useState<Record<string, string>>({});
   const [revokeBusyId, setRevokeBusyId] = useState<string | null>(null);
+  const [rejectedRows, setRejectedRows] = useState<RejectedClaimRow[]>([]);
+  const [reissueBusyId, setReissueBusyId] = useState<string | null>(null);
+  const [reissuedUrls, setReissuedUrls] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     const { data, error } = await supabase.rpc("list_pending_claims");
@@ -73,6 +85,16 @@ export default function AdminClaimsPage() {
     setApprovedRows((data ?? []) as ApprovedClaimRow[]);
   }, []);
 
+  const loadRejected = useCallback(async () => {
+    const { data, error } = await supabase.rpc("list_rejected_claims");
+    if (error) {
+      toast.error("却下済み申請の取得に失敗しました");
+      setRejectedRows([]);
+      return;
+    }
+    setRejectedRows((data ?? []) as RejectedClaimRow[]);
+  }, []);
+
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -88,9 +110,9 @@ export default function AdminClaimsPage() {
         router.replace("/");
         return;
       }
-      await Promise.all([load(), loadApproved()]);
+      await Promise.all([load(), loadApproved(), loadRejected()]);
     })();
-  }, [router, load, loadApproved]);
+  }, [router, load, loadApproved, loadRejected]);
 
   const decide = async (
     row: ClaimRow,
@@ -128,10 +150,9 @@ export default function AdminClaimsPage() {
         return;
       }
       toast.success(decision === "approve" ? "承認しました" : "却下しました");
-      // 承認（approve）は list_pending_claims から消え list_approved_claims に
-      // 現れる。load() だけだと承認済み一覧が反映されず、直後に「発行の取消」が
-      // 必要になっても画面に出てこない。
-      await Promise.all([load(), loadApproved()]);
+      // 承認（approve）は list_approved_claims に、却下（reject）は
+      // list_rejected_claims に現れる。load() だけだと反映されない。
+      await Promise.all([load(), loadApproved(), loadRejected()]);
     } finally {
       setBusyId(null);
     }
@@ -181,6 +202,29 @@ export default function AdminClaimsPage() {
       await loadApproved();
     } finally {
       setRevokeBusyId(null);
+    }
+  };
+
+  const reissue = async (row: RejectedClaimRow) => {
+    setReissueBusyId(row.id);
+    try {
+      const { data, error } = await supabase.rpc("reissue_claim_token", {
+        p_claim_id: row.id,
+        p_reason: null,
+      });
+      if (error) {
+        toast.error("一時的に処理できませんでした。繰り返すときはサーバログを確認してください");
+        return;
+      }
+      const r = data as { ok?: boolean; error?: string; token?: string };
+      if (!r?.ok || !r.token) {
+        toast.error(reissueClaimTokenErrorMessage(r?.error));
+        return;
+      }
+      setReissuedUrls((p) => ({ ...p, [row.id]: claimUrlFromToken(r.token as string) }));
+      toast.success("新しいトークンを発行しました");
+    } finally {
+      setReissueBusyId(null);
     }
   };
 
@@ -397,6 +441,75 @@ export default function AdminClaimsPage() {
                         onClick={() => setOpenRevokeId(row.id)}
                       >
                         発行の取消
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-10">
+          <h2 className="text-xl font-bold text-ink mb-1">却下済み（再発行可能）</h2>
+          <p className="text-xs text-graphite/70 mb-4">
+            先に別の第三者が申請し却下された場合、正当な団体は同じリンクで再申請できません。
+            新しいトークンを発行してDMを再送してください。
+          </p>
+
+          {rejectedRows.length === 0 ? (
+            <p className="text-graphite text-sm bg-paper border border-rule p-6">
+              却下済みの申請はありません。
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {rejectedRows.map((row) => {
+                const resolved = row.organization_claim_status !== "unclaimed";
+                const newUrl = reissuedUrls[row.id];
+                return (
+                  <div key={row.id} className="bg-paper border border-rule p-5">
+                    <div className="mb-2">
+                      <Link
+                        href={`/organizations/${row.organization_id}`}
+                        className="text-ink font-bold hover:underline"
+                      >
+                        {row.organization_name || "（名称なし）"}
+                      </Link>
+                      <p className="text-xs text-graphite/70 mt-0.5">
+                        {row.organization_university} ／ {row.channel}:{row.channel_handle}
+                      </p>
+                      <p className="text-xs text-graphite/50 mt-0.5">
+                        {row.decided_at
+                          ? `${new Date(row.decided_at).toLocaleString("ja-JP")} 却下`
+                          : ""}
+                      </p>
+                    </div>
+
+                    {row.decision_note && (
+                      <p className="text-sm text-graphite bg-mist p-3 mb-3">
+                        却下理由：{row.decision_note}
+                      </p>
+                    )}
+
+                    {resolved ? (
+                      <p className="text-xs text-graphite/70">
+                        既に別の方が引き取り済みです。再発行の必要はありません。
+                      </p>
+                    ) : newUrl ? (
+                      <div className="bg-mist border border-rule p-3">
+                        <p className="text-xs font-bold text-ink mb-1">
+                          新しいトークンを発行しました
+                        </p>
+                        <p className="text-xs text-graphite break-all">{newUrl}</p>
+                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outlineMuted"
+                        disabled={reissueBusyId === row.id}
+                        onClick={() => reissue(row)}
+                      >
+                        再発行
                       </Button>
                     )}
                   </div>
