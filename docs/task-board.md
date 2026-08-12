@@ -65,17 +65,26 @@
 1. ✅ **マイグレーション033の本番適用**（2026-08-09 完了）。claim動線の Critical 3件を解消。
    うち1件（C3）は claim と無関係に、030 の副作用で**新規登録とプロフィール保存を本番で壊していた**
    （`profiles` の upsert が `permission denied`）。適用後に実測で解消を確認済み。
-2. ✅ **`revoke_claim` のUI（`/admin/claims` に「発行の取消」）→ 完了・クローズ（2026-08-12）。**
+2. ✅ **`revoke_claim` のUI（`/admin/claims` に「発行の取消」）→ 完了・クローズ（2026-08-13）。**
    マイグレーション038（DB側：`revoke_claim`に掲載内容の復元を統合し、承認済み一覧RPCを追加。
    コミット `9e0483b`）は本番適用済み。API側は `/api/claims/revoke` を新設しISR再検証込み
    （コミット `4bfad60`）、UI側は `/admin/claims` に承認済み一覧と「発行の取消」ボタンを追加
    （コミット `5cfbe66`）。他の3アクションと同じくRoute Handler経由で
-   `revalidateOrganizationPage` を呼ぶ形にし、「却下が乗っ取り後の内容を復元しうる」件も
-   `revoke_claim` 側の復元統合で同時に解消済み。`npm test`（45ファイル410テスト全PASS）・
-   `tsc --noEmit`（エラーなし）・`npm run build`（成功）で最終検証済み。
+   `revalidateOrganizationPage` を呼ぶ形にした。`npm test`（45ファイル410テスト全PASS）・
+   `tsc --noEmit`（エラーなし）・`npm run build`（成功）で検証済み。
    `git push origin main`実行済み（2026-08-12・`482ce98..1927d30`）。
    ⚠️ **未実機確認**：本セッションのブラウザツールが本番サイトへ到達できず、
    `/admin/claims` 画面でのブラウザ実機確認はまだ行っていない（オーナーへ依頼、`docs/owner-todo.md`参照）。
+   \
+   **「却下が乗っ取り後の内容を復元しうる」件は038では未解消だった。** 全体レビュー
+   （opus）で発覚：2026-08-09最終レビューitem5で既に指摘され「revoke UIと同時に直す」
+   とされていたのに、038本体では見送られていた。マイグレーション039で対処し
+   （`resolve_dispute`の却下分岐で、オーナーが実在するかを復元より前に確定し、
+   不在なら`pre_freeze`＝乗っ取り後の内容ではなく`pre_claim`＝claim前の安全な内容を
+   戻す。あわせて`revoke_claim`に復元前の`pre_revoke`スナップショットを追加し、
+   誤操作を手動SQLで復旧可能にした）、本番BEGIN…ROLLBACK検証（4チェック全通過）を経て
+   本番適用済み（2026-08-13）。詳細は
+   `docs/superpowers/plans/2026-08-12-b19-verification-039.md`。
 3. ✅ **claimトークンがGA4に送信される件 → 完了・クローズ（2026-08-12）**
    `lib/analytics/redactTokenPath.ts` を追加し、`components/GoogleAnalytics.tsx` の
    page_view送信経路を一本化・トークンを丸める形に変更（コミット `08464e8`・`209d081`）。
