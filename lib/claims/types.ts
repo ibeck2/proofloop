@@ -72,3 +72,17 @@ export type ApprovedClaimRow = {
   granted_level: GrantLevel | null;
   decided_at: string | null;
 };
+
+/** list_rejected_claims（040）の戻り値の1行。「再発行」の対象。 */
+export type RejectedClaimRow = {
+  id: string;
+  organization_id: string;
+  organization_name: string | null;
+  organization_university: string | null;
+  /** 'unclaimed' でなければ既に別のclaimで解決済み。再発行ボタンを無効化する */
+  organization_claim_status: OrganizationClaimStatus;
+  channel: ChannelKind;
+  channel_handle: string | null;
+  decision_note: string | null;
+  decided_at: string | null;
+};
