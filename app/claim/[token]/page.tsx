@@ -8,8 +8,7 @@ import { toast } from "sonner";
 import { Repeat } from "lucide-react";
 import { Button, Input, Textarea } from "@/components/ui";
 import { resolveClaimView, claimErrorMessage, type ClaimPreview } from "@/lib/claims/claimView";
-
-const RETURN_KEY = "proofloop.claim.returnTo";
+import { CLAIM_RETURN_KEY } from "@/lib/claims/returnUrl";
 /** このブラウザから「自分が」申請済みかどうかを覚えておくためのキー接頭辞。
  *  get_claim_preview().already_applied はトークン単位の状態（誰かが申請済みか）
  *  であって「あなたが」申請したかは示さない。同じトークンを持つ別の関係者が
@@ -136,7 +135,7 @@ export default function ClaimPage() {
   /** ログイン後にこのページへ戻れるよう、遷移前にトークンを控える */
   const rememberReturn = () => {
     try {
-      sessionStorage.setItem(RETURN_KEY, `/claim/${token}`);
+      sessionStorage.setItem(CLAIM_RETURN_KEY, `/claim/${token}`);
     } catch {
       // プライベートブラウジング等で失敗しても致命ではない
     }

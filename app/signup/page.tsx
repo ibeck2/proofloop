@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Mail, Repeat } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
+import { CLAIM_RETURN_KEY } from "@/lib/claims/returnUrl";
 import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_PLACEHOLDER,
@@ -76,6 +77,11 @@ export default function SignupPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [sentEmail, setSentEmail] = useState<string | null>(null);
+  // claim ページから登録に来た場合、確認メール送信画面で戻り先を案内する。
+  // signup は本人確認メールを挟む非同期フローなので、/login のようにその場で
+  // 消費して router.replace できない（メールのリンクは別タブで開き、
+  // sessionStorage を共有しない）。読むだけで消費しない。
+  const [claimReturnPath, setClaimReturnPath] = useState<string | null>(null);
 
   // Company state (keep existing)
   const {
@@ -201,6 +207,11 @@ export default function SignupPage() {
         }
       }
 
+      try {
+        setClaimReturnPath(sessionStorage.getItem(CLAIM_RETURN_KEY));
+      } catch {
+        // 参照できなくても登録自体は成功しているため致命ではない
+      }
       setSignupSuccess(true);
       setSentEmail(uEmail);
     } catch (err) {
@@ -244,6 +255,15 @@ export default function SignupPage() {
               <p className="text-graphite text-sm mt-3">
                 本人確認のため、入力された大学のメールアドレス（{sentEmail}）に確認リンクを送信しました。リンクをクリックして本登録を完了してください。
               </p>
+              {claimReturnPath && (
+                <p className="text-graphite text-sm mt-4 leading-relaxed">
+                  団体ページの引き取り申請から来られた方は、登録完了後に{" "}
+                  <Link href={claimReturnPath} className="text-ink font-bold hover:underline">
+                    こちらのリンク
+                  </Link>
+                  {" "}を開いて申請を続けてください（{claimReturnPath}）。
+                </p>
+              )}
               <div className="mt-8">
                 <Link href="/login" className="text-ink font-bold hover:underline">
                   ログインへ

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Repeat } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
+import { CLAIM_RETURN_KEY } from "@/lib/claims/returnUrl";
 
 const OPERATIONS_EMAIL_WHITELIST = "ibeckzoom@gmail.com";
 const UNIVERSITY_DOMAIN_ERROR = "大学発行のメールアドレス（.ac.jpなど）を入力してください";
@@ -84,9 +85,9 @@ export default function LoginPage() {
       if (result.success) {
         // claim ページから来ていれば、そこへ戻す
         try {
-          const back = sessionStorage.getItem("proofloop.claim.returnTo");
+          const back = sessionStorage.getItem(CLAIM_RETURN_KEY);
           if (back) {
-            sessionStorage.removeItem("proofloop.claim.returnTo");
+            sessionStorage.removeItem(CLAIM_RETURN_KEY);
             router.replace(back);
             return;
           }
