@@ -46,3 +46,18 @@ export function shouldRevalidateAfterDisputeResolution(
 ): boolean {
   return result?.ok === true;
 }
+
+/** revoke_claim（038）の応答 */
+export type ClaimRevocationResult = { ok?: boolean } | null | undefined;
+
+/**
+ * 発行の取消：成功したら claim_status が unclaimed に変わる
+ * （frozen 中は revoke_claim が claim_status を書き換えないが、UI側で frozen の
+ * 行はボタンを無効化しているため、成功応答が返る時点で常に claimed だったと
+ * 見なせる。よって resolve_dispute と同じく「成功なら常に捨てる」でよい）。
+ */
+export function shouldRevalidateAfterClaimRevocation(
+  result: ClaimRevocationResult
+): boolean {
+  return result?.ok === true;
+}

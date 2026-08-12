@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   shouldRevalidateAfterClaimDecision,
+  shouldRevalidateAfterClaimRevocation,
   shouldRevalidateAfterDispute,
   shouldRevalidateAfterDisputeResolution,
 } from "./revalidationTriggers";
@@ -57,5 +58,17 @@ describe("shouldRevalidateAfterDisputeResolution", () => {
     expect(shouldRevalidateAfterDisputeResolution({ ok: false })).toBe(false);
     expect(shouldRevalidateAfterDisputeResolution(null)).toBe(false);
     expect(shouldRevalidateAfterDisputeResolution(undefined)).toBe(false);
+  });
+});
+
+describe("shouldRevalidateAfterClaimRevocation", () => {
+  it("成功したら常に捨てる（frozen以外は必ず掲載列を書き換えるため）", () => {
+    expect(shouldRevalidateAfterClaimRevocation({ ok: true })).toBe(true);
+  });
+
+  it("失敗したら捨てない", () => {
+    expect(shouldRevalidateAfterClaimRevocation({ ok: false })).toBe(false);
+    expect(shouldRevalidateAfterClaimRevocation(null)).toBe(false);
+    expect(shouldRevalidateAfterClaimRevocation(undefined)).toBe(false);
   });
 });
