@@ -73,8 +73,7 @@
    `revalidateOrganizationPage` を呼ぶ形にした。`npm test`（45ファイル410テスト全PASS）・
    `tsc --noEmit`（エラーなし）・`npm run build`（成功）で検証済み。
    `git push origin main`実行済み（2026-08-12・`482ce98..1927d30`）。
-   ⚠️ **未実機確認**：本セッションのブラウザツールが本番サイトへ到達できず、
-   `/admin/claims` 画面でのブラウザ実機確認はまだ行っていない（オーナーへ依頼、`docs/owner-todo.md`参照）。
+   オーナーが `/admin/claims` を実機確認済み（2026-08-13）。
    \
    **「却下が乗っ取り後の内容を復元しうる」件は038では未解消だった。** 全体レビュー
    （opus）で発覚：2026-08-09最終レビューitem5で既に指摘され「revoke UIと同時に直す」
