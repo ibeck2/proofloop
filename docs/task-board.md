@@ -73,9 +73,9 @@
    `revalidateOrganizationPage` を呼ぶ形にし、「却下が乗っ取り後の内容を復元しうる」件も
    `revoke_claim` 側の復元統合で同時に解消済み。`npm test`（45ファイル410テスト全PASS）・
    `tsc --noEmit`（エラーなし）・`npm run build`（成功）で最終検証済み。
-   ⚠️ **未push・未実機確認**：上記3コミットは `main` にローカルコミット済みだが
-   `git push origin main` は未実行（要承認の別ステップ）。本番デプロイ前のため、
-   `/admin/claims` 画面でのブラウザ実機確認もまだ行っていない。
+   `git push origin main`実行済み（2026-08-12・`482ce98..1927d30`）。
+   ⚠️ **未実機確認**：本セッションのブラウザツールが本番サイトへ到達できず、
+   `/admin/claims` 画面でのブラウザ実機確認はまだ行っていない（オーナーへ依頼、`docs/owner-todo.md`参照）。
 3. ✅ **claimトークンがGA4に送信される件 → 完了・クローズ（2026-08-12）**
    `lib/analytics/redactTokenPath.ts` を追加し、`components/GoogleAnalytics.tsx` の
    page_view送信経路を一本化・トークンを丸める形に変更（コミット `08464e8`・`209d081`）。
