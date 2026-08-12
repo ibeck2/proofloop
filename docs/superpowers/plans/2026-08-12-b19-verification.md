@@ -70,3 +70,20 @@ ALL CHECKS PASSED (org1 restored, org2 frozen-skip, org3 via resolve_dispute, li
 
 Task 3（本番へのマイグレーション適用）に進む前に、この結果をユーザーに提示し、
 明示的な適用の承認を得る必要がある（CLAUDE.mdの方針）。
+
+---
+
+## 本番適用済み（2026-08-12）
+
+ユーザーの明示的な承認を得たうえで、`supabase/migrations/038_claim_revocation.sql`（Task 1が
+committした内容そのまま・無改変）を `mcp__claude_ai_Supabase__apply_migration`
+（`project_id: uhhofjcyotfyrlhaguvy`、`name: 038_claim_revocation`）で本番に適用した。
+
+適用後の確認：
+
+- `SELECT proname FROM pg_proc WHERE proname = 'list_approved_claims';` → 1行返る（`list_approved_claims`）
+- `SELECT version, name FROM supabase_migrations.schema_migrations ORDER BY version DESC LIMIT 3;` →
+  最新行が `20260812123706 / 038_claim_revocation`
+
+いずれもブリーフの期待どおり。本番で `revoke_claim` / `resolve_dispute` が更新され、
+`list_approved_claims` が呼び出し可能になった。
