@@ -57,3 +57,18 @@ export type DisputeRow = {
   /** 032 で追加。false の場合は自動凍結がレート制限で見送られ、記録のみ。 */
   froze_organization: boolean;
 };
+
+/** list_approved_claims（038）の戻り値の1行。「発行の取消」の対象。 */
+export type ApprovedClaimRow = {
+  id: string;
+  organization_id: string;
+  organization_name: string | null;
+  organization_university: string | null;
+  /** 'frozen' のときは異議申立て対応中。取消ボタンを無効化し /admin/disputes へ誘導する */
+  organization_claim_status: OrganizationClaimStatus;
+  applicant_user_id: string | null;
+  applicant_name: string | null;
+  applicant_email: string | null;
+  granted_level: GrantLevel | null;
+  decided_at: string | null;
+};
