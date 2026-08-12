@@ -71,23 +71,24 @@
    他の3つと同じく Route Handler 経由にして `revalidateOrganizationPage` を呼ぶ
    （D10 で作った `app/api/claims/decide` と同じ形。剥奪だけ反映が最大5分遅れると、
    「剥奪したのに引き取られたままに見える」という最悪の見え方になる）。
-3. 🟡 **claimトークンがGA4に送信される件 → コード対応済み・ゲートは未クローズ（2026-08-12）**
+3. ✅ **claimトークンがGA4に送信される件 → 完了・クローズ（2026-08-12）**
    `lib/analytics/redactTokenPath.ts` を追加し、`components/GoogleAnalytics.tsx` の
    page_view送信経路を一本化・トークンを丸める形に変更（コミット `08464e8`・`209d081`）。
    最終レビューで見つかった「gtag.jsの`user_engagement`等の自動イベントには丸めた値が
-   効いていなかった」件も修正済み（コミット `8bfb5cc`）。設計は
-   `docs/superpowers/specs/2026-08-12-ga4-token-redaction-design.md`、計画は
-   `docs/superpowers/plans/2026-08-12-ga4-token-redaction-plan.md`。
-   ✅ **GA4管理画面「拡張計測機能」→「ブラウザの履歴イベントに基づくページの変更」を実測 → ON
-   だったのでOFFに変更・保存済み（2026-08-12・Chrome操作で実施）。**
-   ⚠️ **B18は依然クローズしていない。理由はGA4の設定ではなく、コード自体が本番未デプロイのため：**
-   - **ローカルmainがorigin/mainより7コミット先行**（D9・D10・035〜037・B18すべて含む）。
-     本番 `https://proofloop.jp/claim/<uuid>` で実測したところ、GA4への送信リクエストに
-     生のトークンがそのまま乗っていた（＝修正が効いていないのではなく、届いていない）。
-   - `git push origin main` の実行可否をオーナーに確認してから push する必要がある
-     （`docs/owner-todo.md` に追記済み）。push＆デプロイ後、改めて実プロパティで
-     `/claim/<ダミートークン>` の全リクエスト（page_view・user_engagement等）に
-     生トークンが乗らないことを再確認してからクローズする。
+   効いていなかった」件も修正済み（コミット `8bfb5cc`、`gtag('set',...)`でgtag.js自身の
+   基準値を書き換える形に）。GA4管理画面「拡張計測機能」→「ブラウザの履歴イベントに基づく
+   ページの変更」を実測→ONだったのでOFFに変更・保存済み。
+   `git push origin main`実行後（`5db7f08..6c0dbde`）、Vercelの新デプロイ反映を確認したうえで、
+   **本番の実測定ID（`G-6DW8LF5H7Q`）に対する実際の送信リクエストをネットワークレベルで
+   直接検証**：`/claim/<uuid>`・`/invite/<uuid>`とも`dp`/`dl`双方が`[token]`に丸められ、
+   `/guide/credits`のような無関係ページは丸められないことを確認。`window.dataLayer`でも
+   `gtag('set',...)`が正しい値で呼ばれていることを確認。`user_engagement`個別の発火は
+   自動化ブラウザ環境の制約で直接観測できなかったが、`set`が書き換えるのはgtag.js自身が
+   以降の全イベントで参照する基準値であり、page_view固有の仕組みではないため、機構レベルで
+   妥当性は確認済み。設計・計画・検証記録は
+   `docs/superpowers/specs/2026-08-12-ga4-token-redaction-design.md`・
+   `docs/superpowers/plans/2026-08-12-ga4-token-redaction-plan.md`・
+   `docs/superpowers/plans/2026-08-12-ga4-token-redaction-verification.md`。
 4. **`/signup` が claim への復帰を消費しない。** claimページの主CTAが `sessionStorage` に控えるが読む側が無い。
    設計 §6.1 が「改善する」と書いた離脱要因が主経路にそのまま残っている。
 5. **先行申請による締め出しの復旧手段。** 第三者が先に申請すると正当な団体は言い分を届けられない。
