@@ -55,6 +55,12 @@ BEGIN
   SELECT * INTO c FROM public.organization_claims WHERE id = p_claim_id FOR UPDATE;
   IF NOT FOUND THEN RETURN jsonb_build_object('ok', false, 'error', 'not_found'); END IF;
 
+  -- ⚠️ 掲載内容の復元（下記(d)）はこの IF の中でしか走らない。claim が
+  --   approved 以外（例：resolve_dispute の uphold が対象 claim を取り違えた場合）や
+  --   applicant_user_id が NULL（申請者退会・FK が ON DELETE SET NULL）のときは、
+  --   organizations.claim_status が 'claimed' のままでも掲載内容は戻らない。
+  --   032 が「詰み」として既に文書化している病的な状態と同じ前提であり、
+  --   B19全体レビューの時点でこの分岐を広げる要件は無かったため意図的に残す。
   IF c.status = 'approved' AND c.applicant_user_id IS NOT NULL THEN
     -- (a) 申請者本人。claim 前から在籍していた場合も消す（033と同じ）
     DELETE FROM public.organization_members

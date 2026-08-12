@@ -201,8 +201,10 @@ $$;
 --    （凍結中の団体は異議申立てフローが既に進行中で、二重に操作すると
 --    状態が読みにくくなるため）。
 --
---    applicant_name/applicant_email は clubsettings/members 画面と同じ
---    フォールバック順（full_name → display_name、contact_email → email）にする。
+--    applicant_name は clubsettings/members 画面と同じフォールバック順
+--    （full_name → display_name）。applicant_email は運営が連絡を取るための
+--    項目なので、/admin/requests と同じ contact_email 優先（無ければ email）にする
+--    （clubsettings/members は email のみを見ており、contact_email は選択していない）。
 -- --------------------------------------------
 CREATE OR REPLACE FUNCTION public.list_approved_claims()
 RETURNS TABLE (

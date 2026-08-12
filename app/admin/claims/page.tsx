@@ -128,7 +128,10 @@ export default function AdminClaimsPage() {
         return;
       }
       toast.success(decision === "approve" ? "承認しました" : "却下しました");
-      await load();
+      // 承認（approve）は list_pending_claims から消え list_approved_claims に
+      // 現れる。load() だけだと承認済み一覧が反映されず、直後に「発行の取消」が
+      // 必要になっても画面に出てこない。
+      await Promise.all([load(), loadApproved()]);
     } finally {
       setBusyId(null);
     }
@@ -330,7 +333,11 @@ export default function AdminClaimsPage() {
                         </p>
                       </div>
                       <span className="text-xs font-bold px-2 py-1 bg-mist text-ink">
-                        {row.granted_level === "full" ? "フル権限" : "限定権限"}
+                        {row.granted_level === "full"
+                          ? "フル権限"
+                          : row.granted_level === "limited"
+                            ? "限定権限"
+                            : "権限不明"}
                       </span>
                     </div>
 

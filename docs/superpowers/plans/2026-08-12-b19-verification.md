@@ -15,7 +15,9 @@
 `authenticated` へのSELECT権限を付与していなかったこと。
 
 これは **Task 1のマイグレーション本体の不備ではなく、検証ハーネス（ブリーフのSQL）側のバグ**
-だったため、自己判断で修正せずBLOCKEDとして報告した（`.superpowers/sdd/task-2-report.md` 参照）。
+だったため、自己判断で修正せずBLOCKEDとして報告した（実行時の生ログは
+`.superpowers/sdd/task-2-report.md` に残る想定だが、`.superpowers/sdd/` は
+`.gitignore` 対象の使い捨て領域のため本コミットには含まれない。恒久的な記録は本ファイル）。
 
 修正：`CREATE TEMP TABLE _b19t (...)` の直後に `GRANT SELECT ON _b19t TO authenticated;` を追加。
 この1行を加えたブリーフで再実行した（本番データ・マイグレーション本体は無変更）。
