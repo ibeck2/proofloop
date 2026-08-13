@@ -85,4 +85,7 @@ export type RejectedClaimRow = {
   channel_handle: string | null;
   decision_note: string | null;
   decided_at: string | null;
+  /** その団体に今も有効な未使用トークン（issued/applied・期限内）が何件あるか。
+   *  1件以上あれば、再発行すると二重発行になる可能性を画面で警告する。 */
+  live_sibling_count: number;
 };

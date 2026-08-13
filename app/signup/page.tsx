@@ -10,6 +10,7 @@ import { Mail, Repeat } from "lucide-react";
 import { Button, Input } from "@/components/ui";
 import { supabase } from "@/lib/supabase";
 import { CLAIM_RETURN_KEY } from "@/lib/claims/returnUrl";
+import { SITE_URL } from "@/lib/site-url";
 import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_PLACEHOLDER,
@@ -261,7 +262,7 @@ export default function SignupPage() {
                   <Link href={claimReturnPath} className="text-ink font-bold hover:underline">
                     こちらのリンク
                   </Link>
-                  {" "}を開いて申請を続けてください（{claimReturnPath}）。
+                  {" "}を開いて申請を続けてください（{SITE_URL}{claimReturnPath}）。
                 </p>
               )}
               <div className="mt-8">

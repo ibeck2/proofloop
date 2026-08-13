@@ -199,7 +199,7 @@ export default function AdminClaimsPage() {
       );
       setOpenRevokeId(null);
       setRevokeReasons((p) => ({ ...p, [row.id]: "" }));
-      await loadApproved();
+      await Promise.all([loadApproved(), loadRejected()]);
     } finally {
       setRevokeBusyId(null);
     }
@@ -488,6 +488,13 @@ export default function AdminClaimsPage() {
                     {row.decision_note && (
                       <p className="text-sm text-graphite bg-mist p-3 mb-3">
                         却下理由：{row.decision_note}
+                      </p>
+                    )}
+
+                    {!resolved && row.live_sibling_count > 0 && (
+                      <p className="text-xs text-seal bg-seal/10 border border-seal p-2 mb-3">
+                        この団体には今も有効な未使用トークンが{row.live_sibling_count}件あります。
+                        再発行すると重複します。本当に必要か確認してください。
                       </p>
                     )}
 

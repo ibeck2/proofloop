@@ -16,6 +16,10 @@ describe("reissueClaimTokenErrorMessage", () => {
     expect(reissueClaimTokenErrorMessage("invalid")).toContain("却下済み");
   });
 
+  it("already_claimed（団体は既に別のclaimで解決済み）", () => {
+    expect(reissueClaimTokenErrorMessage("already_claimed")).toContain("引き取り済み");
+  });
+
   it("未知のコードと undefined は既定の文言", () => {
     expect(reissueClaimTokenErrorMessage(undefined)).toBe("再発行に失敗しました");
     expect(reissueClaimTokenErrorMessage("who_knows")).toBe("再発行に失敗しました");

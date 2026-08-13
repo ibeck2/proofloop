@@ -10,7 +10,7 @@ export function claimUrlFromToken(token: string): string {
   return `${SITE_URL}/claim/${token}`;
 }
 
-export type ReissueClaimTokenErrorCode = "forbidden" | "invalid";
+export type ReissueClaimTokenErrorCode = "forbidden" | "invalid" | "already_claimed";
 
 export function reissueClaimTokenErrorMessage(code: string | undefined): string {
   switch (code as ReissueClaimTokenErrorCode | undefined) {
@@ -18,6 +18,8 @@ export function reissueClaimTokenErrorMessage(code: string | undefined): string 
       return "権限がありません";
     case "invalid":
       return "この申請は却下済みではないか、既に見つかりません";
+    case "already_claimed":
+      return "この団体は既に別の方が引き取り済みです";
     default:
       return "再発行に失敗しました";
   }
