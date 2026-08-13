@@ -103,3 +103,23 @@ SELECT
 
 本番へのマイグレーション適用（`apply_migration`）は、この結果をユーザーに提示し、
 明示的な適用の承認を得たうえで別ステップとして行う（CLAUDE.mdの方針）。
+
+---
+
+## 本番適用済み（2026-08-13）
+
+ユーザーの明示的な承認を得て、`mcp__claude_ai_Supabase__apply_migration`
+（`project_id: "uhhofjcyotfyrlhaguvy"`, `name: "041_claim_reissue_hardening"`）で
+`supabase/migrations/041_claim_reissue_hardening.sql`（commit `4b82d1a`）をそのまま本番へ適用した。
+`apply_migration` は `{"success":true}` を返した。
+
+適用後、以下2点を `execute_sql` で確認した。
+
+1. `list_rejected_claims` の戻り値型：
+   `TABLE(id uuid, organization_id uuid, organization_name text, organization_university text, organization_claim_status text, channel text, channel_handle text, decision_note text, decided_at timestamp with time zone, live_sibling_count integer)`
+   ＝ `live_sibling_count` が追加された10列版になっている。
+2. `supabase_migrations.schema_migrations` の最新3件：
+   `20260813001728 / 041_claim_reissue_hardening` が先頭、続いて
+   `20260812163802 / 040_claim_reissue`、`20260812152315 / 039_dispute_dismiss_owner_check`。
+
+いずれも想定どおり。本番適用は完了。
