@@ -113,6 +113,14 @@
    同じチャネル情報で新しいトークンを発行する方式（設計書の(b)案）。`/admin/claims`に
    「却下済み（再発行可能）」セクションを追加し、運営がボタン1つで再発行できる
    （コミット `df06ad6`）。
+   ⚠️ **全体レビューでImportant1件・Minor9件を検出。Important＋安価なMinor4件は
+   マイグレーション041で同日中に対応・本番適用済み**（再発行トークンが一時state
+   にしか存在せず失われると誰にも見えず取り消せない問題／revoke後の一覧stale／
+   TOCTOU／`FOR UPDATE`未使用／`/signup`のURL表示が相対パス）。**残り5件は設計判断
+   を伴うため見送り**（`decided_by`/`decided_at`の転用による監査記録の薄さ／再発行が
+   同じ・漏洩した可能性のあるチャネルに固定される／`channel_handle`の陳腐化／
+   検証で「存在しないclaim」ケース未実施／オーナー実機確認の記録漏れ）。
+   次にこの機能を触るときに再検討する。
 6. ✅ **`middleware.ts`（リスクS1）→ 確認のみで完了・クローズ（2026-08-13）。**
    `export const config = { matcher: [...] }` は `["/admin", "/admin/:path*"]` のまま。
    パスベースの網羅により `/admin/disputes`・`/admin/claims`（`df06ad6` で追加した
