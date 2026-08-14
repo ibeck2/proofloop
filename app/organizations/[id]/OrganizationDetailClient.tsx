@@ -27,6 +27,7 @@ import { useSavedOrganizations } from "@/hooks/useSavedOrganizations";
 import OrganizationPageViewTracker from "@/components/OrganizationPageViewTracker";
 import type { Application, ProfileForEntry } from "@/lib/types/application";
 import type { OrganizationClaimStatus } from "@/lib/claims/types";
+import { resolveEntryAvailability } from "@/lib/organizations/entryAvailability";
 
 export type EventRow = {
   id: string;
@@ -395,6 +396,7 @@ export default function OrganizationDetailClient({
     });
   };
 
+  const entryAvailability = resolveEntryAvailability(claimStatus);
   const name = org.name ?? "（団体名なし）";
   const formatEventDate = (iso: string) => {
     const d = new Date(iso);
@@ -493,7 +495,13 @@ export default function OrganizationDetailClient({
 
         {/* エントリーCTA */}
         <div className="py-4 border-b border-rule">
-          {session ? (
+          {entryAvailability !== "available" ? (
+            <p className="text-graphite/70 text-sm text-center py-6 border border-dashed border-rule rounded-lg bg-mist">
+              {entryAvailability === "frozen"
+                ? "この団体は現在、掲載内容の確認作業中のため、応募・メッセージ機能を一時停止しています。"
+                : "この団体のページはまだProofLoop運営による確認が済んでいません。応募・メッセージ機能は現在ご利用いただけません。"}
+            </p>
+          ) : session ? (
             application ? (
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-2 text-graphite">
