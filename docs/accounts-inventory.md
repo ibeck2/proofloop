@@ -21,7 +21,7 @@
 | **contact@ibeck.co.jp** | Claude Code（このセッション）。Supabase MCP もこの接続経由 | — |
 | **takenaka01@ibeck.co.jp**（CEO） | Ahrefs のワークスペース所有者 | 2026-07-16 時点の記録 |
 
-**未確認：Vercel／さくらインターネット（ドメイン）／Search Console**（GSCはGA4と同じ `contact@proofloop.jp` の可能性が高い。§4参照）
+**未確認：ドメインレジストラ／Search Console**（GSCはGA4と同じ `contact@proofloop.jp` の可能性が高い。§4参照。Vercelは2026-08-14に`ibeckzoom@gmail.com`と確定）
 
 > **注記**：当初 Claude は git 履歴から「Google系も `ibeckzoom@gmail.com` だろう」と推定しましたが、**実際は GA4 が `contact@proofloop.jp` で外れていました。** git の author や GitHub のユーザー名は、SaaS の所有アカウントの根拠にはなりません。以降も同じ推定はしないでください。
 
@@ -73,13 +73,15 @@
 | リポジトリ | `https://github.com/ibeck2/proofloop`（Public） |
 | コミット author | `ibeck2 <ibeckzoom@gmail.com>`（全78コミット、他の author なし） |
 
-### Vercel ⚠️ プロジェクトは把握・アカウントは未確定
+### Vercel ✅ 確定（2026-08-14）
 
-- **同一リポジトリに Vercel プロジェクトが2つ**紐づいています（2026-07-16 調査時点）。
-  - `proofloop-2cea`（`prj_WcU...`）… **proofloop.jp を配信している本番**。ビルド成功。
-  - `proofloop`（`prj_UqW...`）… `*.vercel.app` のみ。Supabase環境変数が未設定で**全ビルドがエラー**。本番配信はしていないためサイトへの実害はなし。
-- 命名が逆転（本番が旧名の `proofloop-2cea`）しており、整理したい状態です。
-- GitHub連携で作られている以上、**Vercelアカウントは GitHub（ibeck2）と連携している可能性が高い**です。
+| 項目 | 値 |
+| --- | --- |
+| アカウント | **`ibeckzoom@gmail.com`**（チーム名 `ibeckzoom-1475's projects`） |
+| 本番プロジェクト | **`proofloop-2cea`**（`proofloop.jp` を配信） |
+
+- **`proofloop.jp` の権威DNSも Vercel が持っている**（`ns1`/`ns2.vercel-dns.com`）。さくらインターネットはレジストラかもしれないが、DNSレコードの実体はVercel側のDomains画面（プロジェクト → Domains → 対象ドメイン → 「View DNS Records」）で管理する。旧記載「DNSはさくら」は誤りだったため訂正（詳細は`docs/task-board.md`タスクG、memory `proofloop-dns-sakura`）。
+- 旧 `proofloop`（`*.vercel.app` のみ、ビルドエラー）プロジェクトは2026-07-23にオーナーが削除済み。プロジェクトは1つのみ。
 
 ### Resend（メール送信）⚠️ 重要な発見あり
 
@@ -94,10 +96,11 @@
   - 迷惑メール判定されやすく、到達率にも影響します。
   - CLAUDE.md の「学生団体への通知メールを営業＆流入の入口にする」施策を実行するなら、**独自ドメイン認証は前提条件**です。
 
-### ドメイン（proofloop.jp）⚠️ レジストラは把握・アカウント未確定
+### ドメイン（proofloop.jp）⚠️ レジストラ未確定・DNS権威はVercelと確定
 
-- DNS は**さくらインターネット**で管理（過去の調査記録より。ゾーンにAレコードが無く不通だった経緯あり）。
-- Vercel向けの A / CNAME レコードをさくら側のゾーン編集で設定済み。
+- **権威DNSはさくらインターネットではなく Vercel**（`ns1`/`ns2.vercel-dns.com`。2026-08-14に`nslookup -type=NS`で確定、上記Vercel項目参照）。
+- レジストラ（ドメインの契約自体）がどこかは未確定。さくらで契約していても、ネームサーバーはVercelに委任されているため、**DNSレコードの追加・変更はVercelのDomains画面で行う**（さくらのゾーン編集をしても反映されない）。
+- ドメインの更新期限は未確認のまま（レジストラが確定していないため）。失効するとサイトが即座に落ちるリスクは残っている。
 
 ### Ahrefs ⚠️ CEO所有
 
@@ -187,9 +190,10 @@ CLAUDE.md には以下の記載があります。
 | Supabase | （ibeck2's Org） | 2026-07-22 | 組織名から推定。ログイン用メールは要確認 |
 | **GA4** | **contact@proofloop.jp** | **2026-07-22** | 測定ID `G-6DW8LF5H7Q`。オーナー本人が確認 |
 | Search Console | 未確認（`contact@proofloop.jp` の可能性が非常に高い） | | メタタグ認証、2026-03-31追加。**GA4プロパティに Search Console 連携が設定済み**であることを確認（GA4左メニューに「Search Console」セクションが存在）。連携には両方の管理権限が必要なため、同一アカウントの可能性が高い |
-| Vercel | 未確認 | | プロジェクト2つ（要整理） |
-| **Resend** | **ibeckzoom@gmail.com** | **2026-07-22** | 送信元が resend.dev のまま（要対応） |
-| さくらインターネット | 未確認 | | proofloop.jp のDNS。更新期限も要確認 |
+| **Vercel** | **ibeckzoom@gmail.com** | **2026-08-14** | プロジェクト`proofloop-2cea`のみ。**proofloop.jpの権威DNSもここ**（さくらではない） |
+| **Resend** | **ibeckzoom@gmail.com** | **2026-07-22** | ドメイン認証のDNS設定は2026-08-14完了、Verified確認は残作業（`docs/task-board.md`タスクD） |
+| ドメインレジストラ | 未確認（さくらの可能性） | | DNS権威はVercelに委任済み（上記）。更新期限は未確認のまま |
+| **HubSpot** | **ibeckzoom@gmail.com** | **2026-08-14** | アカウント名「ProofLoop」・account ID `246862852`。企業アウトリーチCRM・学生団体連絡管理用に整備済み（`docs/task-board.md`タスクL） |
 | Ahrefs | takenaka01@ibeck.co.jp（CEO） | 2026-07-29 | proofloop.jp 登録済（project_id `10155573`・GSC連携有効）。Rank Tracker KWは0件・オーナーに席なし |
 | **バリューコマース** | **ibeckzoom@gmail.com** | **2026-07-22** | **旧URLで登録されていたため proofloop.jp へURL変更を申請中（審査待ち）。** サイトへの実装は未着手 |
 
@@ -208,14 +212,14 @@ CLAUDE.md には以下の記載があります。
 
 ---
 
-## 5. この調査で見つかった要対応事項
+## 5. この調査で見つかった要対応事項（2026-07-22時点・以下は現状）
 
 `docs/owner-todo.md` にも転記済みです。
 
-1. **Resend の送信元が `onboarding@resend.dev`** … 独自ドメイン未認証。団体への通知メール施策の前提条件。
-2. **アフィリエイトが未実装** … CLAUDE.md の記述と実態が乖離。収益導線がゼロの状態。
-3. **Vercel プロジェクトが2つ** … 片方は全ビルド失敗中。命名も逆転しており整理が必要。
-4. **ドメインの更新期限が未把握** … 失効するとサイトが落ちます。
+1. ~~**Resend の送信元が `onboarding@resend.dev`**~~ → DNS設定は2026-08-14完了、Verified確認とコード側`from`差し替えが残作業（`docs/task-board.md`タスクD）
+2. ~~**アフィリエイトが未実装**~~ → 実装済み（2026-07-24）。バリューコマース3社が稼働中
+3. ~~**Vercel プロジェクトが2つ**~~ → 2026-07-23にオーナーが不要な方を削除、`proofloop-2cea`のみに整理済み
+4. **ドメインの更新期限が未把握** … 未解決。レジストラ自体が未確定なため確認できていない。失効するとサイトが落ちます。
 
 ---
 

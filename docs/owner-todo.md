@@ -120,28 +120,19 @@
 
 ---
 
-## 🔴 最優先（信頼性の土台が欠けている・2026-08-07 追加）
+## ✅ 対応済み（2026-08-14・Claudeが原因特定・DNS修正）
 
-- [ ] **`contact@proofloop.jp` で「受信」ができるようにする**
-  - **状況（オーナー申告 2026-08-07）**：このアドレスからの**送信はできるが、受信ができない**。
-  - **なぜ最優先か**：08-06 に公開した法務4文書が、このアドレスを**窓口として11箇所で案内しており、すでに本番稼働中**です（`lib/legal/documents.ts`）。
-    - `/listing-policy` … **掲載停止・記載訂正の依頼窓口**。2,421団体を同意なく掲載している以上、止める手段が届かないのは致命的
-    - `/privacy` … 個人情報の開示・訂正・削除請求の窓口
-    - `/terms`・`/about` … 問い合わせ窓口
-    - ⇒ **リスク台帳 L3（削除依頼窓口がない）は「✅対応済み」ではなく実質未対応に戻っています。** 窓口を書いただけで届かないのは、書いていないのとほぼ同じです。
-  - **切り分け済みの事実（Claude が 2026-08-07 に実査）**：DNS は問題ありません。
-    ```
-    proofloop.jp  MX preference = 1, mail exchanger = smtp.google.com
-    proofloop.jp  TXT "v=spf1 include:_spf.google.com ~all"
-    ```
-    MX は Google Workspace の標準形（単一MX `smtp.google.com`）で正しく向いており、SPF も Google を許可済み。**さくら側のゾーン設定は正しい**ので、原因は Google 側にあります。
-  - **確認していただきたい順**：
-    1. **Google Workspace の契約が生きているか**（無料試用の期限切れ・支払い失敗で受信が止まる）。admin.google.com → お支払い
-    2. **`contact@proofloop.jp` が「ユーザー（メールボックス）」として存在するか。** 「エイリアス」や「送信専用の send-as 設定」だけだと、**送信はできるが受信箱が無い**という今の症状にちょうど一致します。admin.google.com → ディレクトリ → ユーザー
-    3. Gmail 側でフィルタ・転送・迷惑メール振り分けに吸われていないか
-  - ⚠️ **Google Workspace の管理画面はオーナーのログインが必要です。** ログイン済みのブラウザをご用意いただければ、そこから先の確認・設定は Claude が `claude-in-chrome` で伴走します。
-  - 🔁 **代替案（Workspace を契約しない場合）**：さくらのメールボックスで `contact@` を受け、MX をさくらに戻す。ただし**その場合 Google 側の送信設定を作り直す必要があり、Resend の独自ドメイン認証（下記）とも干渉する**ため、どちらで受けるかを先に決めてください。
-  - 📌 **決まるまでの暫定策**：受信できる既存アドレス（`ibeckzoom@gmail.com` 等）へ**転送を設定する**か、法務文書の窓口を一時的に受信可能なアドレスへ差し替える。差し替えは `lib/legal/company.ts` の1行なので Claude が即対応できます。**「窓口が死んでいる期間」を作らないことが重要です。**
+- [x] **`contact@proofloop.jp` で「受信」ができるようにする**（完了 2026-08-14・オーナーが受信確認済み）
+  - **真因は「Google Workspaceの設定不備」ではなく、`proofloop.jp` の権威DNSがVercelに移管された際、MX・SPFレコードが一切移植されていなかったこと。**
+  - 2026-08-07時点の実査で「MX/SPFは正しく`smtp.google.com`を向いている」と確認していたが、これはさくら時代の設定が各種パブリックDNSにキャッシュされていた残像だった。ns1/ns2.vercel-dns.com（実際の権威サーバー）に直接問い合わせると、MX・TXTともに0件（NODATA）だったことが今回判明。
+  - **対応**：Vercel `proofloop-2cea` プロジェクト → Domains → `proofloop.jp` のDNS Recordsに `MX smtp.google.com priority=1` と `TXT v=spf1 include:_spf.google.com ~all` を追加。Vercelログインは `ibeckzoom@gmail.com`。
+  - 検証：ns1/ns2.vercel-dns.com・Google Public DNS・Quad9のいずれからも即座に正しい値を確認。オーナーがテストメールで受信を確認済み。
+  - **教訓**：`docs/accounts-inventory.md`・memory `proofloop-dns-sakura` の「権威DNSはさくら」という記述は誤りだった（ネームサーバー移管後は無効）。両方訂正済み。同種のドメイン移行時は、レジストラの設定ではなく実際のネームサーバー（`dig NS` / `nslookup -type=NS`）を必ず確認すること。
+
+- [x] **Resend の独自ドメイン認証**（DNS設定は完了 2026-08-14・Resend側の検証待ち）
+  - さくらではなくVercelの `proofloop-2cea` → Domains → `proofloop.jp` のDNS Recordsに、Resendが要求するDKIM（`resend._domainkey` TXT）・SPF（`send` MX/TXT）・DMARC（`_dmarc` TXT）の4件を追加済み。
+  - いずれも `proofloop.jp` 本体ではなく `send.proofloop.jp` 等のサブドメイン向けのため、Google用の既存SPF（apex）とは競合しない。
+  - ⚠️ **残作業**：Resend側のステータスが「Pending」だった時点で作業を終えている。**Verifiedになったか確認し、なっていれば次にコード側の`from:`をRESEND_FROM環境変数経由で`contact@proofloop.jp`に差し替える**（`docs/task-board.md` タスクD参照）。
 
 - [ ] **協賛1案件の平均単価が ¥500,000 で妥当かを検証する**（投資回収モデルの最重要リスク R-1）
   - `docs/roadmap-2026-08-to-2027-01.md` と `docs/models/ProofLoop_投資回収モデル_2026-08-07.xlsx` の**回収可否のほぼ全てが、この1つの数字に乗っています。**
@@ -294,12 +285,14 @@
 - [x] **Vercel のプロジェクト2つを整理する**（完了 2026-07-23・オーナーが `proofloop` プロジェクトを削除）
   - 本番は `proofloop-2cea`（proofloop.jp を配信）に一本化されました。
 
-- [ ] **バリューコマース：提携申請8件の審査結果を確認する**（2026-07-24 申請・すべて「提携待ち」）
+- [ ] **バリューコマース：提携申請8件の審査結果を確認する**（2026-07-24 申請）
+  - ✅ **シゴトin（プログラムID 2054979）が提携済みに変わっているのをClaudeが2026-08-14に確認・反映済み**。MyLink取得し `job_listings` の該当行（既存の誤リンク行を修正）を更新、`/baito`に表示中。
+  - 残り7件（タウンワーク・JCB・リクルートカード・IIJmio・アイリスプラザ・GMOクリック証券・マネーフォワードME）は引き続き「提携待ち」。定期的に確認を。
 
   | 広告主 | プログラムID | 承認後の反映先 |
   | --- | --- | --- |
   | タウンワーク | 2113716 | `/baito`：現在の公式リンクを**広告枠へ移行** |
-  | シゴトin | 2054979 | `/baito`：新規カードを追加 |
+  | シゴトin | 2054979 | ✅完了（2026-08-14・`/baito`に反映済み） |
   | マネーフォワード ME | 2174117 | `/guide/money`：家計簿の広告枠 |
   | GMOクリック証券 証券口座 | 2163260 | `/guide/money`：投資の入口 |
   | JCBカード | 2137100 | `/guide/money`：クレカ（要・注意喚起併記） |
