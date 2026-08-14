@@ -7,24 +7,45 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { Plus, GripVertical, CalendarDays, CheckCircle2, X } from "lucide-react";
+import { Plus, GripVertical, CalendarDays, CheckCircle2, X, User, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button, Input, Textarea } from "@/components/ui";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
+import GanttView from "./GanttView";
 
 const LANES: { id: TaskStatus; title: string }[] = [
   { id: "todo", title: "未対応" },
   { id: "in_progress", title: "進行中" },
+  { id: "in_review", title: "レビュー待ち" },
+  { id: "on_hold", title: "保留中" },
   { id: "done", title: "完了" },
 ];
 
+const LANE_TITLE_BY_ID = Object.fromEntries(
+  LANES.map((l) => [l.id, l.title])
+) as Record<TaskStatus, string>;
+
+/** バッジ・レーンヘッダーの円で白文字にするレーン（背景が濃い） */
+const WHITE_TEXT_LANES: TaskStatus[] = ["in_progress", "in_review", "done"];
+
+/**
+ * DBの tasks_priority_check 制約は low/medium/high の英語canonical値のみを許可する。
+ * status（todo/in_progress/done）と同じパターンで、DBは英語・UIは日本語ラベルに分離する。
+ * 以前はここが日本語（高/中/低）のまま送信されており、制約違反で新規タスクの保存が常に失敗していた。
+ */
 const PRIORITY_OPTIONS = [
-  { value: "高", label: "高" },
-  { value: "中", label: "中" },
-  { value: "低", label: "低" },
+  { value: "high", label: "高" },
+  { value: "medium", label: "中" },
+  { value: "low", label: "低" },
 ] as const;
+
+const PRIORITY_LABEL: Record<string, string> = {
+  high: "高",
+  medium: "中",
+  low: "低",
+};
 
 /**
  * 優先度は装飾ではなく意味なので、色相ではなく紺の濃淡で表す。
@@ -32,14 +53,18 @@ const PRIORITY_OPTIONS = [
  * clubats/page.tsx と同じ定義（ファイル間で共有モジュールを増やさないためここでも定義）。
  */
 const PRIORITY_BADGE_CLASS: Record<string, string> = {
-  高: "border border-ink bg-ink text-paper",
-  中: "border border-rule bg-mist text-ink",
-  低: "border border-rule bg-paper text-graphite",
+  high: "border border-ink bg-ink text-paper",
+  medium: "border border-rule bg-mist text-ink",
+  low: "border border-rule bg-paper text-graphite",
 };
 const DEFAULT_PRIORITY_BADGE_CLASS = "border border-rule bg-paper text-graphite";
 
 function priorityBadgeClass(priority: string | null | undefined): string {
   return PRIORITY_BADGE_CLASS[priority ?? ""] ?? DEFAULT_PRIORITY_BADGE_CLASS;
+}
+
+function priorityLabel(priority: string | null | undefined): string {
+  return (priority && PRIORITY_LABEL[priority]) || "—";
 }
 
 /**
@@ -50,11 +75,15 @@ function priorityBadgeClass(priority: string | null | undefined): string {
 const STATUS_TINT: Record<TaskStatus, string | null> = {
   todo: "#AEBFD0",
   in_progress: "#7391AF",
+  in_review: "#4F6E91",
+  on_hold: "#9AA5B1",
   done: null, // ink 固定（Tailwindクラスで指定）
 };
 
 function normalizeStatus(s: string | null | undefined): TaskStatus {
   const v = (s || "todo").toLowerCase().trim();
+  if (v === "in_review" || v === "review" || v === "レビュー待ち") return "in_review";
+  if (v === "on_hold" || v === "hold" || v === "paused" || v === "保留中") return "on_hold";
   if (v === "in_progress" || v === "progress" || v === "doing") return "in_progress";
   if (v === "done" || v === "completed" || v === "complete") return "done";
   if (v === "todo" || v === "pending" || v === "未対応") return "todo";
@@ -82,9 +111,18 @@ const emptyForm = {
   title: "",
   description: "",
   status: "todo" as TaskStatus,
-  priority: "中",
+  priority: "medium",
   due_date: "",
+  assignee_id: "",
+  reviewer_id: "",
+  category: "",
 };
+
+type MemberOption = { user_id: string; name: string; title: string | null };
+
+function formatMemberOption(m: MemberOption): string {
+  return m.title ? `${m.name}（${m.title}）` : m.name;
+}
 
 export default function ClubTasksPage() {
   const {
@@ -96,17 +134,20 @@ export default function ClubTasksPage() {
   } = useClubOrganization();
 
   const [tasks, setTasks] = useState<TaskRow[]>([]);
+  const [members, setMembers] = useState<MemberOption[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskRow | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [view, setView] = useState<"kanban" | "gantt">("kanban");
 
   const loadTasks = useCallback(async () => {
     if (!orgId) return;
     const { data, error } = await supabase
       .from("tasks")
       .select(
-        "id, organization_id, title, description, status, priority, assignee_id, due_date"
+        "id, organization_id, title, description, status, priority, assignee_id, reviewer_id, created_by, category, due_date, created_at"
       )
       .eq("organization_id", orgId);
 
@@ -119,18 +160,86 @@ export default function ClubTasksPage() {
     setTasks((data as TaskRow[]) ?? []);
   }, [orgId]);
 
+  const loadMembers = useCallback(async () => {
+    if (!orgId) return;
+    const { data: memData, error: memErr } = await supabase
+      .from("organization_members")
+      .select("user_id, title")
+      .eq("organization_id", orgId);
+    if (memErr || !memData) {
+      console.error("members fetch error:", memErr);
+      setMembers([]);
+      return;
+    }
+    const titleByUserId: Record<string, string | null> = {};
+    for (const m of memData as Array<{ user_id: string; title: string | null }>) {
+      titleByUserId[m.user_id] = m.title;
+    }
+    const ids = memData.map((m) => m.user_id).filter(Boolean);
+    if (ids.length === 0) {
+      setMembers([]);
+      return;
+    }
+    const { data: profData, error: profErr } = await supabase
+      .from("profiles")
+      .select("id, full_name, display_name")
+      .in("id", ids);
+    if (profErr || !profData) {
+      console.error("profiles fetch error:", profErr);
+      setMembers([]);
+      return;
+    }
+    setMembers(
+      (
+        profData as Array<{
+          id: string;
+          full_name: string | null;
+          display_name: string | null;
+        }>
+      ).map((p) => ({
+        user_id: p.id,
+        name: p.full_name?.trim() || p.display_name?.trim() || "（氏名未設定）",
+        title: titleByUserId[p.id]?.trim() || null,
+      }))
+    );
+  }, [orgId]);
+
   useEffect(() => {
-    if (orgId) loadTasks();
-  }, [orgId, loadTasks]);
+    if (orgId) {
+      loadTasks();
+      loadMembers();
+    }
+  }, [orgId, loadTasks, loadMembers]);
+
+  const memberNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const m of members) map[m.user_id] = formatMemberOption(m);
+    return map;
+  }, [members]);
+
+  const categoryOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        tasks
+          .map((t) => t.category?.trim())
+          .filter((c): c is string => Boolean(c))
+      )
+    );
+  }, [tasks]);
+
+  const visibleTasks = useMemo(() => {
+    if (!categoryFilter) return tasks;
+    return tasks.filter((t) => (t.category ?? "").trim() === categoryFilter);
+  }, [tasks, categoryFilter]);
 
   const tasksByLane = useMemo(() => {
     return LANES.map((lane) => ({
       lane,
-      items: tasks
+      items: visibleTasks
         .filter((t) => normalizeStatus(t.status) === lane.id)
         .sort(sortTasksInLane),
     }));
-  }, [tasks]);
+  }, [visibleTasks]);
 
   const openNewModal = () => {
     setEditingTask(null);
@@ -144,10 +253,13 @@ export default function ClubTasksPage() {
       title: task.title,
       description: task.description ?? "",
       status: normalizeStatus(task.status),
-      priority: task.priority && ["高", "中", "低"].includes(task.priority) ? task.priority : "中",
+      priority: task.priority && ["high", "medium", "low"].includes(task.priority) ? task.priority : "medium",
       due_date: task.due_date
         ? task.due_date.slice(0, 10)
         : "",
+      assignee_id: task.assignee_id ?? "",
+      reviewer_id: task.reviewer_id ?? "",
+      category: task.category ?? "",
     });
     setModalOpen(true);
   };
@@ -175,7 +287,9 @@ export default function ClubTasksPage() {
         status: form.status,
         priority: form.priority || null,
         due_date: form.due_date || null,
-        assignee_id: editingTask?.assignee_id ?? null,
+        assignee_id: form.assignee_id || null,
+        reviewer_id: form.reviewer_id || null,
+        category: form.category.trim() || null,
       };
 
       if (editingTask) {
@@ -187,14 +301,20 @@ export default function ClubTasksPage() {
             status: payload.status,
             priority: payload.priority,
             due_date: payload.due_date,
+            assignee_id: payload.assignee_id,
+            reviewer_id: payload.reviewer_id,
+            category: payload.category,
           })
           .eq("id", editingTask.id);
         if (error) throw error;
         toast.success("タスクを更新しました");
       } else {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         const { error } = await supabase.from("tasks").insert({
           ...payload,
-          assignee_id: null,
+          created_by: user?.id ?? null,
         });
         if (error) throw error;
         toast.success("タスクを追加しました");
@@ -298,7 +418,7 @@ export default function ClubTasksPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-ink font-mincho">
             タスク管理
@@ -316,16 +436,66 @@ export default function ClubTasksPage() {
           className="inline-flex items-center gap-2 shrink-0"
         >
           <Plus className="w-5 h-5" aria-hidden="true" />
-          ＋ 新規タスク追加
+          新規タスク追加
         </Button>
       </div>
 
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <label htmlFor="category-filter" className="text-sm text-graphite/70 shrink-0">
+            種別で絞り込み
+          </label>
+          <select
+            id="category-filter"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="border border-rule rounded-lg px-2 py-1.5 text-sm bg-paper text-ink"
+          >
+            <option value="">すべて</option>
+            {categoryOptions.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="inline-flex rounded-lg border border-rule overflow-hidden shrink-0 w-fit">
+          <button
+            type="button"
+            onClick={() => setView("kanban")}
+            className={`px-3 py-1.5 text-sm font-medium ${
+              view === "kanban" ? "bg-ink text-paper" : "bg-paper text-graphite hover:bg-mist"
+            }`}
+          >
+            カンバン
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("gantt")}
+            className={`px-3 py-1.5 text-sm font-medium border-l border-rule ${
+              view === "gantt" ? "bg-ink text-paper" : "bg-paper text-graphite hover:bg-mist"
+            }`}
+          >
+            ガントチャート
+          </button>
+        </div>
+      </div>
+
+      {view === "gantt" ? (
+        <GanttView
+          tasks={visibleTasks}
+          laneTitleById={LANE_TITLE_BY_ID}
+          laneTintById={STATUS_TINT}
+          normalizeStatus={normalizeStatus}
+        />
+      ) : (
       <div className="overflow-x-auto pb-4 -mx-2">
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="flex gap-4 min-w-max px-2">
             {tasksByLane.map(({ lane, items }) => {
               const isDone = lane.id === "done";
               const tint = STATUS_TINT[lane.id];
+              const whiteText = WHITE_TEXT_LANES.includes(lane.id);
 
               return (
                 <div
@@ -345,7 +515,7 @@ export default function ClubTasksPage() {
                         className="inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded-full text-xs font-bold font-numeric tabular-nums"
                         style={{
                           backgroundColor: isDone ? "#002B5C" : tint ?? undefined,
-                          color: isDone || lane.id === "in_progress" ? "#FFFFFF" : "#002B5C",
+                          color: whiteText ? "#FFFFFF" : "#002B5C",
                         }}
                       >
                         （{items.length}）
@@ -398,13 +568,30 @@ export default function ClubTasksPage() {
                                     <span
                                       className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded ${priorityBadgeClass(task.priority)}`}
                                     >
-                                      {task.priority || "—"}
+                                      {priorityLabel(task.priority)}
                                     </span>
                                   </div>
+                                  {task.category && (
+                                    <span className="inline-block mb-1 text-[10px] font-medium px-1.5 py-0.5 rounded border border-rule text-graphite/70">
+                                      {task.category}
+                                    </span>
+                                  )}
                                   <p className="text-xs text-graphite/70 flex items-center gap-1">
                                     <CalendarDays className="w-[14px] h-[14px]" aria-hidden="true" />
                                     {formatDue(task.due_date)}
                                   </p>
+                                  {task.assignee_id && memberNameById[task.assignee_id] && (
+                                    <p className="text-xs text-graphite/70 flex items-center gap-1 mt-0.5">
+                                      <User className="w-[14px] h-[14px]" aria-hidden="true" />
+                                      {memberNameById[task.assignee_id]}
+                                    </p>
+                                  )}
+                                  {lane.id === "in_review" && task.reviewer_id && memberNameById[task.reviewer_id] && (
+                                    <p className="text-xs text-graphite/70 flex items-center gap-1 mt-0.5">
+                                      <Eye className="w-[14px] h-[14px]" aria-hidden="true" />
+                                      {memberNameById[task.reviewer_id]}
+                                    </p>
+                                  )}
                                 </button>
                               </div>
                             )}
@@ -420,6 +607,7 @@ export default function ClubTasksPage() {
           </div>
         </DragDropContext>
       </div>
+      )}
 
       {modalOpen && (
         <div
@@ -452,6 +640,11 @@ export default function ClubTasksPage() {
               </button>
             </div>
             <form onSubmit={handleSave} className="p-5 space-y-4">
+              {editingTask && editingTask.created_by && (
+                <p className="text-xs text-graphite/70">
+                  作成者：{memberNameById[editingTask.created_by] ?? "（元メンバー）"}
+                </p>
+              )}
               <div>
                 <label className="block text-sm font-bold text-ink mb-1">
                   タイトル<span className="text-ink"> *</span>
@@ -499,6 +692,8 @@ export default function ClubTasksPage() {
                   >
                     <option value="todo">未対応</option>
                     <option value="in_progress">進行中</option>
+                    <option value="in_review">レビュー待ち</option>
+                    <option value="on_hold">保留中</option>
                     <option value="done">完了</option>
                   </select>
                 </div>
@@ -522,19 +717,83 @@ export default function ClubTasksPage() {
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-ink mb-1">
-                  期限
-                </label>
-                <input
-                  type="date"
-                  value={form.due_date}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, due_date: e.target.value }))
-                  }
-                  disabled={saving}
-                  className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-ink mb-1">
+                    期限
+                  </label>
+                  <input
+                    type="date"
+                    value={form.due_date}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, due_date: e.target.value }))
+                    }
+                    disabled={saving}
+                    className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-ink mb-1">
+                    担当者
+                  </label>
+                  <select
+                    value={form.assignee_id}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, assignee_id: e.target.value }))
+                    }
+                    disabled={saving}
+                    className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
+                  >
+                    <option value="">未定</option>
+                    {members.map((m) => (
+                      <option key={m.user_id} value={m.user_id}>
+                        {formatMemberOption(m)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-ink mb-1">
+                    種別
+                  </label>
+                  <Input
+                    list="task-category-suggestions"
+                    value={form.category}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, category: e.target.value }))
+                    }
+                    placeholder="例：デザイン、広報、物品準備"
+                    disabled={saving}
+                    className="w-full"
+                  />
+                  <datalist id="task-category-suggestions">
+                    {categoryOptions.map((c) => (
+                      <option key={c} value={c} />
+                    ))}
+                  </datalist>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-ink mb-1">
+                    レビュー者
+                  </label>
+                  <select
+                    value={form.reviewer_id}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, reviewer_id: e.target.value }))
+                    }
+                    disabled={saving}
+                    className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
+                  >
+                    <option value="">未定</option>
+                    {members.map((m) => (
+                      <option key={m.user_id} value={m.user_id}>
+                        {formatMemberOption(m)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button
