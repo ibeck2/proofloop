@@ -149,7 +149,7 @@ export default function ClubMessagesPage() {
           className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-rule text-graphite text-sm hover:bg-mist transition-colors"
         >
           <ClipboardList className="w-5 h-5" aria-hidden="true" />
-          採用管理（ATS）
+          入会応募者管理
         </Link>
       </header>
 

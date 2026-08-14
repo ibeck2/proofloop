@@ -291,7 +291,7 @@ export default function ClubAtsPage() {
         const { error } = await supabase.from("organizations").update({ planned_hire_count: num }).eq("id", orgId);
         if (error) throw error;
         setPlannedHireCount(value);
-        toast.success("計画採用人数を保存しました");
+        toast.success("計画入会人数を保存しました");
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "保存に失敗しました");
       } finally {
@@ -456,7 +456,7 @@ export default function ClubAtsPage() {
     <div className="p-6 md:p-10">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-ink font-mincho">採用管理（ATS）</h1>
+          <h1 className="text-2xl font-bold text-ink font-mincho">入会応募者管理</h1>
           {orgName && (
             <p className="text-graphite text-sm mt-1">{orgName} の応募者を管理します</p>
           )}
@@ -489,7 +489,7 @@ export default function ClubAtsPage() {
             <p className="text-xs text-graphite/70 mt-0.5">お見送りを除く選考中＋内定</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-graphite/70 uppercase tracking-wider">計画採用人数</p>
+            <p className="text-xs font-medium text-graphite/70 uppercase tracking-wider">計画入会人数</p>
             <div className="flex items-center gap-2 mt-1">
               <input
                 type="number"
@@ -587,7 +587,7 @@ export default function ClubAtsPage() {
               {simulatorTooStrict && (
                 <div className="rounded-lg border border-rule border-l-4 border-l-seal bg-mist px-4 py-3">
                   <p className="text-sm font-medium text-ink">
-                    ※各ステップの通過率が低すぎます。このままでは計画採用人数を下回る可能性があります。
+                    ※各ステップの通過率が低すぎます。このままでは計画入会人数を下回る可能性があります。
                   </p>
                   <p className="text-xs text-graphite mt-1">
                     予測通過: 約{Math.round(predictedPassCount)}名 / 計画: {plannedNum}名

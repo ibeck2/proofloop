@@ -50,7 +50,7 @@ function buildApplyEmailHtml(
                 <strong style="color:#0f172a;">${club}</strong>の管理者様
               </p>
               <p style="margin:0 0 20px;font-size:15px;line-height:1.8;color:#475569;">
-                <strong style="color:#0f172a;">${uni}</strong>の<strong style="color:#0f172a;">${applicant}</strong>さんから新規エントリーがありました。早速ATSダッシュボードを開いて、チャットで面接の日程調整などを進めましょう！
+                <strong style="color:#0f172a;">${uni}</strong>の<strong style="color:#0f172a;">${applicant}</strong>さんから新規エントリーがありました。早速「入会応募者管理」を開いて、チャットで面接の日程調整などを進めましょう！
               </p>
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px auto 0;">
                 <tr>

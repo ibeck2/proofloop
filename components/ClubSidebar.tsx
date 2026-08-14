@@ -55,7 +55,7 @@ export default function ClubSidebar() {
             </Link>
             <Link className={linkClass("/clubats", true)} href={withOrgQuery("/clubats")}>
               <ClipboardList className="w-6 h-6" aria-hidden="true" />
-              <span className="text-sm font-medium">採用管理（ATS）</span>
+              <span className="text-sm font-medium">入会応募者管理</span>
             </Link>
             <Link className={linkClass("/clubmessages", true)} href={withOrgQuery("/clubmessages")}>
               <Mail className="w-6 h-6" aria-hidden="true" />

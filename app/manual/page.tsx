@@ -75,7 +75,7 @@ const SETUP_STEPS = [
 const FEATURES = [
   {
     Icon: Inbox,
-    name: "新歓の応募管理（ATS）",
+    name: "入会応募者管理",
     href: "/clubats",
     body: "説明会や体験入会の応募を一覧で管理します。応募者ごとに選考の進み具合を移動させられるので、「誰にまだ連絡していないか」が一目で分かります。LINEのDMを遡る作業がなくなります。",
   },
@@ -191,7 +191,7 @@ export default function ManualPage() {
         <section className="flex flex-col gap-6">
           <h2 className="text-ink text-xl md:text-2xl font-black font-mincho">機能ごとの使い方</h2>
           <p className="text-graphite text-sm leading-relaxed">
-            全部を使う必要はありません。新歓期はATSとイベント、通常期はタスクと投稿、というように必要なものだけ使ってください。
+            全部を使う必要はありません。新歓期は入会応募者管理とイベント、通常期はタスクと投稿、というように必要なものだけ使ってください。
           </p>
           <div className="grid gap-4 md:grid-cols-2">
             {FEATURES.map((f) => (

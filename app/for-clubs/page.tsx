@@ -83,7 +83,7 @@ function MockInboxKanban() {
         <div className="flex flex-1 flex-col gap-2 border border-rule bg-paper p-3">
           <div className="flex items-center gap-2 text-ink">
             <Kanban className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-            <span className="text-[11px] font-bold">採用ボード</span>
+            <span className="text-[11px] font-bold">応募ボード</span>
           </div>
           <div className="flex min-h-0 flex-1 gap-2">
             {["新規", "面談中", "内定"].map((stage) => (
@@ -366,7 +366,7 @@ export default function ForClubsPage() {
         <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
-              <MessageSquare className="size-3.5 shrink-0" aria-hidden="true" />02 ／ 応募・採用管理
+              <MessageSquare className="size-3.5 shrink-0" aria-hidden="true" />02 ／ 入会応募者管理
             </div>
             <h2 className="font-mincho text-2xl md:text-3xl font-black text-ink leading-snug">
               「あの子、もう連絡した？」を<br />なくす。
@@ -375,7 +375,7 @@ export default function ForClubsPage() {
               学生はワンタップで応募。その後のメッセージのやり取りから面談の進捗まで、カンバンボードで全員分を一覧管理。返信漏れで候補者を逃すことがなくなります。
             </p>
             <ul className="flex flex-col gap-2">
-              {["応募フォームを自動生成", "Inboxで連絡を一元管理", "採用ステータスをカンバンで可視化"].map(f => (
+              {["応募フォームを自動生成", "Inboxで連絡を一元管理", "応募ステータスをカンバンで可視化"].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-graphite">
                   <CheckCircle2 className="size-4 text-ink shrink-0" aria-hidden="true" />
                   {f}
