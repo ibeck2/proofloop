@@ -170,6 +170,16 @@
 - 本番でBEGIN…ROLLBACKによる実地検証済み（unclaimed→拒否／claimed→成功／
   frozen→拒否の3パターン全PASS）。マイグレーション044は本番適用済み。
 
+**✅ マイグレーション025（`applications.is_chat_only`列）が本番未適用だった件を解消（2026-08-14 完了）**
+
+前項の改修中に`applications`が本番0件だったことから深掘りし、`025_chat_only_applications.sql`
+（`is_chat_only`列＋インデックス2本）だけが本番未適用（列が存在しない）と判明した
+（021・022・024は適用済みを確認、025のみ漏れ）。この列は`clubats`・`clubdashboard`・
+`mypage`・団体ページの「メッセージを送る」の計4箇所がクエリ条件に使っており、
+列が無いとPostgRESTがエラーを返すため、いずれも本番で機能していなかった可能性が高い。
+既存の025をそのまま本番適用（`DEFAULT false`・`IF NOT EXISTS`のみで後方互換、
+`applications`0件のためデータ影響なし）して解消。コード変更なし。
+
 **✅ D9・D10・付随のS12/S13は本番適用済み（2026-08-12）。実測は `docs/superpowers/plans/2026-08-12-d9-d10-verification.md`**
 
 - ✅ **D9：応募RLSのメンバー起点移行 → マイグレーション035（本番適用済み）**
