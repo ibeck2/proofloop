@@ -156,6 +156,20 @@
 - 凍結中の団体への申立てが「まだ引き取られていません」と表示される（文言の食い違い）
 - 異議申立ての区切り行を通報者が偽装できる／CSVパーサがフィールド内改行に非対応
 
+**✅ claim前・凍結中の団体への応募・DM送信を禁止（2026-08-14 完了）**
+
+団体詳細ページの「エントリーする」「メッセージを送る」が`claim_status`を一切見ておらず、
+未引取（unclaimed）・凍結中（frozen）の団体でも押せていた。実質的な管理者がいないため、
+学生が応募・DMを送っても永久に応答が来ない状態だった。UI・DBの両レイヤーで防いだ。
+- UI：`lib/organizations/entryAvailability.ts`（純粋関数、TDDで実装）でclaim状態から
+  表示可否を判定し、`OrganizationDetailClient.tsx`のCTAをclaimedのみ従来表示、
+  unclaimed/frozenは案内文に差し替え。
+- DB：マイグレーション044。`applications`のINSERTポリシーに対象団体の
+  `claim_status='claimed'`条件を追加。`application_messages`はapplications行の
+  存在が前提のため、ここを塞ぐだけでチャット開始（is_chat_only）も連鎖的に防げる。
+- 本番でBEGIN…ROLLBACKによる実地検証済み（unclaimed→拒否／claimed→成功／
+  frozen→拒否の3パターン全PASS）。マイグレーション044は本番適用済み。
+
 **✅ D9・D10・付随のS12/S13は本番適用済み（2026-08-12）。実測は `docs/superpowers/plans/2026-08-12-d9-d10-verification.md`**
 
 - ✅ **D9：応募RLSのメンバー起点移行 → マイグレーション035（本番適用済み）**
