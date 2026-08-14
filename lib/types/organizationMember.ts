@@ -12,5 +12,6 @@ export type OrganizationMemberRow = {
   id: string;
   user_id: string;
   role: string;
+  title: string | null;
 } & OrganizationMemberPermissions;
 

@@ -114,6 +114,7 @@ export default function ClubMembersSettingsPage() {
     null
   );
   const [editRole, setEditRole] = useState<OrganizationMemberRole>("admin");
+  const [editTitle, setEditTitle] = useState("");
   const [editPermissions, setEditPermissions] =
     useState<OrganizationMemberPermissions>(DEFAULT_PERMISSIONS);
   const [editSubmitting, setEditSubmitting] = useState(false);
@@ -128,7 +129,7 @@ export default function ClubMembersSettingsPage() {
       const { data: memData, error: memErr } = await supabase
         .from("organization_members")
         .select(
-          "id, user_id, role, can_edit_profile, can_manage_posts, can_manage_members, can_manage_applications, can_manage_finance"
+          "id, user_id, role, title, can_edit_profile, can_manage_posts, can_manage_members, can_manage_applications, can_manage_finance"
         )
         .eq("organization_id", orgId)
         .order("role", { ascending: true });
@@ -145,6 +146,7 @@ export default function ClubMembersSettingsPage() {
           id: m.id,
           user_id: m.user_id,
           role: m.role,
+          title: m.title ?? null,
           can_edit_profile: m.can_edit_profile ?? DEFAULT_PERMISSIONS.can_edit_profile,
           can_manage_posts: m.can_manage_posts ?? DEFAULT_PERMISSIONS.can_manage_posts,
           can_manage_members: m.can_manage_members ?? DEFAULT_PERMISSIONS.can_manage_members,
@@ -213,6 +215,7 @@ export default function ClubMembersSettingsPage() {
   const openEditModal = (member: OrganizationMemberRow) => {
     setEditingMember(member);
     setEditRole((member.role === "owner" ? "owner" : "admin") as OrganizationMemberRole);
+    setEditTitle(member.title ?? "");
     setEditPermissions({
       can_edit_profile: member.can_edit_profile,
       can_manage_posts: member.can_manage_posts,
@@ -227,10 +230,12 @@ export default function ClubMembersSettingsPage() {
     if (!editingMember) return;
     setEditSubmitting(true);
     try {
+      const trimmedTitle = editTitle.trim() || null;
       const { error } = await supabase
         .from("organization_members")
         .update({
           role: editRole,
+          title: trimmedTitle,
           ...editPermissions,
         })
         .eq("id", editingMember.id)
@@ -242,7 +247,7 @@ export default function ClubMembersSettingsPage() {
       setMembers((prev) =>
         prev.map((m) =>
           m.id === editingMember.id
-            ? { ...m, role: editRole, ...editPermissions }
+            ? { ...m, role: editRole, title: trimmedTitle, ...editPermissions }
             : m
         )
       );
@@ -435,6 +440,11 @@ export default function ClubMembersSettingsPage() {
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <span className="font-medium text-ink">
                       {displayNameForUser(m.user_id)}
+                      {m.title && (
+                        <span className="ml-1.5 text-xs font-normal text-graphite/70">
+                          （{m.title}）
+                        </span>
+                      )}
                     </span>
                     <RoleTag role={m.role} />
                   </div>
@@ -572,7 +582,7 @@ export default function ClubMembersSettingsPage() {
                   ：団体の代表として、全ての管理機能と他の代表者の招待が可能です。
                   <br />
                   <strong>Admin</strong>
-                  ：採用・メッセージ・イベント等の日常運用が可能です。代表者の招待は代表者のみが行えます。
+                  ：入会応募者・メッセージ・イベント等の日常運用が可能です。代表者の招待は代表者のみが行えます。
                 </p>
                 {activeRole !== "owner" && (
                   <p className="text-xs text-ink font-bold mt-2">
@@ -653,7 +663,7 @@ export default function ClubMembersSettingsPage() {
             <form onSubmit={handleSaveMemberPermissions} className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-ink mb-1">
-                  役職
+                  権限
                 </label>
                 <select
                   value={editRole}
@@ -667,6 +677,36 @@ export default function ClubMembersSettingsPage() {
                     Owner（代表者）— 代表者のみ
                   </option>
                 </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="edit-title"
+                  className="block text-sm font-bold text-ink mb-1"
+                >
+                  役職
+                </label>
+                <Input
+                  id="edit-title"
+                  list="member-title-suggestions"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="例：キャプテン、会計担当、新歓隊長"
+                  className="w-full"
+                />
+                <datalist id="member-title-suggestions">
+                  {Array.from(
+                    new Set(
+                      members
+                        .map((mem) => mem.title?.trim())
+                        .filter((t): t is string => Boolean(t))
+                    )
+                  ).map((t) => (
+                    <option key={t} value={t} />
+                  ))}
+                </datalist>
+                <p className="mt-1 text-xs text-graphite/70">
+                  権限（Admin/Owner）とは別に、団体内での呼び名を自由に記録できます。
+                </p>
               </div>
               <div>
                 <p className="block text-sm font-bold text-ink mb-1">
