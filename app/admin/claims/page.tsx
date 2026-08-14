@@ -150,6 +150,23 @@ export default function AdminClaimsPage() {
         return;
       }
       toast.success(decision === "approve" ? "承認しました" : "却下しました");
+
+      // 通知メールはベストエフォート。失敗しても承認・却下処理自体は
+      // 既に完了しているため、画面の成功表示を止めない（/api/emails/chat と同じ方式）。
+      if (row.signals.applicant_email) {
+        fetch("/api/emails/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: decision === "approve" ? "approved" : "rejected",
+            email: row.signals.applicant_email,
+            organizationName: row.organization_name ?? "",
+            grantedLevel: level,
+            decisionNote: decision === "reject" ? notes[row.id]?.trim() || null : null,
+          }),
+        }).catch(() => {});
+      }
+
       // 承認（approve）は list_approved_claims に、却下（reject）は
       // list_rejected_claims に現れる。load() だけだと反映されない。
       await Promise.all([load(), loadApproved(), loadRejected()]);

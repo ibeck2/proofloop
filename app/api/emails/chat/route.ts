@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
+import { RESEND_FROM } from "@/lib/email/resendFrom";
 
 function escapeHtml(text: string): string {
   return text
@@ -139,7 +140,7 @@ export async function POST(request: Request) {
     );
 
     const { data, error } = await resend.emails.send({
-      from: "ProofLoop運営 <onboarding@resend.dev>",
+      from: RESEND_FROM,
       to: email,
       subject,
       html,

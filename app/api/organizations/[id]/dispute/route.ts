@@ -54,10 +54,43 @@ export async function POST(
     return NextResponse.json({ ok: false, error: "rpc_error" }, { status: 502 });
   }
 
-  const result = data as { ok: boolean; error?: string; frozen?: boolean };
+  const result = data as {
+    ok: boolean;
+    error?: string;
+    frozen?: boolean;
+    escalated?: boolean;
+    owner_email?: string | null;
+    owner_name?: string | null;
+    organization_name?: string | null;
+  };
+
   if (shouldRevalidateAfterDispute(result)) {
     revalidateOrganizationPage(id);
   }
 
-  return NextResponse.json(result);
+  // 045：凍結が実際に発生したときだけ、現オーナーへ通知メールを中継する。
+  // owner_email は submit_dispute（SECURITY DEFINER）が特権で解決した機微情報。
+  // ベストエフォート（await しない）で、失敗しても申立て受付自体は成功のまま返す。
+  if (result.frozen && result.owner_email) {
+    const emailUrl = new URL("/api/emails/claim", request.url).toString();
+    fetch(emailUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "frozen",
+        email: result.owner_email,
+        organizationName: result.organization_name ?? "",
+        ownerName: result.owner_name ?? "",
+      }),
+    }).catch(() => {});
+  }
+
+  // owner_email / owner_name は運営が特権で解決したオーナーの個人情報であり、
+  // この申立ては未ログインの訪問者でも送れる。ブラウザへ返す前に必ず取り除く
+  // （通報者がオーナーの連絡先を読み取れてしまうと悪用の温床になる）。
+  const { owner_email: _ownerEmail, owner_name: _ownerName, ...publicResult } = result;
+  void _ownerEmail;
+  void _ownerName;
+
+  return NextResponse.json(publicResult);
 }

@@ -129,10 +129,13 @@
   - 検証：ns1/ns2.vercel-dns.com・Google Public DNS・Quad9のいずれからも即座に正しい値を確認。オーナーがテストメールで受信を確認済み。
   - **教訓**：`docs/accounts-inventory.md`・memory `proofloop-dns-sakura` の「権威DNSはさくら」という記述は誤りだった（ネームサーバー移管後は無効）。両方訂正済み。同種のドメイン移行時は、レジストラの設定ではなく実際のネームサーバー（`dig NS` / `nslookup -type=NS`）を必ず確認すること。
 
-- [x] **Resend の独自ドメイン認証**（DNS設定は完了 2026-08-14・Resend側の検証待ち）
+- [x] **Resend の独自ドメイン認証**（DNS設定・Verified確認とも完了 2026-08-14）
   - さくらではなくVercelの `proofloop-2cea` → Domains → `proofloop.jp` のDNS Recordsに、Resendが要求するDKIM（`resend._domainkey` TXT）・SPF（`send` MX/TXT）・DMARC（`_dmarc` TXT）の4件を追加済み。
   - いずれも `proofloop.jp` 本体ではなく `send.proofloop.jp` 等のサブドメイン向けのため、Google用の既存SPF（apex）とは競合しない。
-  - ⚠️ **残作業**：Resend側のステータスが「Pending」だった時点で作業を終えている。**Verifiedになったか確認し、なっていれば次にコード側の`from:`をRESEND_FROM環境変数経由で`contact@proofloop.jp`に差し替える**（`docs/task-board.md` タスクD参照）。
+  - ✅ オーナーが `https://resend.com/domains` で `proofloop.jp` の Verified を確認済み（2026-08-14）。
+  - ✅ コード側`from:`のRESEND_FROM化・claim通知メール（タスク9）ともClaudeが実装・本番適用済み（2026-08-14）。`docs/task-board.md` タスクD／タスク9参照。
+  - 📌 **任意**：Vercelに環境変数 `RESEND_FROM` を設定すると送信元表示名を上書きできます（例：`ProofLoop事務局 <contact@proofloop.jp>`）。未設定でも `ProofLoop運営 <contact@proofloop.jp>` が既定値として使われるため、設定は必須ではありません。
+  - 📌 **未検証**：承認・却下・凍結の3種の通知メールが実際にResend経由で届くかは、ブラウザからの実地操作で未確認です（承認済みclaimが本番0件のため）。claimトークンの運用が始まったら、`/admin/claims`での承認・却下操作を1件ずつ試し、Resendの送信ログ（`https://resend.com/emails`）で到達を確認してください。
 
 - [ ] **協賛1案件の平均単価が ¥500,000 で妥当かを検証する**（投資回収モデルの最重要リスク R-1）
   - `docs/roadmap-2026-08-to-2027-01.md` と `docs/models/ProofLoop_投資回収モデル_2026-08-07.xlsx` の**回収可否のほぼ全てが、この1つの数字に乗っています。**

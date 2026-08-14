@@ -4,6 +4,7 @@ import {
   createSupabaseWithBearer,
   getBearerToken,
 } from "@/lib/supabaseRoute";
+import { RESEND_FROM } from "@/lib/email/resendFrom";
 
 function escapeHtml(text: string): string {
   return text
@@ -297,7 +298,7 @@ export async function POST(request: Request) {
 
     const resend = new Resend(apiKey);
     const { data: sent, error: sendErr } = await resend.emails.send({
-      from: "ProofLoop運営 <onboarding@resend.dev>",
+      from: RESEND_FROM,
       to: email,
       subject,
       html,
