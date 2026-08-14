@@ -96,9 +96,14 @@
 
 ---
 
-## 🔴 デプロイ前に必須（2026-08-10 追加）
+## ✅ 対応済み（2026-08-13・オーナーがVercelで設定）
 
-- [ ] **Vercel に `ADMIN_BASIC_USER` / `ADMIN_BASIC_PASSWORD` を設定する**
+- [x] **Vercel に `ADMIN_BASIC_USER` / `ADMIN_BASIC_PASSWORD` を設定する**（完了 2026-08-13）
+  - Production / Preview 双方への設定完了をオーナーが報告。`/admin` の Basic 認証（S1対応）が有効化された前提で運用してよい。
+
+## （参考・旧記載）デプロイ前に必須（2026-08-10 追加・対応済み）
+
+- [x] **Vercel に `ADMIN_BASIC_USER` / `ADMIN_BASIC_PASSWORD` を設定する**
   - `/admin` 配下に HTTP Basic 認証を被せた（`middleware.ts`・リスク S1 への対処）。
   - ⚠️ **この2つを設定しないまま本番へ出すと、`/admin` 全体が 503 になり運営自身が入れません。**
     「未設定なら素通し」にしなかったのは意図的です。入れたつもりの防壁が黙って存在しない状態は、
