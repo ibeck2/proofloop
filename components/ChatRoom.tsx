@@ -7,6 +7,11 @@ import type { ApplicationMessage } from "@/lib/types/application";
 import { Send } from "lucide-react";
 import MessageBubble from "@/components/MessageBubble";
 import { fetchOrganizationOwnerUserId } from "@/lib/organizationMembers";
+import { isChatMessagingEnabled } from "@/lib/chat/chatMessagesEnabled";
+
+const MESSAGING_ENABLED = isChatMessagingEnabled(
+  process.env.NEXT_PUBLIC_CHAT_MESSAGES_ENABLED
+);
 
 function firstJoin<T>(v: T | T[] | null | undefined): T | null {
   if (v == null) return null;
@@ -251,7 +256,7 @@ export default function ChatRoom({
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!applicationId || !input.trim()) return;
+    if (!MESSAGING_ENABLED || !applicationId || !input.trim()) return;
     setSending(true);
     const trimmed = input.trim();
     try {
@@ -307,23 +312,29 @@ export default function ChatRoom({
           </>
         )}
       </div>
-      <form onSubmit={handleSend} className="p-3 border-t border-rule bg-paper shrink-0 flex gap-2">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={placeholder}
-          rows={2}
-          className="flex-1 border border-rule rounded-xl px-3 py-2 text-sm bg-paper text-graphite focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink resize-none min-h-0"
-        />
-        <button
-          type="submit"
-          disabled={sending || !input.trim()}
-          className="shrink-0 self-end p-2.5 rounded-xl bg-ink text-paper hover:bg-ink/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          aria-label="送信"
-        >
-          <Send className="w-5 h-5" aria-hidden="true" />
-        </button>
-      </form>
+      {MESSAGING_ENABLED ? (
+        <form onSubmit={handleSend} className="p-3 border-t border-rule bg-paper shrink-0 flex gap-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={placeholder}
+            rows={2}
+            className="flex-1 border border-rule rounded-xl px-3 py-2 text-sm bg-paper text-graphite focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink resize-none min-h-0"
+          />
+          <button
+            type="submit"
+            disabled={sending || !input.trim()}
+            className="shrink-0 self-end p-2.5 rounded-xl bg-ink text-paper hover:bg-ink/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            aria-label="送信"
+          >
+            <Send className="w-5 h-5" aria-hidden="true" />
+          </button>
+        </form>
+      ) : (
+        <p className="p-3 border-t border-rule bg-paper shrink-0 text-xs text-graphite/70 text-center">
+          メッセージ送信機能は現在準備中です。もうしばらくお待ちください。
+        </p>
+      )}
     </div>
   );
 }

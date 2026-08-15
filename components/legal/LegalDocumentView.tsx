@@ -52,7 +52,7 @@ export default function LegalDocumentView({ doc }: { doc: LegalDocument }) {
                 </ul>
               )}
               {/* 外部委託先の表は、それを出すと宣言した文書の該当条項の直後に置く */}
-              {doc.showsProcessors && clause.heading.startsWith("5.") && (
+              {doc.showsProcessors && clause.heading.startsWith("6.") && (
                 <div className="overflow-x-auto mt-2">
                   <table className="w-full text-sm border border-rule">
                     <thead className="bg-mist">
