@@ -83,18 +83,20 @@
 - **`proofloop.jp` の権威DNSも Vercel が持っている**（`ns1`/`ns2.vercel-dns.com`）。さくらインターネットはレジストラかもしれないが、DNSレコードの実体はVercel側のDomains画面（プロジェクト → Domains → 対象ドメイン → 「View DNS Records」）で管理する。旧記載「DNSはさくら」は誤りだったため訂正（詳細は`docs/task-board.md`タスクG、memory `proofloop-dns-sakura`）。
 - 旧 `proofloop`（`*.vercel.app` のみ、ビルドエラー）プロジェクトは2026-07-23にオーナーが削除済み。プロジェクトは1つのみ。
 
-### Resend（メール送信）⚠️ 重要な発見あり
+### Resend（メール送信）✅ 独自ドメイン認証・完了（2026-08-14）
 
 | 項目 | 値 |
 | --- | --- |
-| 用途 | 団体承認メール（`/api/emails/approve`）、招待メール（`/api/emails/invite`） |
-| APIキー | Vercel環境変数 `RESEND_API_KEY`（`.env.local` になし） |
-| **送信元アドレス** | **`onboarding@resend.dev`** |
+| 用途 | 承認・招待・応募・チャット通知・claim通知（`/api/emails/*`） |
+| アカウント | `ibeckzoom@gmail.com` |
+| APIキー（アプリ送信用） | Vercel環境変数 `RESEND_API_KEY`（`.env.local` になし） |
+| **送信元アドレス** | `RESEND_FROM`（`lib/email/resendFrom.ts`、既定値 `ProofLoop運営 <contact@proofloop.jp>`） |
+| ドメイン認証 | `proofloop.jp` Verified 済み（DNS設定・確認とも2026-08-14完了。`docs/task-board.md` タスクD参照） |
 
-- ⚠️ **送信元が `onboarding@resend.dev` のままです。** これは Resend が用意しているテスト用の共有アドレスで、独自ドメインが未認証であることを意味します。
-  - 受信側には「ProofLoop運営 <onboarding@resend.dev>」と表示されます。**営業メールや団体への通知としては信頼性を損ないます。**
-  - 迷惑メール判定されやすく、到達率にも影響します。
-  - CLAUDE.md の「学生団体への通知メールを営業＆流入の入口にする」施策を実行するなら、**独自ドメイン認証は前提条件**です。
+- ✅ **Supabase Auth のカスタムSMTPとしても利用中**（2026-08-14設定）。サインアップ確認メール等、Supabase自前のメール（GoTrueの`Emails`）はこれとは別系統で、以前は「Confirm email」自体が無効（自動確認）だったため一度も送信されていなかった（根本原因は下記参照）。
+  - 専用APIキー `proofloop-supabase-smtp`（Resend側、Sending access・ドメインスコープ `proofloop.jp` のみに制限）を新規発行し、Supabase → Authentication → Emails → SMTP Settings に設定。
+  - Host: `smtp.resend.com` / Port: `465` / Username: `resend` / Sender: `contact@proofloop.jp`。
+- ✅ **Supabase Auth の「Confirm email」を有効化**（2026-08-14）。それまでは大学メールアドレスの「本人確認」が実質機能しておらず（確認メールが一度も送信されず、誰でも他人の`.ac.jp`アドレスを名乗って自動確認・自動ログインできていた）、この設定変更で初めて本人確認が実際に働くようになった。詳細は `docs/task-board.md` の該当タスク記録を参照。
 
 ### ドメイン（proofloop.jp）⚠️ レジストラ未確定・DNS権威はVercelと確定
 
