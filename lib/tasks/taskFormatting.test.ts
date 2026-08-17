@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDue, priorityBadgeClass, priorityLabel } from "./taskFormatting";
+import { checklistProgressLabel, formatDue, priorityBadgeClass, priorityLabel } from "./taskFormatting";
 
 describe("priorityLabel", () => {
   it("labels known priorities in Japanese", () => {
@@ -47,5 +47,23 @@ describe("formatDue", () => {
         day: "numeric",
       })
     );
+  });
+});
+
+describe("checklistProgressLabel", () => {
+  it("returns null when there are no checklist items", () => {
+    expect(checklistProgressLabel(0, 0)).toBeNull();
+  });
+
+  it("formats done/total when items exist", () => {
+    expect(checklistProgressLabel(2, 5)).toBe("2/5");
+  });
+
+  it("formats correctly when all items are done", () => {
+    expect(checklistProgressLabel(3, 3)).toBe("3/3");
+  });
+
+  it("formats correctly when none are done yet", () => {
+    expect(checklistProgressLabel(0, 4)).toBe("0/4");
   });
 });

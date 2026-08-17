@@ -17,3 +17,14 @@ export interface TaskRow {
   created_at?: string;
   updated_at?: string;
 }
+
+/** タスクのチェックリスト項目（task_checklist_items テーブル） */
+export interface ChecklistItemRow {
+  id: string;
+  task_id: string;
+  organization_id: string;
+  text: string;
+  is_done: boolean;
+  position: number;
+  created_at?: string;
+}

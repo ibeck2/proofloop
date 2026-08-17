@@ -35,3 +35,15 @@ export function formatDue(iso: string | null | undefined): string {
     day: "numeric",
   });
 }
+
+/**
+ * カンバンカードの「2/5」のような進捗バッジ用ラベル。
+ * チェックリスト項目が1件も無いタスクにはバッジ自体を出さないため null を返す。
+ */
+export function checklistProgressLabel(
+  done: number,
+  total: number
+): string | null {
+  if (total <= 0) return null;
+  return `${done}/${total}`;
+}
