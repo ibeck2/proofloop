@@ -70,7 +70,7 @@ function compareBy(
         const db = b.due_date
           ? new Date(b.due_date).getTime()
           : Number.POSITIVE_INFINITY;
-        return da - db;
+        return da === db ? 0 : da - db;
       }
     }
   };

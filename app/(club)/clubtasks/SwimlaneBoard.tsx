@@ -6,6 +6,7 @@ import type { TaskRow, TaskStatus } from "@/lib/types/task";
 import {
   encodeSwimlaneDroppableId,
   groupTasksIntoSwimlanes,
+  UNASSIGNED_SWIMLANE_KEY,
   type SwimlaneAxis,
 } from "@/lib/tasks/taskSwimlanes";
 import DraggableTaskCard from "./DraggableTaskCard";
@@ -29,7 +30,7 @@ function rowLabel(
   axis: SwimlaneAxis,
   memberNameById: Record<string, string>
 ): string {
-  if (key === "__unassigned__") {
+  if (key === UNASSIGNED_SWIMLANE_KEY) {
     return axis === "category" ? "種別未設定" : "担当者未定";
   }
   return axis === "category" ? key : memberNameById[key] ?? "（元メンバー）";
