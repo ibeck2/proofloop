@@ -18,6 +18,7 @@ import {
   ClipboardList,
   MessageCircle,
   X,
+  Bell,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { asRow, asRows } from "@/lib/supabase-rows";
@@ -929,6 +930,17 @@ export default function MypagePage() {
                   {isProfileSaving ? "保存中..." : "保存する"}
                 </Button>
               </form>
+            </section>
+
+            {/* 通知設定への導線 */}
+            <section className="mb-10">
+              <Link
+                href="/mypage/notifications"
+                className="inline-flex items-center gap-2 text-sm font-bold text-ink hover:underline"
+              >
+                <Bell className="w-4 h-4" aria-hidden="true" />
+                通知設定を開く
+              </Link>
             </section>
 
             {/* お気に入り・保存リスト */}
