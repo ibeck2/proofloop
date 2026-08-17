@@ -45,32 +45,6 @@ const PRIORITY_OPTIONS = [
   { value: "low", label: "低" },
 ] as const;
 
-const PRIORITY_LABEL: Record<string, string> = {
-  high: "高",
-  medium: "中",
-  low: "低",
-};
-
-/**
- * 優先度は装飾ではなく意味なので、色相ではなく紺の濃淡で表す。
- * 全部同じ見た目にすると、かんばん上で高優先のタスクを一目で拾えなくなる。
- * clubats/page.tsx と同じ定義（ファイル間で共有モジュールを増やさないためここでも定義）。
- */
-const PRIORITY_BADGE_CLASS: Record<string, string> = {
-  high: "border border-ink bg-ink text-paper",
-  medium: "border border-rule bg-mist text-ink",
-  low: "border border-rule bg-paper text-graphite",
-};
-const DEFAULT_PRIORITY_BADGE_CLASS = "border border-rule bg-paper text-graphite";
-
-function priorityBadgeClass(priority: string | null | undefined): string {
-  return PRIORITY_BADGE_CLASS[priority ?? ""] ?? DEFAULT_PRIORITY_BADGE_CLASS;
-}
-
-function priorityLabel(priority: string | null | undefined): string {
-  return (priority && PRIORITY_LABEL[priority]) || "—";
-}
-
 /**
  * ステータスの配色は clubats のファネル配色と同じ言語を使う：
  * 未対応＝紺の最も薄い階調、進行中＝中間階調、完了＝ink（最終形）＋チェックアイコン。
@@ -514,17 +488,6 @@ export default function ClubTasksPage() {
     },
     [tasks, notifyTaskChange, currentUserId]
   );
-
-  const formatDue = (iso: string | null | undefined) => {
-    if (!iso) return "期限なし";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   if (ctxLoading) {
     return (
