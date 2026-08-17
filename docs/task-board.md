@@ -709,6 +709,24 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 
 ---
 
+## R. `/clubtasks` 大規模改修 Phase 1（表・カレンダー・スイムレーン化） ✅ 完了（2026-08-17）
+
+設計 `docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`／計画 `docs/superpowers/plans/2026-08-17-clubtasks-phase1.md`。`subagent-driven-development`でworktree実行（3バッチ＝8タスク＋最終レビュー後の修正3件）。
+
+### やったこと
+- カンバンに加え、表型ビュー（`TableView.tsx`）・カレンダービュー（`CalendarView.tsx`）を追加。表示切替を4択（カンバン/表/カレンダー/ガントチャート）に拡張。
+- カンバンのスイムレーン化：列は既存5ステータス固定のまま、行を「種別ごと」「担当者ごと」に切替可能に（`SwimlaneBoard.tsx`）。行またぎドラッグはステータスに加えグルーピング軸（`category`/`assignee_id`）も更新する（monday.com方式）。
+- 上記に伴い、ドラッグでの担当者変更が新たに発生しうるようになったため、既存の担当者アサイン通知（`shouldNotifyAssigneeChanged`）を`handleDragEnd`からも発火するよう対応（最終レビューで発見・修正）。
+- グルーピング・Droppable ID変換ロジックは`lib/tasks/taskSwimlanes.ts`に純粋関数として切り出しテスト済み。カード表示・優先度/期限フォーマットも`TaskCardBody.tsx`・`lib/tasks/taskFormatting.ts`に共通化。
+
+### 🟡 このPhaseで発見した既存の性能課題（Phase 1のスコープ外・未調査）
+**カンバンのドラッグ&ドロップが体感重い（ドロップしてから反映されるまで時間がかかる）。本番（proofloop.jp）の既存カンバンでも同様に発生することをオーナーが確認済み——今回のPhase 1で新規に作った問題ではない。** `SwimlaneBoard.tsx`の`groupTasksIntoSwimlanes`計算に`useMemo`を追加する対応は行った（ドラッグ中の毎レンダリング再計算というスイムレーン特有のムダは削減）が、フラットかんばん（今回の変更が入っていない既存コード）でも同様の重さが確認されたため、**根本原因はこのPhaseの変更範囲外**。次回このテーマに戻ったら、`handleDragEnd`のSupabase直接更新（`app/(club)/clubtasks/page.tsx`、クライアントから直接`.update()`している）のレイテンシなのか、React再レンダリングコストなのか、切り分けから着手する。
+
+### Phase 2・Phase 3（未着手）
+成果物添付・コメント/活動ログ・チェックリスト・定期タスク（Phase 2）、年度アーカイブ（Phase 3）は`docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`参照。
+
+---
+
 ## 参考：スキルの使いどころ早見表
 
 | 場面 | 使うスキル |
