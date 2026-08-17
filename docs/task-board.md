@@ -702,9 +702,9 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 3. 通知タイプのレジストリに将来`isOrgScoped: false`（プラットフォーム全体向け）が増えた時に誤動作する潜在バグ → 表示側でフィルタを追加
 
 ### 🟡 見送り・設計案として記録（次回このテーマに戻ったら検討）
-**オプトアウトのサーバー側強制。** 現状、`notifyTaskChange`（`/clubtasks`側）がブラウザで`is_notification_enabled`を確認してから送信APIを叩く設計になっており、**APIルート自体はオプトアウト設定を再確認していない**。仕様上あえて「DBに問い合わせない」ルートにしたため（既存4ルートと同じ設計方針）、悪意あるクライアントやバグが opt-out を回避しうる（オーナー確認のうえ、今回は見送り・2026-08-17）。
+**オプトアウトのサーバー側強制、および「認証済みなら誰でも任意宛先に送れる」問題。** 最終レビュー対応でBearer認証は追加した（ログイン必須）が、それは「本人確認」であって「本人が指定してよい宛先か」の認可ではない。現状、`notifyTaskChange`（`/clubtasks`側）がブラウザで`is_notification_enabled`を確認してから送信APIを叩く設計になっており、**APIルート自体はオプトアウト設定もリクエストボディの正当性も再確認していない**。仕様上あえて「DBに問い合わせない」ルートにしたため（既存4ルートと同じ設計方針）、**ログイン済みの任意ユーザーが`email`・`actorName`・`taskTitle`・`organizationName`を自由に指定し、ProofLoopブランドのメールを任意の宛先に送らせられる**（本文はHTMLエスケープ・件名はヘッダインジェクション対策済みのため、injection系ではなくブランド悪用・opt-out回避が実害）。オーナー確認のうえ、今回は見送り（2026-08-17）。
 
-恒久対応案：APIへ渡す情報を`email`ではなく`recipientUserId`＋`organizationId`に変え、ルート側でservice role Supabaseクライアントを使って`is_notification_enabled`をサーバー側で再確認してから送信する。既存4ルート（apply/approve/chat/claim）も同様に未認証のままなので、認証まわりの手当てとまとめて設計し直すのが効率的。
+恒久対応案：APIへ渡す情報を`email`ではなく`recipientUserId`＋`organizationId`に変え、ルート側でservice role Supabaseクライアントを使って受信者のメールアドレス解決と`is_notification_enabled`の再確認をサーバー側で行ってから送信する。既存4ルート（apply/approve/chat/claim）も同様に未認証のままなので、認証・認可まわりの手当てとまとめて設計し直すのが効率的。
 
 ---
 
