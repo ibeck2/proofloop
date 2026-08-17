@@ -4,10 +4,9 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DragDropContext,
   Droppable,
-  Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { Plus, GripVertical, CalendarDays, CheckCircle2, X, User, Eye } from "lucide-react";
+import { Plus, CheckCircle2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button, Input, Textarea } from "@/components/ui";
@@ -18,6 +17,7 @@ import {
   shouldNotifyAssigneeChanged,
 } from "@/lib/tasks/taskNotificationTriggers";
 import GanttView from "./GanttView";
+import DraggableTaskCard from "./DraggableTaskCard";
 
 const LANES: { id: TaskStatus; title: string }[] = [
   { id: "todo", title: "未対応" },
@@ -628,72 +628,16 @@ export default function ClubTasksPage() {
                         className="p-3 space-y-3 max-h-[calc(100vh-240px)] overflow-y-auto flex-1 min-h-[120px]"
                       >
                         {items.map((task, index) => (
-                          <Draggable
+                          <DraggableTaskCard
                             key={task.id}
-                            draggableId={task.id}
+                            task={task}
                             index={index}
-                          >
-                            {(draggableProvided, snapshot) => (
-                              <div
-                                ref={draggableProvided.innerRef}
-                                {...draggableProvided.draggableProps}
-                                className={`rounded-lg border border-rule border-l-4 bg-paper transition-shadow flex ${
-                                  isDone ? "border-l-ink" : ""
-                                } ${
-                                  snapshot.isDragging
-                                    ? "shadow-xl opacity-95 scale-[1.02] ring-2 ring-ink/30 z-50"
-                                    : "shadow-sm hover:shadow-md"
-                                }`}
-                                style={!isDone && tint ? { borderLeftColor: tint } : undefined}
-                              >
-                                <div
-                                  {...draggableProvided.dragHandleProps}
-                                  className="flex-shrink-0 p-2 self-start cursor-grab active:cursor-grabbing text-graphite/70 hover:text-graphite touch-none"
-                                  onClick={(e) => e.stopPropagation()}
-                                  aria-label="ドラッグして移動"
-                                >
-                                  <GripVertical className="w-5 h-5" aria-hidden="true" />
-                                </div>
-                                <button
-                                  type="button"
-                                  className="flex-1 min-w-0 p-3 pr-4 pt-3 text-left"
-                                  onClick={() => openEditModal(task)}
-                                >
-                                  <div className="flex items-start justify-between gap-2 mb-1">
-                                    <p className="font-medium text-ink text-sm leading-snug line-clamp-2">
-                                      {task.title}
-                                    </p>
-                                    <span
-                                      className={`shrink-0 text-xs font-medium px-2 py-0.5 rounded ${priorityBadgeClass(task.priority)}`}
-                                    >
-                                      {priorityLabel(task.priority)}
-                                    </span>
-                                  </div>
-                                  {task.category && (
-                                    <span className="inline-block mb-1 text-[10px] font-medium px-1.5 py-0.5 rounded border border-rule text-graphite/70">
-                                      {task.category}
-                                    </span>
-                                  )}
-                                  <p className="text-xs text-graphite/70 flex items-center gap-1">
-                                    <CalendarDays className="w-[14px] h-[14px]" aria-hidden="true" />
-                                    {formatDue(task.due_date)}
-                                  </p>
-                                  {task.assignee_id && memberNameById[task.assignee_id] && (
-                                    <p className="text-xs text-graphite/70 flex items-center gap-1 mt-0.5">
-                                      <User className="w-[14px] h-[14px]" aria-hidden="true" />
-                                      {memberNameById[task.assignee_id]}
-                                    </p>
-                                  )}
-                                  {lane.id === "in_review" && task.reviewer_id && memberNameById[task.reviewer_id] && (
-                                    <p className="text-xs text-graphite/70 flex items-center gap-1 mt-0.5">
-                                      <Eye className="w-[14px] h-[14px]" aria-hidden="true" />
-                                      {memberNameById[task.reviewer_id]}
-                                    </p>
-                                  )}
-                                </button>
-                              </div>
-                            )}
-                          </Draggable>
+                            status={lane.id}
+                            isDone={isDone}
+                            tint={tint}
+                            memberNameById={memberNameById}
+                            onOpen={openEditModal}
+                          />
                         ))}
                         {provided.placeholder}
                       </div>
