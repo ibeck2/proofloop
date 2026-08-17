@@ -11,7 +11,10 @@ import {
 } from "@/lib/organizationMembers";
 import { getOptionalNotificationTypes } from "@/lib/notifications/registry";
 import { resolveNotificationEnabled } from "@/lib/notifications/resolvePreference";
-import type { NotificationPreferenceRow } from "@/lib/types/notificationPreference";
+import type {
+  NotificationPreferenceRow,
+  NotificationType,
+} from "@/lib/types/notificationPreference";
 
 export default function MypageNotificationsPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -40,6 +43,7 @@ export default function MypageNotificationsPage() {
 
     if (membershipResult.error) {
       console.error("memberships fetch error:", membershipResult.error);
+      toast.error("所属団体の読み込みに失敗しました");
     }
     setMemberships(membershipResult.data);
 
@@ -57,7 +61,7 @@ export default function MypageNotificationsPage() {
   }, [loadAll]);
 
   const handleToggle = async (
-    notificationType: string,
+    notificationType: NotificationType,
     organizationId: string,
     nextEnabled: boolean
   ) => {
@@ -104,7 +108,9 @@ export default function MypageNotificationsPage() {
     }
   };
 
-  const optionalTypes = getOptionalNotificationTypes();
+  const orgScopedTypes = getOptionalNotificationTypes().filter(
+    (t) => t.isOrgScoped
+  );
 
   if (loading) {
     return (
@@ -149,7 +155,7 @@ export default function MypageNotificationsPage() {
                   {m.organization?.name?.trim() || "団体"}
                 </h2>
                 <div className="space-y-3">
-                  {optionalTypes.map((t) => {
+                  {orgScopedTypes.map((t) => {
                     const enabled = resolveNotificationEnabled(
                       rows,
                       t.id,

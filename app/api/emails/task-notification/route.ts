@@ -1,5 +1,9 @@
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
+import {
+  createSupabaseWithBearer,
+  getBearerToken,
+} from "@/lib/supabaseRoute";
 import { RESEND_FROM } from "@/lib/email/resendFrom";
 
 function escapeHtml(text: string): string {
@@ -24,6 +28,7 @@ function getAppOrigin(): string {
 }
 
 function emailShell(headline: string, bodyHtml: string): string {
+  const settingsUrl = `${getAppOrigin()}/mypage/notifications`;
   return `
 <!DOCTYPE html>
 <html lang="ja">
@@ -47,7 +52,7 @@ function emailShell(headline: string, bodyHtml: string): string {
             <td style="padding:32px;">
               ${bodyHtml}
               <p style="margin:24px 0 0;font-size:12px;line-height:1.6;color:#94a3b8;">
-                本メールは ProofLoop 運営より自動送信されています。この通知は「マイページ」の通知設定からオフにできます。
+                本メールは ProofLoop 運営より自動送信されています。この通知は<a href="${escapeHtml(settingsUrl)}" style="color:#0d9488;text-decoration:underline;">「マイページ」の通知設定</a>からオフにできます。
               </p>
             </td>
           </tr>
@@ -145,6 +150,27 @@ export async function POST(request: Request) {
           message: "開発環境ではメール送信をスキップしました",
         },
         { status: 200 }
+      );
+    }
+
+    const bearer = getBearerToken(request);
+    if (!bearer) {
+      return NextResponse.json(
+        { ok: false, error: "認証が必要です（Authorization: Bearer）" },
+        { status: 401 }
+      );
+    }
+
+    const supabase = createSupabaseWithBearer(bearer);
+    const {
+      data: { user },
+      error: userErr,
+    } = await supabase.auth.getUser();
+
+    if (userErr || !user) {
+      return NextResponse.json(
+        { ok: false, error: "セッションが無効です" },
+        { status: 401 }
       );
     }
 

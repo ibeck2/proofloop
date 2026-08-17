@@ -245,6 +245,7 @@ export default function ClubTasksPage() {
       taskTitle: string;
     }) => {
       if (!orgId || !orgName) return;
+      if (!currentUserId) return;
       const email = memberEmailById[params.recipientId];
       if (!email) return;
 
@@ -263,11 +264,18 @@ export default function ClubTasksPage() {
         return;
       }
 
-      const actorName =
-        (currentUserId && memberNameById[currentUserId]) || "運営メンバー";
+      const actorName = memberNameById[currentUserId] || "運営メンバー";
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       fetch("/api/emails/task-notification", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: session?.access_token
+            ? `Bearer ${session.access_token}`
+            : "",
+        },
         body: JSON.stringify({
           type: params.type,
           email,
