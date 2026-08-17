@@ -18,6 +18,7 @@ import {
 } from "@/lib/tasks/taskNotificationTriggers";
 import GanttView from "./GanttView";
 import TableView from "./TableView";
+import CalendarView from "./CalendarView";
 import DraggableTaskCard from "./DraggableTaskCard";
 
 const LANES: { id: TaskStatus; title: string }[] = [
@@ -594,6 +595,8 @@ export default function ClubTasksPage() {
           laneTintById={STATUS_TINT}
           normalizeStatus={normalizeStatus}
         />
+      ) : view === "calendar" ? (
+        <CalendarView tasks={visibleTasks} onOpen={openEditModal} />
       ) : view === "table" ? (
         <TableView
           tasks={visibleTasks}
