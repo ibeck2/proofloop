@@ -23,6 +23,7 @@ import {
   type SwimlaneAxis,
 } from "@/lib/tasks/taskSwimlanes";
 import ChecklistSection from "./ChecklistSection";
+import AttachmentSection from "./AttachmentSection";
 import GanttView from "./GanttView";
 import TableView from "./TableView";
 import CalendarView from "./CalendarView";
@@ -976,13 +977,19 @@ export default function ClubTasksPage() {
                 </div>
               </div>
               {editingTask ? (
-                <ChecklistSection
-                  taskId={editingTask.id}
-                  onCountChange={handleChecklistCountChange}
-                />
+                <>
+                  <ChecklistSection
+                    taskId={editingTask.id}
+                    onCountChange={handleChecklistCountChange}
+                  />
+                  <AttachmentSection
+                    taskId={editingTask.id}
+                    organizationId={editingTask.organization_id}
+                  />
+                </>
               ) : (
                 <p className="text-xs text-graphite/60">
-                  チェックリストは保存後に追加できます。
+                  チェックリスト・添付ファイルは保存後に追加できます。
                 </p>
               )}
               <div className="flex justify-end gap-2 pt-2">
