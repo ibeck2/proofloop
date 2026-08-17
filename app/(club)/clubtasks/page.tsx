@@ -16,10 +16,17 @@ import {
   shouldNotifyReviewAssigned,
   shouldNotifyAssigneeChanged,
 } from "@/lib/tasks/taskNotificationTriggers";
+import {
+  decodeSwimlaneDroppableId,
+  resolveSwimlaneRowChange,
+  swimlaneRowKeyForTask,
+  type SwimlaneAxis,
+} from "@/lib/tasks/taskSwimlanes";
 import GanttView from "./GanttView";
 import TableView from "./TableView";
 import CalendarView from "./CalendarView";
 import DraggableTaskCard from "./DraggableTaskCard";
+import SwimlaneBoard from "./SwimlaneBoard";
 
 const LANES: { id: TaskStatus; title: string }[] = [
   { id: "todo", title: "未対応" },
@@ -122,6 +129,9 @@ export default function ClubTasksPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [view, setView] = useState<"kanban" | "gantt" | "table" | "calendar">(
     "kanban"
+  );
+  const [swimlaneAxis, setSwimlaneAxis] = useState<SwimlaneAxis | "flat">(
+    "flat"
   );
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -441,37 +451,58 @@ export default function ClubTasksPage() {
       const task = tasks.find((t) => t.id === draggableId);
       if (!task) return;
 
-      const fromLane = source.droppableId as TaskStatus;
-      const toLane = destination.droppableId as TaskStatus;
+      const sourceDecoded = decodeSwimlaneDroppableId(source.droppableId);
+      const destDecoded = decodeSwimlaneDroppableId(destination.droppableId);
 
-      if (fromLane === toLane) {
+      const fromLane = sourceDecoded
+        ? sourceDecoded.status
+        : (source.droppableId as TaskStatus);
+      const toLane = destDecoded
+        ? destDecoded.status
+        : (destination.droppableId as TaskStatus);
+      const fromRowKey = sourceDecoded?.rowKey ?? null;
+      const toRowKey = destDecoded?.rowKey ?? null;
+
+      const sameLane = fromLane === toLane;
+      const sameRow = fromRowKey === toRowKey;
+
+      if (sameLane && sameRow) {
         const laneTasks = tasks
           .filter((t) => normalizeStatus(t.status) === fromLane)
+          .filter((t) =>
+            swimlaneAxis === "flat" || fromRowKey === null
+              ? true
+              : swimlaneRowKeyForTask(t, swimlaneAxis) === fromRowKey
+          )
           .sort(sortTasksInLane);
         const reordered = reorder(laneTasks, source.index, destination.index);
-        const others = tasks.filter(
-          (t) => normalizeStatus(t.status) !== fromLane
-        );
+        const laneTaskIds = new Set(laneTasks.map((t) => t.id));
+        const others = tasks.filter((t) => !laneTaskIds.has(t.id));
         setTasks([...others, ...reordered]);
         return;
       }
 
       const newStatus = toLane;
+      const rowChange: Partial<Pick<TaskRow, "category" | "assignee_id">> =
+        destDecoded && swimlaneAxis !== "flat" && !sameRow
+          ? resolveSwimlaneRowChange(swimlaneAxis, destDecoded.rowKey)
+          : {};
+
       const prevTasks = tasks;
       setTasks((prev) =>
         prev.map((t) =>
-          t.id === draggableId ? { ...t, status: newStatus } : t
+          t.id === draggableId ? { ...t, status: newStatus, ...rowChange } : t
         )
       );
 
       const { error } = await supabase
         .from("tasks")
-        .update({ status: newStatus })
+        .update({ status: newStatus, ...rowChange })
         .eq("id", draggableId);
 
       if (error) {
         setTasks(prevTasks);
-        toast.error("ステータスの更新に失敗しました");
+        toast.error("移動に失敗しました");
         return;
       }
 
@@ -490,7 +521,7 @@ export default function ClubTasksPage() {
 
       toast.success("移動しました");
     },
-    [tasks, notifyTaskChange, currentUserId]
+    [tasks, notifyTaskChange, currentUserId, swimlaneAxis]
   );
 
   if (ctxLoading) {
@@ -561,6 +592,28 @@ export default function ClubTasksPage() {
             ))}
           </select>
         </div>
+        {view === "kanban" && (
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="swimlane-axis"
+              className="text-sm text-graphite/70 shrink-0"
+            >
+              グルーピング
+            </label>
+            <select
+              id="swimlane-axis"
+              value={swimlaneAxis}
+              onChange={(e) =>
+                setSwimlaneAxis(e.target.value as SwimlaneAxis | "flat")
+              }
+              className="border border-rule rounded-lg px-2 py-1.5 text-sm bg-paper text-ink"
+            >
+              <option value="flat">フラット</option>
+              <option value="category">種別ごと</option>
+              <option value="assignee">担当者ごと</option>
+            </select>
+          </div>
+        )}
         <div className="inline-flex rounded-lg border border-rule overflow-hidden shrink-0 w-fit flex-wrap">
           {(
             [
@@ -608,64 +661,78 @@ export default function ClubTasksPage() {
       ) : (
       <div className="overflow-x-auto pb-4 -mx-2">
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-4 min-w-max px-2">
-            {tasksByLane.map(({ lane, items }) => {
-              const isDone = lane.id === "done";
-              const tint = STATUS_TINT[lane.id];
-              const whiteText = WHITE_TEXT_LANES.includes(lane.id);
+          {swimlaneAxis === "flat" ? (
+            <div className="flex gap-4 min-w-max px-2">
+              {tasksByLane.map(({ lane, items }) => {
+                const isDone = lane.id === "done";
+                const tint = STATUS_TINT[lane.id];
+                const whiteText = WHITE_TEXT_LANES.includes(lane.id);
 
-              return (
-                <div
-                  key={lane.id}
-                  className="w-[300px] flex-shrink-0 rounded-xl border border-rule bg-mist overflow-hidden flex flex-col"
-                >
+                return (
                   <div
-                    className={`px-4 py-3 border-b border-rule bg-paper shrink-0 border-l-4 ${
-                      isDone ? "border-l-ink" : ""
-                    }`}
-                    style={tint ? { borderLeftColor: tint } : undefined}
+                    key={lane.id}
+                    className="w-[300px] flex-shrink-0 rounded-xl border border-rule bg-mist overflow-hidden flex flex-col"
                   >
-                    <h2 className="font-bold text-sm flex items-center gap-2">
-                      {isDone && <CheckCircle2 className="w-[18px] h-[18px] text-ink shrink-0" aria-hidden="true" />}
-                      <span className="text-ink">{lane.title}</span>
-                      <span
-                        className="inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded-full text-xs font-bold font-numeric tabular-nums"
-                        style={{
-                          backgroundColor: isDone ? "#002B5C" : tint ?? undefined,
-                          color: whiteText ? "#FFFFFF" : "#002B5C",
-                        }}
-                      >
-                        （{items.length}）
-                      </span>
-                    </h2>
+                    <div
+                      className={`px-4 py-3 border-b border-rule bg-paper shrink-0 border-l-4 ${
+                        isDone ? "border-l-ink" : ""
+                      }`}
+                      style={tint ? { borderLeftColor: tint } : undefined}
+                    >
+                      <h2 className="font-bold text-sm flex items-center gap-2">
+                        {isDone && <CheckCircle2 className="w-[18px] h-[18px] text-ink shrink-0" aria-hidden="true" />}
+                        <span className="text-ink">{lane.title}</span>
+                        <span
+                          className="inline-flex items-center justify-center min-w-[1.75rem] px-1.5 py-0.5 rounded-full text-xs font-bold font-numeric tabular-nums"
+                          style={{
+                            backgroundColor: isDone ? "#002B5C" : tint ?? undefined,
+                            color: whiteText ? "#FFFFFF" : "#002B5C",
+                          }}
+                        >
+                          （{items.length}）
+                        </span>
+                      </h2>
+                    </div>
+                    <Droppable droppableId={lane.id}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="p-3 space-y-3 max-h-[calc(100vh-240px)] overflow-y-auto flex-1 min-h-[120px]"
+                        >
+                          {items.map((task, index) => (
+                            <DraggableTaskCard
+                              key={task.id}
+                              task={task}
+                              index={index}
+                              status={lane.id}
+                              isDone={isDone}
+                              tint={tint}
+                              memberNameById={memberNameById}
+                              onOpen={openEditModal}
+                            />
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
                   </div>
-                  <Droppable droppableId={lane.id}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="p-3 space-y-3 max-h-[calc(100vh-240px)] overflow-y-auto flex-1 min-h-[120px]"
-                      >
-                        {items.map((task, index) => (
-                          <DraggableTaskCard
-                            key={task.id}
-                            task={task}
-                            index={index}
-                            status={lane.id}
-                            isDone={isDone}
-                            tint={tint}
-                            memberNameById={memberNameById}
-                            onOpen={openEditModal}
-                          />
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          ) : (
+            <SwimlaneBoard
+              tasks={visibleTasks}
+              axis={swimlaneAxis}
+              lanes={LANES}
+              laneTintById={STATUS_TINT}
+              whiteTextLanes={WHITE_TEXT_LANES}
+              normalizeStatus={normalizeStatus}
+              sortTasksInLane={sortTasksInLane}
+              memberNameById={memberNameById}
+              onOpen={openEditModal}
+            />
+          )}
         </DragDropContext>
       </div>
       )}
