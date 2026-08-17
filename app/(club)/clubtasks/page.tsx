@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import { Button, Input, Textarea } from "@/components/ui";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
+import {
+  shouldNotifyReviewAssigned,
+  shouldNotifyAssigneeChanged,
+} from "@/lib/tasks/taskNotificationTriggers";
 import GanttView from "./GanttView";
 
 const LANES: { id: TaskStatus; title: string }[] = [
@@ -118,7 +122,7 @@ const emptyForm = {
   category: "",
 };
 
-type MemberOption = { user_id: string; name: string; title: string | null };
+type MemberOption = { user_id: string; name: string; title: string | null; email: string | null };
 
 function formatMemberOption(m: MemberOption): string {
   return m.title ? `${m.name}（${m.title}）` : m.name;
@@ -141,6 +145,13 @@ export default function ClubTasksPage() {
   const [saving, setSaving] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [view, setView] = useState<"kanban" | "gantt">("kanban");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id ?? null);
+    });
+  }, []);
 
   const loadTasks = useCallback(async () => {
     if (!orgId) return;
@@ -182,7 +193,7 @@ export default function ClubTasksPage() {
     }
     const { data: profData, error: profErr } = await supabase
       .from("profiles")
-      .select("id, full_name, display_name")
+      .select("id, full_name, display_name, email")
       .in("id", ids);
     if (profErr || !profData) {
       console.error("profiles fetch error:", profErr);
@@ -195,11 +206,13 @@ export default function ClubTasksPage() {
           id: string;
           full_name: string | null;
           display_name: string | null;
+          email: string | null;
         }>
       ).map((p) => ({
         user_id: p.id,
         name: p.full_name?.trim() || p.display_name?.trim() || "（氏名未設定）",
         title: titleByUserId[p.id]?.trim() || null,
+        email: p.email?.trim() || null,
       }))
     );
   }, [orgId]);
@@ -216,6 +229,59 @@ export default function ClubTasksPage() {
     for (const m of members) map[m.user_id] = formatMemberOption(m);
     return map;
   }, [members]);
+
+  const memberEmailById = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const m of members) {
+      if (m.email) map[m.user_id] = m.email;
+    }
+    return map;
+  }, [members]);
+
+  const notifyTaskChange = useCallback(
+    async (params: {
+      type: "task_review_assigned" | "task_assignee_changed";
+      recipientId: string;
+      taskTitle: string;
+    }) => {
+      if (!orgId || !orgName) return;
+      const email = memberEmailById[params.recipientId];
+      if (!email) return;
+
+      const { data: enabled, error } = await supabase.rpc(
+        "is_notification_enabled",
+        {
+          p_user_id: params.recipientId,
+          p_notification_type: params.type,
+          p_organization_id: orgId,
+        }
+      );
+      if (error) {
+        console.error("is_notification_enabled error:", error);
+        // フェイルセーフ：判定に失敗しても通知を止めない（既定ON）
+      } else if (enabled === false) {
+        return;
+      }
+
+      const actorName =
+        (currentUserId && memberNameById[currentUserId]) || "運営メンバー";
+      fetch("/api/emails/task-notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: params.type,
+          email,
+          recipientName: memberNameById[params.recipientId] ?? "メンバー",
+          actorName,
+          taskTitle: params.taskTitle,
+          organizationName: orgName,
+        }),
+      }).catch((err) => {
+        console.error("task-notification email error:", err);
+      });
+    },
+    [orgId, orgName, memberEmailById, memberNameById, currentUserId]
+  );
 
   const categoryOptions = useMemo(() => {
     return Array.from(
@@ -308,6 +374,32 @@ export default function ClubTasksPage() {
           .eq("id", editingTask.id);
         if (error) throw error;
         toast.success("タスクを更新しました");
+
+        const prevReview = {
+          status: normalizeStatus(editingTask.status),
+          reviewerId: editingTask.reviewer_id,
+        };
+        const nextReview = {
+          status: payload.status,
+          reviewerId: payload.reviewer_id,
+        };
+        if (shouldNotifyReviewAssigned(prevReview, nextReview, currentUserId)) {
+          void notifyTaskChange({
+            type: "task_review_assigned",
+            recipientId: payload.reviewer_id!,
+            taskTitle: payload.title,
+          });
+        }
+
+        const prevAssignee = { assigneeId: editingTask.assignee_id };
+        const nextAssignee = { assigneeId: payload.assignee_id };
+        if (shouldNotifyAssigneeChanged(prevAssignee, nextAssignee, currentUserId)) {
+          void notifyTaskChange({
+            type: "task_assignee_changed",
+            recipientId: payload.assignee_id!,
+            taskTitle: payload.title,
+          });
+        }
       } else {
         const {
           data: { user },
@@ -318,6 +410,27 @@ export default function ClubTasksPage() {
         });
         if (error) throw error;
         toast.success("タスクを追加しました");
+
+        const nextReview = {
+          status: payload.status,
+          reviewerId: payload.reviewer_id,
+        };
+        if (shouldNotifyReviewAssigned(null, nextReview, currentUserId)) {
+          void notifyTaskChange({
+            type: "task_review_assigned",
+            recipientId: payload.reviewer_id!,
+            taskTitle: payload.title,
+          });
+        }
+
+        const nextAssignee = { assigneeId: payload.assignee_id };
+        if (shouldNotifyAssigneeChanged(null, nextAssignee, currentUserId)) {
+          void notifyTaskChange({
+            type: "task_assignee_changed",
+            recipientId: payload.assignee_id!,
+            taskTitle: payload.title,
+          });
+        }
       }
       await loadTasks();
       closeModal();
@@ -375,9 +488,23 @@ export default function ClubTasksPage() {
         toast.error("ステータスの更新に失敗しました");
         return;
       }
+
+      const prevReview = {
+        status: normalizeStatus(task.status),
+        reviewerId: task.reviewer_id,
+      };
+      const nextReview = { status: newStatus, reviewerId: task.reviewer_id };
+      if (shouldNotifyReviewAssigned(prevReview, nextReview, currentUserId)) {
+        void notifyTaskChange({
+          type: "task_review_assigned",
+          recipientId: task.reviewer_id!,
+          taskTitle: task.title,
+        });
+      }
+
       toast.success("移動しました");
     },
-    [tasks]
+    [tasks, notifyTaskChange, currentUserId]
   );
 
   const formatDue = (iso: string | null | undefined) => {
