@@ -22,6 +22,7 @@ import {
   swimlaneRowKeyForTask,
   type SwimlaneAxis,
 } from "@/lib/tasks/taskSwimlanes";
+import ChecklistSection from "./ChecklistSection";
 import GanttView from "./GanttView";
 import TableView from "./TableView";
 import CalendarView from "./CalendarView";
@@ -134,6 +135,9 @@ export default function ClubTasksPage() {
     "flat"
   );
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [checklistCountByTaskId, setChecklistCountByTaskId] = useState<
+    Record<string, { done: number; total: number }>
+  >({});
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -205,12 +209,33 @@ export default function ClubTasksPage() {
     );
   }, [orgId]);
 
+  const loadChecklistCounts = useCallback(async () => {
+    if (!orgId) return;
+    const { data, error } = await supabase
+      .from("task_checklist_items")
+      .select("task_id, is_done")
+      .eq("organization_id", orgId);
+    if (error) {
+      console.error("checklist counts fetch error:", error);
+      return;
+    }
+    const counts: Record<string, { done: number; total: number }> = {};
+    for (const row of (data as Array<{ task_id: string; is_done: boolean }>) ?? []) {
+      const c = counts[row.task_id] ?? { done: 0, total: 0 };
+      c.total += 1;
+      if (row.is_done) c.done += 1;
+      counts[row.task_id] = c;
+    }
+    setChecklistCountByTaskId(counts);
+  }, [orgId]);
+
   useEffect(() => {
     if (orgId) {
       loadTasks();
       loadMembers();
+      loadChecklistCounts();
     }
-  }, [orgId, loadTasks, loadMembers]);
+  }, [orgId, loadTasks, loadMembers, loadChecklistCounts]);
 
   const memberNameById = useMemo(() => {
     const map: Record<string, string> = {};
@@ -225,6 +250,16 @@ export default function ClubTasksPage() {
     }
     return map;
   }, [members]);
+
+  const handleChecklistCountChange = useCallback(
+    (taskId: string, done: number, total: number) => {
+      setChecklistCountByTaskId((prev) => ({
+        ...prev,
+        [taskId]: { done, total },
+      }));
+    },
+    []
+  );
 
   const notifyTaskChange = useCallback(
     async (params: {
@@ -938,6 +973,16 @@ export default function ClubTasksPage() {
                   </select>
                 </div>
               </div>
+              {editingTask ? (
+                <ChecklistSection
+                  taskId={editingTask.id}
+                  onCountChange={handleChecklistCountChange}
+                />
+              ) : (
+                <p className="text-xs text-graphite/60">
+                  チェックリストは保存後に追加できます。
+                </p>
+              )}
               <div className="flex justify-end gap-2 pt-2">
                 <Button
                   type="button"
