@@ -136,23 +136,6 @@ type TaskNotificationBody = {
 
 export async function POST(request: Request) {
   try {
-    const apiKey = process.env.RESEND_API_KEY?.trim();
-    if (!apiKey) {
-      console.warn(
-        "[api/emails/task-notification] RESEND_API_KEY が未設定のためメール送信をスキップしました（開発環境のモック動作）"
-      );
-      return NextResponse.json(
-        {
-          ok: true,
-          emailSent: false,
-          skipped: true,
-          reason: "resend_api_key_missing",
-          message: "開発環境ではメール送信をスキップしました",
-        },
-        { status: 200 }
-      );
-    }
-
     const bearer = getBearerToken(request);
     if (!bearer) {
       return NextResponse.json(
@@ -171,6 +154,23 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { ok: false, error: "セッションが無効です" },
         { status: 401 }
+      );
+    }
+
+    const apiKey = process.env.RESEND_API_KEY?.trim();
+    if (!apiKey) {
+      console.warn(
+        "[api/emails/task-notification] RESEND_API_KEY が未設定のためメール送信をスキップしました（開発環境のモック動作）"
+      );
+      return NextResponse.json(
+        {
+          ok: true,
+          emailSent: false,
+          skipped: true,
+          reason: "resend_api_key_missing",
+          message: "開発環境ではメール送信をスキップしました",
+        },
+        { status: 200 }
       );
     }
 
