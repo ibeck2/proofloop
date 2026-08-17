@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Droppable } from "@hello-pangea/dnd";
 import { CheckCircle2 } from "lucide-react";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
@@ -47,14 +48,16 @@ export default function SwimlaneBoard({
   memberNameById,
   onOpen,
 }: Props) {
-  const statuses = lanes.map((l) => l.id);
-  const rows = groupTasksIntoSwimlanes(
-    tasks,
-    axis,
-    statuses,
-    normalizeStatus,
-    sortTasksInLane
-  );
+  const rows = useMemo(() => {
+    const statuses = lanes.map((l) => l.id);
+    return groupTasksIntoSwimlanes(
+      tasks,
+      axis,
+      statuses,
+      normalizeStatus,
+      sortTasksInLane
+    );
+  }, [tasks, axis, lanes, normalizeStatus, sortTasksInLane]);
 
   if (rows.length === 0) {
     return (
