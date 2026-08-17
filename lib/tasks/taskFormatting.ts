@@ -47,3 +47,13 @@ export function checklistProgressLabel(
   if (total <= 0) return null;
   return `${done}/${total}`;
 }
+
+/**
+ * 添付ファイルの一覧表示用に、バイト数を人間可読な文字列に変換する。
+ * B → KB → MB のしきい値は 1024 単位（1000 ではない）。
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}

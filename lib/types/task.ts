@@ -28,3 +28,16 @@ export interface ChecklistItemRow {
   position: number;
   created_at?: string;
 }
+
+/** タスクの添付ファイル（task_attachments テーブル） */
+export interface AttachmentRow {
+  id: string;
+  task_id: string;
+  organization_id: string;
+  uploaded_by: string | null;
+  file_path: string;
+  file_name: string;
+  file_size: number;
+  mime_type: string | null;
+  created_at?: string;
+}

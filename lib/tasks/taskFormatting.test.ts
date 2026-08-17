@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { checklistProgressLabel, formatDue, priorityBadgeClass, priorityLabel } from "./taskFormatting";
+import {
+  checklistProgressLabel,
+  formatDue,
+  formatFileSize,
+  priorityBadgeClass,
+  priorityLabel,
+} from "./taskFormatting";
 
 describe("priorityLabel", () => {
   it("labels known priorities in Japanese", () => {
@@ -65,5 +71,24 @@ describe("checklistProgressLabel", () => {
 
   it("formats correctly when none are done yet", () => {
     expect(checklistProgressLabel(0, 4)).toBe("0/4");
+  });
+});
+
+describe("formatFileSize", () => {
+  it("formats bytes under 1KB as-is", () => {
+    expect(formatFileSize(0)).toBe("0B");
+    expect(formatFileSize(500)).toBe("500B");
+    expect(formatFileSize(1023)).toBe("1023B");
+  });
+
+  it("formats kilobytes with one decimal place", () => {
+    expect(formatFileSize(1024)).toBe("1.0KB");
+    expect(formatFileSize(2048)).toBe("2.0KB");
+    expect(formatFileSize(1536)).toBe("1.5KB");
+  });
+
+  it("formats megabytes with one decimal place", () => {
+    expect(formatFileSize(1024 * 1024)).toBe("1.0MB");
+    expect(formatFileSize(1024 * 1024 * 2.5)).toBe("2.5MB");
   });
 });
