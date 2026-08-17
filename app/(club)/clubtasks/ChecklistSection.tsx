@@ -53,8 +53,7 @@ export default function ChecklistSection({ taskId, onCountChange }: Props) {
     load();
   }, [load]);
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAdd = async () => {
     const text = newText.trim();
     if (!text) return;
     setAdding(true);
@@ -76,7 +75,6 @@ export default function ChecklistSection({ taskId, onCountChange }: Props) {
   };
 
   const handleToggle = async (item: ChecklistItemRow) => {
-    const prevItems = items;
     const next = items.map((i) =>
       i.id === item.id ? { ...i, is_done: !i.is_done } : i
     );
@@ -90,13 +88,11 @@ export default function ChecklistSection({ taskId, onCountChange }: Props) {
     if (error) {
       console.error("checklist item update error:", error);
       toast.error("チェックリストの更新に失敗しました");
-      setItems(prevItems);
-      reportCounts(taskId, prevItems, onCountChange);
+      void load();
     }
   };
 
   const handleDelete = async (item: ChecklistItemRow) => {
-    const prevItems = items;
     const next = items.filter((i) => i.id !== item.id);
     setItems(next);
     reportCounts(taskId, next, onCountChange);
@@ -108,8 +104,7 @@ export default function ChecklistSection({ taskId, onCountChange }: Props) {
     if (error) {
       console.error("checklist item delete error:", error);
       toast.error("チェックリスト項目の削除に失敗しました");
-      setItems(prevItems);
-      reportCounts(taskId, prevItems, onCountChange);
+      void load();
     }
   };
 
@@ -127,19 +122,21 @@ export default function ChecklistSection({ taskId, onCountChange }: Props) {
           )}
           {items.map((item) => (
             <li key={item.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={item.is_done}
-                onChange={() => handleToggle(item)}
-                className="w-4 h-4 accent-ink shrink-0"
-              />
-              <span
-                className={`flex-1 text-sm ${
-                  item.is_done ? "line-through text-graphite/50" : "text-ink"
-                }`}
-              >
-                {item.text}
-              </span>
+              <label className="flex-1 flex items-center gap-2 min-w-0">
+                <input
+                  type="checkbox"
+                  checked={item.is_done}
+                  onChange={() => handleToggle(item)}
+                  className="w-4 h-4 accent-ink shrink-0"
+                />
+                <span
+                  className={`flex-1 text-sm ${
+                    item.is_done ? "line-through text-graphite/50" : "text-ink"
+                  }`}
+                >
+                  {item.text}
+                </span>
+              </label>
               <button
                 type="button"
                 onClick={() => handleDelete(item)}
@@ -152,22 +149,30 @@ export default function ChecklistSection({ taskId, onCountChange }: Props) {
           ))}
         </ul>
       )}
-      <form onSubmit={handleAdd} className="flex gap-2">
+      <div className="flex gap-2">
         <Input
           value={newText}
           onChange={(e) => setNewText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAdd();
+            }
+          }}
           placeholder="項目を追加"
           disabled={adding}
           className="flex-1"
         />
         <Button
-          type="submit"
+          type="button"
           variant="outlineMuted"
+          onClick={handleAdd}
           disabled={adding || !newText.trim()}
+          aria-label="項目を追加"
         >
           <Plus className="w-4 h-4" aria-hidden="true" />
         </Button>
-      </form>
+      </div>
     </div>
   );
 }
