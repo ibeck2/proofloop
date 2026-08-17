@@ -519,6 +519,21 @@ export default function ClubTasksPage() {
         });
       }
 
+      const prevAssignee = { assigneeId: task.assignee_id };
+      const nextAssignee = {
+        assigneeId:
+          "assignee_id" in rowChange
+            ? (rowChange.assignee_id ?? null)
+            : task.assignee_id,
+      };
+      if (shouldNotifyAssigneeChanged(prevAssignee, nextAssignee, currentUserId)) {
+        void notifyTaskChange({
+          type: "task_assignee_changed",
+          recipientId: nextAssignee.assigneeId!,
+          taskTitle: task.title,
+        });
+      }
+
       toast.success("移動しました");
     },
     [tasks, notifyTaskChange, currentUserId, swimlaneAxis]
