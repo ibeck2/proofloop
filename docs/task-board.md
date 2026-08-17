@@ -722,8 +722,31 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 ### 🟡 このPhaseで発見した既存の性能課題（Phase 1のスコープ外・未調査）
 **カンバンのドラッグ&ドロップが体感重い（ドロップしてから反映されるまで時間がかかる）。本番（proofloop.jp）の既存カンバンでも同様に発生することをオーナーが確認済み——今回のPhase 1で新規に作った問題ではない。** `SwimlaneBoard.tsx`の`groupTasksIntoSwimlanes`計算に`useMemo`を追加する対応は行った（ドラッグ中の毎レンダリング再計算というスイムレーン特有のムダは削減）が、フラットかんばん（今回の変更が入っていない既存コード）でも同様の重さが確認されたため、**根本原因はこのPhaseの変更範囲外**。次回このテーマに戻ったら、`handleDragEnd`のSupabase直接更新（`app/(club)/clubtasks/page.tsx`、クライアントから直接`.update()`している）のレイテンシなのか、React再レンダリングコストなのか、切り分けから着手する。
 
-### Phase 2・Phase 3（未着手）
-成果物添付・コメント/活動ログ・チェックリスト・定期タスク（Phase 2）、年度アーカイブ（Phase 3）は`docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`参照。
+### Phase 2・Phase 3（残り）
+成果物添付・コメント/活動ログ・定期タスク（Phase 2残り）、年度アーカイブ（Phase 3）は`docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`参照。チェックリストはセクションSで完了。
+
+---
+
+## S. `/clubtasks` Phase 2「チェックリスト」機能 ✅ 完了（2026-08-18）
+
+計画 `docs/superpowers/plans/2026-08-17-clubtasks-checklist.md`。`subagent-driven-development`でworktree実行（Task 1=マイグレーション単独バッチ、Task 2-4=1バッチ＋最終レビュー後の修正1件）。
+
+### やったこと
+- 新規テーブル`task_checklist_items`（`id, task_id, organization_id, text, is_done, position, created_at`）。担当者・期限は持たない、テキスト＋完了フラグのみ。RLSは既存`tasks`テーブルと同じ`tasks_*_own_org`パターン（roleを見ない、団体メンバー全員が読み書き可）。
+- `organization_id`はクライアントから受け取らず、BEFORE INSERT/UPDATEトリガー（`set_task_checklist_item_org`）が`tasks.organization_id`から自動導出。クライアントの詐称を構造的に防ぐ設計。
+- 編集モーダルに`ChecklistSection`コンポーネントを追加（項目の追加・チェック切替・削除）。カンバンカードに「2/5」のような進捗バッジを表示。
+- **本番適用済みマイグレーション**：`048_task_checklist_items.sql`（テーブル・RLS・トリガー）→`049_task_checklist_items_org_fn_revoke.sql`（アドバイザ警告修正）→`050_task_checklist_items_trigger_widen.sql`（後述のセキュリティ修正）。
+
+### レビューで見つかり、このPRで対応した4件
+1. **トリガーの適用範囲が狭かった**（`048`は`BEFORE INSERT OR UPDATE OF task_id`のみ）。`task_id`を触らず`organization_id`だけを直接PATCHするリクエストではトリガーが発火せず、複数団体に所属するメンバーがチェックリスト項目の`organization_id`を実際のタスクの所属団体と異なる値に書き換えられる可能性があった（RLSのUSING/WITH CHECKはどちらも「自分が所属する団体か」しか見ないため、複数団体所属だと通ってしまう）。`050`でトリガーを`BEFORE INSERT OR UPDATE`（列指定なし）に拡張して解消。ネガティブコントロール（旧トリガーで再現→新トリガーで防止）で検証済み。
+2. **048の`REVOKE ALL ... FROM PUBLIC`が本番Supabaseでは無効**（CLAUDE.mdの既知の落とし穴）だったため、`set_task_checklist_item_org`にsecurity advisorの新規警告が2件出ていた。`049`で`REVOKE EXECUTE ... FROM anon, authenticated`を明示して解消。
+3. **チェックリスト追加フォームがタスク編集モーダルの`<form>`の中にネストされていた**（計画のJSXそのものの欠陣。実装は忠実に転写しただけ）。ネイティブのsubmitイベントはバブリングするため、＋ボタンやEnterでの項目追加が外側フォームの`onSubmit={handleSave}`も誘発し、モーダルが意図せず閉じる（タスクの保存・場合によっては通知メール誤発火）不具合になり得た。最終レビューで発見。`<form>`を`<div>`＋`onClick`/`onKeyDown`に変更して入れ子を解消。
+4. **チェック切替・削除の失敗時ロールバックが古いスナップショットへの巻き戻し方式だった**ため、ロールバック直前に別の変更（追加等）が成功していた場合、その変更がローカル表示から消える競合状態があった。`void load()`によるサーバー再取得方式に変更して解消。
+
+### 🟡 見送り・追跡事項として記録
+- **複数団体に所属するメンバーは、タスク自体を自分の別の団体へ移動できてしまう**（`tasks`テーブルの既存RLS、マイグレーション013由来。今回の変更が入れたものではない）。移動されると、そのタスクのチェックリスト項目は旧団体側に取り残され、両団体のどちらからも実質見えなくなる（データ消失ではないが孤立する）。恒久対応案：`tasks`に`UNIQUE (id, organization_id)`を張り、`task_checklist_items`のFKを複合外部キー`FOREIGN KEY (task_id, organization_id) REFERENCES tasks(id, organization_id) ON UPDATE CASCADE`に変更する（トリガー任せではなく制約で保証する形）。次にこのテーマに戻ったら着手。
+- `loadChecklistCounts`（`page.tsx`）は団体内の全チェックリスト行を毎回まるごと取得する非増分方式。現状件数では問題ないが、セクションR記載のドラッグ&ドロップ性能課題とあわせて、次回の性能点検でまとめて見るのがよい。
+- **このリポジトリにはコンポーネントレベルのテスト基盤が無い**（vitestのみ、jsdom/testing-library未導入）。今回の「フォーム入れ子」バグはDOM挙動起因で、純粋関数テストでは原理的に検出できないクラスの不具合だった。ライブQA（ブラウザでの実機確認）がこの種のバグを拾う唯一のネットになっている状態は、次にUIを大きく触るときの検討事項として残す。
 
 ---
 
