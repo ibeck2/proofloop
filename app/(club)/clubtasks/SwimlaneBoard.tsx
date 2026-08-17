@@ -23,6 +23,7 @@ type Props = {
   normalizeStatus: (s: string | null | undefined) => TaskStatus;
   sortTasksInLane: (a: TaskRow, b: TaskRow) => number;
   memberNameById: Record<string, string>;
+  checklistCountByTaskId: Record<string, { done: number; total: number }>;
   onOpen: (task: TaskRow) => void;
 };
 
@@ -46,6 +47,7 @@ export default function SwimlaneBoard({
   normalizeStatus,
   sortTasksInLane,
   memberNameById,
+  checklistCountByTaskId,
   onOpen,
 }: Props) {
   const rows = useMemo(() => {
@@ -133,6 +135,7 @@ export default function SwimlaneBoard({
                             isDone={isDone}
                             tint={tint}
                             memberNameById={memberNameById}
+                            checklistCountByTaskId={checklistCountByTaskId}
                             onOpen={onOpen}
                           />
                         ))}

@@ -1,8 +1,9 @@
 "use client";
 
-import { CalendarDays, Eye, User } from "lucide-react";
+import { CalendarDays, Eye, ListChecks, User } from "lucide-react";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
 import {
+  checklistProgressLabel,
   formatDue,
   priorityBadgeClass,
   priorityLabel,
@@ -12,6 +13,7 @@ type Props = {
   task: TaskRow;
   status: TaskStatus;
   memberNameById: Record<string, string>;
+  checklistCountByTaskId: Record<string, { done: number; total: number }>;
   onOpen: (task: TaskRow) => void;
 };
 
@@ -19,8 +21,14 @@ export default function TaskCardBody({
   task,
   status,
   memberNameById,
+  checklistCountByTaskId,
   onOpen,
 }: Props) {
+  const checklistProgress = checklistCountByTaskId[task.id];
+  const checklistLabel = checklistProgress
+    ? checklistProgressLabel(checklistProgress.done, checklistProgress.total)
+    : null;
+
   return (
     <button
       type="button"
@@ -60,6 +68,12 @@ export default function TaskCardBody({
             {memberNameById[task.reviewer_id]}
           </p>
         )}
+      {checklistLabel && (
+        <p className="text-xs text-graphite/70 flex items-center gap-1 mt-0.5">
+          <ListChecks className="w-[14px] h-[14px]" aria-hidden="true" />
+          {checklistLabel}
+        </p>
+      )}
     </button>
   );
 }

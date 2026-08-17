@@ -12,6 +12,7 @@ type Props = {
   isDone: boolean;
   tint: string | null;
   memberNameById: Record<string, string>;
+  checklistCountByTaskId: Record<string, { done: number; total: number }>;
   onOpen: (task: TaskRow) => void;
 };
 
@@ -22,6 +23,7 @@ export default function DraggableTaskCard({
   isDone,
   tint,
   memberNameById,
+  checklistCountByTaskId,
   onOpen,
 }: Props) {
   return (
@@ -51,6 +53,7 @@ export default function DraggableTaskCard({
             task={task}
             status={status}
             memberNameById={memberNameById}
+            checklistCountByTaskId={checklistCountByTaskId}
             onOpen={onOpen}
           />
         </div>

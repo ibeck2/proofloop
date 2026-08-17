@@ -759,6 +759,7 @@ export default function ClubTasksPage() {
                               isDone={isDone}
                               tint={tint}
                               memberNameById={memberNameById}
+                              checklistCountByTaskId={checklistCountByTaskId}
                               onOpen={openEditModal}
                             />
                           ))}
@@ -780,6 +781,7 @@ export default function ClubTasksPage() {
               normalizeStatus={normalizeStatus}
               sortTasksInLane={sortTasksInLane}
               memberNameById={memberNameById}
+              checklistCountByTaskId={checklistCountByTaskId}
               onOpen={openEditModal}
             />
           )}
