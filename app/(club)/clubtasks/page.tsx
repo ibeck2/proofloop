@@ -17,6 +17,7 @@ import {
   shouldNotifyAssigneeChanged,
 } from "@/lib/tasks/taskNotificationTriggers";
 import GanttView from "./GanttView";
+import TableView from "./TableView";
 import DraggableTaskCard from "./DraggableTaskCard";
 
 const LANES: { id: TaskStatus; title: string }[] = [
@@ -118,7 +119,9 @@ export default function ClubTasksPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
-  const [view, setView] = useState<"kanban" | "gantt">("kanban");
+  const [view, setView] = useState<"kanban" | "gantt" | "table" | "calendar">(
+    "kanban"
+  );
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -557,25 +560,30 @@ export default function ClubTasksPage() {
             ))}
           </select>
         </div>
-        <div className="inline-flex rounded-lg border border-rule overflow-hidden shrink-0 w-fit">
-          <button
-            type="button"
-            onClick={() => setView("kanban")}
-            className={`px-3 py-1.5 text-sm font-medium ${
-              view === "kanban" ? "bg-ink text-paper" : "bg-paper text-graphite hover:bg-mist"
-            }`}
-          >
-            カンバン
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("gantt")}
-            className={`px-3 py-1.5 text-sm font-medium border-l border-rule ${
-              view === "gantt" ? "bg-ink text-paper" : "bg-paper text-graphite hover:bg-mist"
-            }`}
-          >
-            ガントチャート
-          </button>
+        <div className="inline-flex rounded-lg border border-rule overflow-hidden shrink-0 w-fit flex-wrap">
+          {(
+            [
+              { id: "kanban", label: "カンバン" },
+              { id: "table", label: "表" },
+              { id: "calendar", label: "カレンダー" },
+              { id: "gantt", label: "ガントチャート" },
+            ] as const
+          ).map((v, i) => (
+            <button
+              key={v.id}
+              type="button"
+              onClick={() => setView(v.id)}
+              className={`px-3 py-1.5 text-sm font-medium ${
+                i > 0 ? "border-l border-rule" : ""
+              } ${
+                view === v.id
+                  ? "bg-ink text-paper"
+                  : "bg-paper text-graphite hover:bg-mist"
+              }`}
+            >
+              {v.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -585,6 +593,14 @@ export default function ClubTasksPage() {
           laneTitleById={LANE_TITLE_BY_ID}
           laneTintById={STATUS_TINT}
           normalizeStatus={normalizeStatus}
+        />
+      ) : view === "table" ? (
+        <TableView
+          tasks={visibleTasks}
+          laneTitleById={LANE_TITLE_BY_ID}
+          memberNameById={memberNameById}
+          normalizeStatus={normalizeStatus}
+          onOpen={openEditModal}
         />
       ) : (
       <div className="overflow-x-auto pb-4 -mx-2">
