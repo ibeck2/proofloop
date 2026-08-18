@@ -832,11 +832,17 @@ export default function ClubTasksPage() {
       toast.error("アーカイブに失敗しました");
       return;
     }
-    toast.success(`${data ?? 0}件のタスクをアーカイブしました`);
+    const archivedCount = data ?? 0;
+    if (archivedCount > 0) {
+      toast.success(`${archivedCount}件のタスクをアーカイブしました`);
+    } else {
+      toast.error("アーカイブ対象のタスクがありませんでした");
+    }
     setArchiveModalOpen(false);
     setArchiveLabelInput("");
     await loadTasks();
     await loadArchiveLabels();
+    await loadChecklistCounts();
   };
 
   if (ctxLoading) {

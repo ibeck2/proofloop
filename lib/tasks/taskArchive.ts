@@ -34,6 +34,10 @@ export function filterTasksByArchiveView(
  * 過去にアーカイブされたラベルの一覧を、直近にアーカイブされた順（降順）で
  * 返す。同じラベルで複数回アーカイブされることは想定していないが、念のため
  * 各ラベルの最も新しいarchived_atを代表値として採用する。
+ *
+ * 現在は`list_organization_archive_labels` RPC（SQL側でGROUP BY集約）に
+ * 置き換えられており、`page.tsx`からは呼ばれていない。テスト付きの参考
+ * 実装として残している。
  */
 export function archiveLabelOptions(
   tasks: Pick<TaskRow, "archive_label" | "archived_at">[]
