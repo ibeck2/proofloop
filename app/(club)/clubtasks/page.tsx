@@ -6,7 +6,7 @@ import {
   Droppable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { Plus, CheckCircle2, X } from "lucide-react";
+import { Plus, CheckCircle2, X, Archive, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button, Input, Textarea } from "@/components/ui";
@@ -28,6 +28,11 @@ import {
   buildRecurringTask,
   type RecurringTaskSource,
 } from "@/lib/tasks/taskRecurrence";
+import {
+  archiveLabelOptions,
+  filterTasksByArchiveView,
+  type ArchiveView,
+} from "@/lib/tasks/taskArchive";
 import ChecklistSection from "./ChecklistSection";
 import AttachmentSection from "./AttachmentSection";
 import CommentSection from "./CommentSection";
@@ -126,6 +131,7 @@ export default function ClubTasksPage() {
     loading: ctxLoading,
     activeOrgId: orgId,
     activeOrgName: orgName,
+    activeRole,
     hasNoMemberships,
     isReady,
   } = useClubOrganization();
@@ -147,6 +153,12 @@ export default function ClubTasksPage() {
   const [checklistCountByTaskId, setChecklistCountByTaskId] = useState<
     Record<string, { done: number; total: number }>
   >({});
+  const [archiveView, setArchiveView] = useState<ArchiveView>({
+    type: "current",
+  });
+  const [archiveModalOpen, setArchiveModalOpen] = useState(false);
+  const [archiveLabelInput, setArchiveLabelInput] = useState("");
+  const [archiving, setArchiving] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -159,7 +171,7 @@ export default function ClubTasksPage() {
     const { data, error } = await supabase
       .from("tasks")
       .select(
-        "id, organization_id, title, description, status, priority, assignee_id, reviewer_id, created_by, category, due_date, created_at, recurrence_rule"
+        "id, organization_id, title, description, status, priority, assignee_id, reviewer_id, created_by, category, due_date, created_at, recurrence_rule, archived_at, archive_label"
       )
       .eq("organization_id", orgId);
 
@@ -439,10 +451,17 @@ export default function ClubTasksPage() {
     );
   }, [tasks]);
 
+  const archiveLabelOpts = useMemo(() => archiveLabelOptions(tasks), [tasks]);
+
+  const isViewingArchiveHistory = archiveView.type !== "current";
+
   const visibleTasks = useMemo(() => {
-    if (!categoryFilter) return tasks;
-    return tasks.filter((t) => (t.category ?? "").trim() === categoryFilter);
-  }, [tasks, categoryFilter]);
+    const archived = filterTasksByArchiveView(tasks, archiveView);
+    if (!categoryFilter) return archived;
+    return archived.filter(
+      (t) => (t.category ?? "").trim() === categoryFilter
+    );
+  }, [tasks, archiveView, categoryFilter]);
 
   const tasksByLane = useMemo(() => {
     return LANES.map((lane) => ({
@@ -617,6 +636,7 @@ export default function ClubTasksPage() {
 
   const handleDragEnd = useCallback(
     async (result: DropResult) => {
+      if (archiveView.type !== "current") return;
       const { source, destination, draggableId } = result;
       if (!destination) return;
       if (
@@ -742,8 +762,39 @@ export default function ClubTasksPage() {
         );
       }
     },
-    [tasks, notifyTaskChange, currentUserId, swimlaneAxis, maybeGenerateRecurringTask]
+    [
+      tasks,
+      notifyTaskChange,
+      currentUserId,
+      swimlaneAxis,
+      maybeGenerateRecurringTask,
+      archiveView,
+    ]
   );
+
+  const handleArchive = async () => {
+    if (!orgId) return;
+    const label = archiveLabelInput.trim();
+    if (!label) {
+      toast.error("アーカイブ名を入力してください");
+      return;
+    }
+    setArchiving(true);
+    const { data, error } = await supabase.rpc("archive_organization_tasks", {
+      p_organization_id: orgId,
+      p_archive_label: label,
+    });
+    setArchiving(false);
+    if (error) {
+      console.error("archive_organization_tasks error:", error);
+      toast.error("アーカイブに失敗しました");
+      return;
+    }
+    toast.success(`${data ?? 0}件のタスクをアーカイブしました`);
+    setArchiveModalOpen(false);
+    setArchiveLabelInput("");
+    await loadTasks();
+  };
 
   if (ctxLoading) {
     return (
@@ -783,15 +834,34 @@ export default function ClubTasksPage() {
             </p>
           )}
         </div>
-        <Button
-          type="button"
-          variant="primary"
-          onClick={openNewModal}
-          className="inline-flex items-center gap-2 shrink-0"
-        >
-          <Plus className="w-5 h-5" aria-hidden="true" />
-          新規タスク追加
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {(activeRole === "owner" || activeRole === "admin") && (
+            <Button
+              type="button"
+              variant="outlineMuted"
+              onClick={() => setArchiveModalOpen(true)}
+              className="inline-flex items-center gap-2"
+            >
+              <Archive className="w-5 h-5" aria-hidden="true" />
+              年度アーカイブ
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="primary"
+            onClick={openNewModal}
+            disabled={isViewingArchiveHistory}
+            title={
+              isViewingArchiveHistory
+                ? "アーカイブ履歴を閲覧中は新規タスクを追加できません"
+                : undefined
+            }
+            className="inline-flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" aria-hidden="true" />
+            新規タスク追加
+          </Button>
+        </div>
       </div>
 
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -813,6 +883,35 @@ export default function ClubTasksPage() {
             ))}
           </select>
         </div>
+        {archiveLabelOpts.length > 0 && (
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="archive-view"
+              className="text-sm text-graphite/70 shrink-0"
+            >
+              表示
+            </label>
+            <select
+              id="archive-view"
+              value={archiveView.type === "current" ? "" : archiveView.label}
+              onChange={(e) =>
+                setArchiveView(
+                  e.target.value
+                    ? { type: "label", label: e.target.value }
+                    : { type: "current" }
+                )
+              }
+              className="border border-rule rounded-lg px-2 py-1.5 text-sm bg-paper text-ink"
+            >
+              <option value="">現在のタスク</option>
+              {archiveLabelOpts.map((label) => (
+                <option key={label} value={label}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         {view === "kanban" && (
           <div className="flex items-center gap-2">
             <label
@@ -861,6 +960,13 @@ export default function ClubTasksPage() {
           ))}
         </div>
       </div>
+
+      {isViewingArchiveHistory && (
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-rule bg-mist px-4 py-2 text-sm text-graphite">
+          <Lock className="w-4 h-4 shrink-0" aria-hidden="true" />
+          「{archiveView.type === "label" ? archiveView.label : ""}」のアーカイブ履歴を閲覧中です（参照専用。ドラッグでの移動・新規タスク追加はできません）
+        </div>
+      )}
 
       {view === "gantt" ? (
         <GanttView
@@ -914,7 +1020,10 @@ export default function ClubTasksPage() {
                         </span>
                       </h2>
                     </div>
-                    <Droppable droppableId={lane.id}>
+                    <Droppable
+                      droppableId={lane.id}
+                      isDropDisabled={isViewingArchiveHistory}
+                    >
                       {(provided) => (
                         <div
                           ref={provided.innerRef}
@@ -1205,6 +1314,66 @@ export default function ClubTasksPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {archiveModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="archive-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !archiving) {
+              setArchiveModalOpen(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-md rounded-xl bg-paper border border-rule shadow-xl">
+            <div className="p-5 border-b border-rule">
+              <h2
+                id="archive-modal-title"
+                className="text-lg font-bold text-ink"
+              >
+                年度アーカイブ
+              </h2>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-graphite">
+                現在アーカイブされていない全てのタスクに、入力したアーカイブ名を付けて一括でアーカイブします。アーカイブ後は既存の表示から除外されますが、コメント・添付ファイル・チェックリストを含め削除はされず、「表示」の絞り込みからいつでも参照できます。この操作は元に戻せません。
+              </p>
+              <div>
+                <label className="block text-sm font-bold text-ink mb-1">
+                  アーカイブ名
+                </label>
+                <Input
+                  value={archiveLabelInput}
+                  onChange={(e) => setArchiveLabelInput(e.target.value)}
+                  placeholder="例：2026年度"
+                  disabled={archiving}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outlineMuted"
+                  onClick={() => setArchiveModalOpen(false)}
+                  disabled={archiving}
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleArchive}
+                  disabled={archiving || !archiveLabelInput.trim()}
+                >
+                  {archiving ? "アーカイブ中..." : "アーカイブする"}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
