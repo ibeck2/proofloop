@@ -41,3 +41,13 @@ export interface AttachmentRow {
   mime_type: string | null;
   created_at?: string;
 }
+
+/** タスクへのコメント（task_comments テーブル。投稿後の編集・削除は無い） */
+export interface CommentRow {
+  id: string;
+  task_id: string;
+  organization_id: string;
+  author_id: string | null;
+  body: string;
+  created_at?: string;
+}

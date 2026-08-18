@@ -1,6 +1,7 @@
 export type NotificationType =
   | "task_review_assigned"
-  | "task_assignee_changed";
+  | "task_assignee_changed"
+  | "task_comment_added";
 
 export interface NotificationPreferenceRow {
   id: string;

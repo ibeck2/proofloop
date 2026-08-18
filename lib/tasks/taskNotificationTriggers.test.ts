@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  shouldNotifyReviewAssigned,
+  commentNotificationRecipients,
   shouldNotifyAssigneeChanged,
+  shouldNotifyReviewAssigned,
 } from "./taskNotificationTriggers";
 
 describe("shouldNotifyReviewAssigned", () => {
@@ -121,5 +122,47 @@ describe("shouldNotifyAssigneeChanged", () => {
         "user-actor"
       )
     ).toBe(false);
+  });
+});
+
+describe("commentNotificationRecipients", () => {
+  it("returns assignee, reviewer, and creator when all are distinct and none is the author", () => {
+    const result = commentNotificationRecipients(
+      { assigneeId: "user-a", reviewerId: "user-r", createdBy: "user-c" },
+      "user-author"
+    );
+    expect(result).toEqual(["user-a", "user-r", "user-c"]);
+  });
+
+  it("deduplicates when the same person holds two roles", () => {
+    const result = commentNotificationRecipients(
+      { assigneeId: "user-x", reviewerId: "user-x", createdBy: "user-c" },
+      "user-author"
+    );
+    expect(result).toEqual(["user-x", "user-c"]);
+  });
+
+  it("excludes the comment author even when they hold a role", () => {
+    const result = commentNotificationRecipients(
+      { assigneeId: "user-author", reviewerId: "user-r", createdBy: "user-c" },
+      "user-author"
+    );
+    expect(result).toEqual(["user-r", "user-c"]);
+  });
+
+  it("returns an empty array when all roles are null", () => {
+    const result = commentNotificationRecipients(
+      { assigneeId: null, reviewerId: null, createdBy: null },
+      "user-author"
+    );
+    expect(result).toEqual([]);
+  });
+
+  it("returns an empty array when the author holds every role", () => {
+    const result = commentNotificationRecipients(
+      { assigneeId: "user-author", reviewerId: "user-author", createdBy: "user-author" },
+      "user-author"
+    );
+    expect(result).toEqual([]);
   });
 });

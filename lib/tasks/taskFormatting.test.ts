@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   checklistProgressLabel,
+  formatDateTime,
   formatDue,
   formatFileSize,
   priorityBadgeClass,
@@ -90,5 +91,29 @@ describe("formatFileSize", () => {
   it("formats megabytes with one decimal place", () => {
     expect(formatFileSize(1024 * 1024)).toBe("1.0MB");
     expect(formatFileSize(1024 * 1024 * 2.5)).toBe("2.5MB");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("returns an em dash for a missing date", () => {
+    expect(formatDateTime(null)).toBe("—");
+    expect(formatDateTime(undefined)).toBe("—");
+  });
+
+  it("returns an em dash for an unparseable date", () => {
+    expect(formatDateTime("not-a-date")).toBe("—");
+  });
+
+  it("formats a valid ISO datetime in ja-JP long form with time", () => {
+    const iso = "2026-09-01T10:30:00Z";
+    expect(formatDateTime(iso)).toBe(
+      new Date(iso).toLocaleString("ja-JP", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    );
   });
 });

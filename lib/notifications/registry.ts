@@ -28,6 +28,14 @@ export const NOTIFICATION_REGISTRY: NotificationTypeMeta[] = [
     isOptional: true,
     isOrgScoped: true,
   },
+  {
+    id: "task_comment_added",
+    label: "タスクへのコメント",
+    description:
+      "自分が担当・レビュー・作成したタスクにコメントが投稿されたときにメールで知らせます。",
+    isOptional: true,
+    isOrgScoped: true,
+  },
 ];
 
 export function getOptionalNotificationTypes(): NotificationTypeMeta[] {

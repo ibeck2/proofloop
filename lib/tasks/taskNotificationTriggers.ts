@@ -41,3 +41,29 @@ export function shouldNotifyAssigneeChanged(
 
   return true;
 }
+
+export interface TaskCommentRoles {
+  assigneeId: string | null;
+  reviewerId: string | null;
+  createdBy: string | null;
+}
+
+/**
+ * コメント投稿時に通知すべき相手（担当者・レビュー者・作成者）を、
+ * 投稿者自身を除き重複無く返す。順序は 担当者→レビュー者→作成者。
+ */
+export function commentNotificationRecipients(
+  task: TaskCommentRoles,
+  authorId: string
+): string[] {
+  const candidates = [task.assigneeId, task.reviewerId, task.createdBy];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const id of candidates) {
+    if (id && id !== authorId && !seen.has(id)) {
+      seen.add(id);
+      result.push(id);
+    }
+  }
+  return result;
+}
