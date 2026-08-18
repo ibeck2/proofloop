@@ -320,7 +320,7 @@ export default function ClubTasksPage() {
     [orgId, orgName, memberEmailById, memberNameById, currentUserId]
   );
 
-  const handleCommentAdded = useCallback(() => {
+  const handleCommentAdded = useCallback(async () => {
     if (!editingTask) return;
     const recipients = commentNotificationRecipients(
       {
@@ -330,8 +330,10 @@ export default function ClubTasksPage() {
       },
       currentUserId ?? ""
     );
+    // 逐次await：複数人に同時発火するとResendのレート制限に触れて
+    // 一部だけ無言で失敗しうるため、直列に送ってその余地を無くす。
     for (const recipientId of recipients) {
-      void notifyTaskChange({
+      await notifyTaskChange({
         type: "task_comment_added",
         recipientId,
         taskTitle: editingTask.title,
