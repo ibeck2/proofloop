@@ -38,6 +38,7 @@ function makeTask(overrides: Partial<TaskRow> = {}): TaskRow {
     created_by: null,
     category: null,
     due_date: null,
+    recurrence_rule: null,
     ...overrides,
   };
 }
