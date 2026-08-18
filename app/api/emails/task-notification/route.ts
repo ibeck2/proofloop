@@ -125,8 +125,33 @@ function buildAssigneeChangedHtml(
   return emailShell("タスクの担当者に指定されました", body);
 }
 
+function buildCommentAddedHtml(
+  recipientName: string,
+  actorName: string,
+  taskTitle: string,
+  organizationName: string,
+  tasksUrl: string
+): string {
+  const name = escapeHtml(recipientName || "メンバー");
+  const actor = escapeHtml(actorName || "メンバー");
+  const title = escapeHtml(taskTitle || "タスク");
+  const org = escapeHtml(organizationName || "団体");
+  const body = `
+    <p style="margin:0 0 16px;font-size:16px;line-height:1.7;color:#334155;">
+      <strong style="color:#0f172a;">${name}</strong> 様
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.75;color:#475569;">
+      <strong style="color:#0f172a;">${actor}</strong>さんが、<strong style="color:#0f172a;">${org}</strong>のタスク「<strong style="color:#0f172a;">${title}</strong>」にコメントを投稿しました。
+    </p>
+    <p style="margin:0 0 24px;font-size:14px;line-height:1.7;color:#64748b;">
+      内容を確認してください。
+    </p>
+    ${ctaButton(tasksUrl, "タスク一覧を開く")}`;
+  return emailShell("タスクにコメントが投稿されました", body);
+}
+
 type TaskNotificationBody = {
-  type?: "task_review_assigned" | "task_assignee_changed";
+  type?: "task_review_assigned" | "task_assignee_changed" | "task_comment_added";
   email?: string;
   recipientName?: string;
   actorName?: string;
@@ -195,9 +220,17 @@ export async function POST(request: Request) {
     const organizationName =
       typeof b.organizationName === "string" ? b.organizationName.trim() : "";
 
-    if (type !== "task_review_assigned" && type !== "task_assignee_changed") {
+    if (
+      type !== "task_review_assigned" &&
+      type !== "task_assignee_changed" &&
+      type !== "task_comment_added"
+    ) {
       return NextResponse.json(
-        { ok: false, error: "type（task_review_assigned/task_assignee_changed）が不正です" },
+        {
+          ok: false,
+          error:
+            "type（task_review_assigned/task_assignee_changed/task_comment_added）が不正です",
+        },
         { status: 400 }
       );
     }
@@ -216,9 +249,12 @@ export async function POST(request: Request) {
     if (type === "task_review_assigned") {
       subject = `【ProofLoop】「${sanitizeSubjectPart(taskTitle)}」のレビューを依頼されました`;
       html = buildReviewAssignedHtml(recipientName, actorName, taskTitle, organizationName, tasksUrl);
-    } else {
+    } else if (type === "task_assignee_changed") {
       subject = `【ProofLoop】「${sanitizeSubjectPart(taskTitle)}」の担当者に指定されました`;
       html = buildAssigneeChangedHtml(recipientName, actorName, taskTitle, organizationName, tasksUrl);
+    } else {
+      subject = `【ProofLoop】「${sanitizeSubjectPart(taskTitle)}」にコメントが投稿されました`;
+      html = buildCommentAddedHtml(recipientName, actorName, taskTitle, organizationName, tasksUrl);
     }
 
     const resend = new Resend(apiKey);
