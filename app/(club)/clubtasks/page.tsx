@@ -353,60 +353,70 @@ export default function ClubTasksPage() {
    */
   const maybeGenerateRecurringTask = useCallback(
     async (source: RecurringTaskSource, sourceTaskId: string) => {
-      if (!source.recurrence_rule) return;
+      try {
+        if (!source.recurrence_rule) return;
 
-      const { data: checklistData, error: checklistError } = await supabase
-        .from("task_checklist_items")
-        .select("text, position")
-        .eq("task_id", sourceTaskId)
-        .order("position", { ascending: true })
-        .order("created_at", { ascending: true });
-      if (checklistError) {
-        console.error(
-          "recurring task checklist fetch error:",
-          checklistError
-        );
-      }
-
-      const generation = buildRecurringTask(
-        source,
-        (checklistData as Array<{ text: string; position: number }>) ?? []
-      );
-      if (!generation) return;
-
-      const { data: newTask, error: insertError } = await supabase
-        .from("tasks")
-        .insert({ ...generation.task, created_by: currentUserId })
-        .select("id")
-        .single();
-      if (insertError || !newTask) {
-        console.error("recurring task insert error:", insertError);
-        toast.error("定期タスクの自動生成に失敗しました");
-        return;
-      }
-
-      if (generation.checklistItems.length > 0) {
-        const { error: checklistInsertError } = await supabase
+        const { data: checklistData, error: checklistError } = await supabase
           .from("task_checklist_items")
-          .insert(
-            generation.checklistItems.map((item) => ({
-              task_id: newTask.id,
-              text: item.text,
-              position: item.position,
-              is_done: item.is_done,
-            }))
-          );
-        if (checklistInsertError) {
+          .select("text, position")
+          .eq("task_id", sourceTaskId)
+          .order("position", { ascending: true })
+          .order("created_at", { ascending: true });
+        if (checklistError) {
           console.error(
-            "recurring task checklist insert error:",
-            checklistInsertError
+            "recurring task checklist fetch error:",
+            checklistError
           );
         }
-      }
 
-      toast.success("次回分の定期タスクを自動生成しました");
-      await loadTasks();
-      await loadChecklistCounts();
+        const generation = buildRecurringTask(
+          source,
+          (checklistData as Array<{ text: string; position: number }>) ?? []
+        );
+        if (!generation) return;
+
+        const { data: newTask, error: insertError } = await supabase
+          .from("tasks")
+          .insert({ ...generation.task, created_by: currentUserId })
+          .select("id")
+          .single();
+        if (insertError || !newTask) {
+          console.error("recurring task insert error:", insertError);
+          toast.error("定期タスクの自動生成に失敗しました");
+          return;
+        }
+
+        let checklistInsertFailed = false;
+        if (generation.checklistItems.length > 0) {
+          const { error: checklistInsertError } = await supabase
+            .from("task_checklist_items")
+            .insert(
+              generation.checklistItems.map((item) => ({
+                task_id: newTask.id,
+                text: item.text,
+                position: item.position,
+                is_done: item.is_done,
+              }))
+            );
+          if (checklistInsertError) {
+            console.error(
+              "recurring task checklist insert error:",
+              checklistInsertError
+            );
+            toast.error("チェックリストの引き継ぎに失敗しました（タスク自体は作成されています）");
+            checklistInsertFailed = true;
+          }
+        }
+
+        if (!checklistInsertFailed) {
+          toast.success("次回分の定期タスクを自動生成しました");
+        }
+        await loadTasks();
+        await loadChecklistCounts();
+      } catch (err) {
+        console.error("recurring task generation error:", err);
+        toast.error("定期タスクの自動生成に失敗しました");
+      }
     },
     [currentUserId, loadTasks, loadChecklistCounts]
   );
