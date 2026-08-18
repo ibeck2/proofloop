@@ -93,13 +93,24 @@ export default function AttachmentSection({
   };
 
   const handleDelete = async (item: AttachmentRow) => {
-    const { error } = await supabase
+    // .select("id")で実際に削除された行を確認する。RLSが対象行を除外した
+    // 場合（例：親タスクがアーカイブ済み）、PostgRESTのDELETEはエラーを
+    // 返さず0行成功として扱うため、この確認をしないとDB行は残ったまま
+    // Storage側の実体だけを消してしまう（不可逆なデータ消失）。
+    const { data, error } = await supabase
       .from("task_attachments")
       .delete()
-      .eq("id", item.id);
+      .eq("id", item.id)
+      .select("id");
     if (error) {
       console.error("attachment delete error:", error);
       toast.error("添付ファイルの削除に失敗しました");
+      return;
+    }
+    if (!data || data.length === 0) {
+      console.error("attachment delete blocked by RLS (0 rows):", item.id);
+      toast.error("添付ファイルの削除に失敗しました");
+      await load();
       return;
     }
     await supabase.storage.from("task-attachments").remove([item.file_path]);
