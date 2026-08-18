@@ -723,7 +723,7 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 **カンバンのドラッグ&ドロップが体感重い（ドロップしてから反映されるまで時間がかかる）。本番（proofloop.jp）の既存カンバンでも同様に発生することをオーナーが確認済み——今回のPhase 1で新規に作った問題ではない。** `SwimlaneBoard.tsx`の`groupTasksIntoSwimlanes`計算に`useMemo`を追加する対応は行った（ドラッグ中の毎レンダリング再計算というスイムレーン特有のムダは削減）が、フラットかんばん（今回の変更が入っていない既存コード）でも同様の重さが確認されたため、**根本原因はこのPhaseの変更範囲外**。次回このテーマに戻ったら、`handleDragEnd`のSupabase直接更新（`app/(club)/clubtasks/page.tsx`、クライアントから直接`.update()`している）のレイテンシなのか、React再レンダリングコストなのか、切り分けから着手する。
 
 ### Phase 2・Phase 3（残り）
-成果物添付・コメント/活動ログ・定期タスク（Phase 2残り）、年度アーカイブ（Phase 3）は`docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`参照。チェックリストはセクションSで完了。
+コメント/活動ログ・定期タスク（Phase 2残り）、年度アーカイブ（Phase 3）は`docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`参照。チェックリストはセクションS、成果物添付はセクションTで完了。
 
 ---
 
@@ -747,6 +747,30 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 - **複数団体に所属するメンバーは、タスク自体を自分の別の団体へ移動できてしまう**（`tasks`テーブルの既存RLS、マイグレーション013由来。今回の変更が入れたものではない）。移動されると、そのタスクのチェックリスト項目は旧団体側に取り残され、両団体のどちらからも実質見えなくなる（データ消失ではないが孤立する）。恒久対応案：`tasks`に`UNIQUE (id, organization_id)`を張り、`task_checklist_items`のFKを複合外部キー`FOREIGN KEY (task_id, organization_id) REFERENCES tasks(id, organization_id) ON UPDATE CASCADE`に変更する（トリガー任せではなく制約で保証する形）。次にこのテーマに戻ったら着手。
 - `loadChecklistCounts`（`page.tsx`）は団体内の全チェックリスト行を毎回まるごと取得する非増分方式。現状件数では問題ないが、セクションR記載のドラッグ&ドロップ性能課題とあわせて、次回の性能点検でまとめて見るのがよい。
 - **このリポジトリにはコンポーネントレベルのテスト基盤が無い**（vitestのみ、jsdom/testing-library未導入）。今回の「フォーム入れ子」バグはDOM挙動起因で、純粋関数テストでは原理的に検出できないクラスの不具合だった。ライブQA（ブラウザでの実機確認）がこの種のバグを拾う唯一のネットになっている状態は、次にUIを大きく触るときの検討事項として残す。
+
+---
+
+## T. `/clubtasks` Phase 2「成果物・アウトプット添付」機能 ✅ 完了（2026-08-18）
+
+計画 `docs/superpowers/plans/2026-08-18-clubtasks-attachments.md`。`subagent-driven-development`でworktree実行（Task 1=マイグレーション単独バッチ＋同日中のレビュー起因の追加マイグレーション1件、Task 2-3=1バッチ）。
+
+### やったこと
+- 新規テーブル`task_attachments`（`id, task_id, organization_id, uploaded_by, file_path, file_name, file_size, mime_type, created_at`）。ファイル実体は非公開のSupabase Storageバケット`task-attachments`に保存し、テーブルはメタデータのみ。担当者・作成者に限らず団体メンバー全員が読み書き可（`finance-receipts`と異なり`can_manage_org_finance`のような権限制限は無い）。
+- `organization_id`はクライアントから受け取らず、BEFORE INSERT/UPDATEトリガー（`set_task_attachment_org`）が`tasks.organization_id`から自動導出。**チェックリスト機能（セクションS）で見つかった「列指定トリガーの穴」の教訓を踏まえ、最初から列指定なしの`BEFORE INSERT OR UPDATE`で作った**ため、セクションSの050のような追加修正は不要だった（本番のBEGIN…ROLLBACK検証で、この種の穴が最初から塞がっていることを確認済み）。
+- 編集モーダルに`AttachmentSection`コンポーネントを追加（アップロード・一覧・署名付きURLでの開封・削除）。**`<form>`要素を一切使わない**（隠した`<input type="file">`を`<label>`でクリックトリガーする方式）設計とし、セクションSのチェックリスト機能で発生した「ネストしたformのsubmitイベントが外側のタスク編集フォームにバブリングしモーダルが意図せず閉じる」バグのクラスを構造的に回避した。
+- カンバンカードへの進捗バッジ表示は設計上求めていないため実装していない（チェックリストの「2/5」バッジに相当するものは無い）。
+- **本番適用済みマイグレーション**：`051_task_attachments.sql`（テーブル・RLS・トリガー・Storageバケット・Storage RLS）→`052_task_attachments_path_org_check.sql`（後述）。
+
+### レビューで見つかり、このPRで対応した1件
+1. **Storageの`file_path`先頭セグメント（クライアントが構成）と、テーブル行の`organization_id`（トリガーで自動導出）が独立していた。** 複数団体に所属するメンバーが「`file_path`は団体Aのフォルダ配下、`task_id`は団体Bのタスク」という行を作れてしまう構造だった。現状はクライアントサイドの署名付きURL取得のみのため、Storage RLSが団体Bメンバーからの閲覧を独立に遮断しており実害は無いが、**将来サーバーサイド（service_role）で署名URLを発行する実装に変わった場合、`file_path`だけを信頼するとクロステナントの非公開ファイル漏洩になり得る**。`052`でトリガーに「`file_path`先頭セグメントと導出済み`organization_id`の一致」チェックを追加し、実装の変更に関わらず恒久的に閉じた。本番でBEGIN…ROLLBACK検証済み（正しいpathは成功、不一致pathは拒否）。
+
+### 🟡 見送り・追跡事項として記録
+- **`window.open()`が`await`の後に呼ばれており、Safari/iOS Safariでポップアップブロックされる可能性がある**（`AttachmentSection.tsx`の添付ファイルを開く処理）。Chromeでは許容されるため今回のライブQAでは問題なく見えたが、ユーザージェスチャーのコンテキストが`await`中に失われるのが原因。既存の`clubfinance`（`FinanceOverviewContent.tsx`の領収書を開く処理）にも同じパターンがあり、今回新規に作った問題ではない。次に触るときに両方まとめて、クリックハンドラ内で先に空タブを開いてから`location.href`を設定する方式に直す。
+- ダウンロード時のファイル名が保存パス（`{timestamp}_{filename}`形式）になり、元のファイル名で保存されない。`createSignedUrl`の`download`オプションで元ファイル名を指定すれば解消できる（副次効果として`.html`/`.svg`等が`*.supabase.co`オリジンでアクティブコンテンツとして描画されるリスクも下がる）。
+- Storageバケットに`file_size_limit`・`allowed_mime_types`の設定が無い（`finance-receipts`と同じ）。領収書写真と異なり「成果物・アウトプット」は動画・デザインファイル等の大容量ファイルも想定されるため、サーバー側での容量上限設定は`finance-receipts`の踏襲が必ずしも適切でない可能性がある。
+- タスク削除時にDB行はCASCADE削除されるが、Storage側のファイル実体を掃除する仕組みが無い（`finance-receipts`/`club_photos`も同様の既存ギャップ）。**現状`/clubtasks`にタスク削除機能自体が存在しないため到達不能だが、将来タスク削除機能やPhase 3の年度アーカイブ（一括削除を伴う可能性）を実装する際は、この孤児化への対応を必須要件として引き継ぐこと。**
+- 削除時・アップロード失敗時ロールバックでのStorage`.remove()`失敗が無言で握りつぶされる（コンソールエラーも出ない）。実害は非公開バケット内のファイルが1件残るだけで低いが、診断のためにconsole.errorを足す価値はある。
+- セクションS記載の「複数団体所属メンバーがタスク自体を別団体へ移動できる」問題は、添付ファイルにも同様に影響する（むしろやや重い：行が孤立するだけでなく、Storageのパスも旧団体のプレフィックス配下に残り続けるため、新団体のメンバーからは行が仮に見えても実体に到達できない）。セクションSの複合FK案（`tasks`に`UNIQUE (id, organization_id)`＋`task_attachments`のFKを複合外部キー化）は両テーブルを同時に解決する。
 
 ---
 
