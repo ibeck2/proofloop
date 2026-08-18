@@ -15,6 +15,9 @@ export interface TaskRow {
   due_date: string | null;
   /** 'weekly' | 'biweekly' | 'monthly' | null。tasks_recurrence_rule_check制約で3値+NULLのみ許可 */
   recurrence_rule: string | null;
+  /** 年度アーカイブでarchive_organization_tasks RPCがセットする。nullなら現役タスク */
+  archived_at: string | null;
+  archive_label: string | null;
   /** DB に列がある場合のみ */
   created_at?: string;
   updated_at?: string;
