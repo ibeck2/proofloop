@@ -722,8 +722,8 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 ### 🟡 このPhaseで発見した既存の性能課題（Phase 1のスコープ外・未調査）
 **カンバンのドラッグ&ドロップが体感重い（ドロップしてから反映されるまで時間がかかる）。本番（proofloop.jp）の既存カンバンでも同様に発生することをオーナーが確認済み——今回のPhase 1で新規に作った問題ではない。** `SwimlaneBoard.tsx`の`groupTasksIntoSwimlanes`計算に`useMemo`を追加する対応は行った（ドラッグ中の毎レンダリング再計算というスイムレーン特有のムダは削減）が、フラットかんばん（今回の変更が入っていない既存コード）でも同様の重さが確認されたため、**根本原因はこのPhaseの変更範囲外**。次回このテーマに戻ったら、`handleDragEnd`のSupabase直接更新（`app/(club)/clubtasks/page.tsx`、クライアントから直接`.update()`している）のレイテンシなのか、React再レンダリングコストなのか、切り分けから着手する。
 
-### Phase 3（残り）
-年度アーカイブは`docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`参照。チェックリストはセクションS、成果物添付はセクションT、コメント・活動ログはセクションU、定期タスクはセクションVで完了。Phase 2の4サブ機能はこれで全て完了。
+### Phase 1〜3 完了
+チェックリストはセクションS、成果物添付はセクションT、コメント・活動ログはセクションU、定期タスクはセクションV、年度アーカイブはセクションWで完了。`docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`の3フェーズ構成はこれで全て実装済み。
 
 ---
 
@@ -826,6 +826,32 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 - 繰り返しルールの値の語彙（`'weekly' | 'biweekly' | 'monthly'`）が`lib/tasks/taskRecurrence.ts`・`lib/tasks/taskFormatting.ts`・`page.tsx`のUI選択肢・DBのCHECK制約の4箇所に分散している。3値のうちは許容範囲だが、種類が増える場合は1箇所への集約を検討する。
 - セクションS・T・U記載の「複数団体所属メンバーがタスク自体を別団体へ移動できる」問題は、`recurrence_rule`自体には影響しない（列がタスク本体にあるため）が、生成されるチェックリストのコピーには同様の孤立リスクがある。
 - ライブQA（ブラウザでの実機確認）は今回**未実施**（セクションS・T・Uと同じ、認証済みセッションに団体データが無く到達不能という制約）。次に`/clubtasks`を触る際、チェックリスト付きタスクをドラッグで完了させ、①次回タスクが1件だけ生成される②期限・担当者・チェックリストが正しくコピーされる③再度同じタスクを完了に出し入れしても多重生成されない、の3点を実機で確認すること。
+
+---
+
+## W. `/clubtasks` Phase 3「年度アーカイブ」機能 ✅ 完了（2026-08-18）
+
+計画 `docs/superpowers/plans/2026-08-18-clubtasks-archive.md`。`subagent-driven-development`でworktree実行（Task 1=マイグレーション・RPC単独バッチ＋本番検証中のバグ発見・修正、Task 2=純粋関数+TDD、Task 3=UI統合、最終レビュー後の修正1件）。これで`docs/superpowers/specs/2026-08-17-clubtasks-overhaul-design.md`の3フェーズ構成（表/カレンダー/スイムレーン・成果物添付/コメント/チェックリスト/定期タスク・年度アーカイブ）が全て完了。
+
+### やったこと
+- 新規テーブルは作らず、既存`tasks`に`archived_at timestamptz`・`archive_label text`列を追加。代表者（`role IN ('owner','admin')`）が「年度アーカイブ」ボタンを押し、アーカイブ名（例：「2026年度」）を入力すると、その時点で未アーカイブの全タスクに一括で`archived_at`・`archive_label`が書き込まれる。
+- **RLSだけでは「代表者のみ」を担保できない設計上の制約への対応**：既存の`tasks_update_own_org`等のRLSポリシーは団体所属のみを見ておりrole判定をしないため、`archived_at`・`archive_label`の2列だけ`authenticated`/`anon`から明示的にUPDATE・INSERT権限を剥がし（テーブルレベルGRANTを一旦REVOKEしてから許可列だけGRANTし直す方式）、`SECURITY DEFINER`のRPC`archive_organization_tasks`経由でのみ書き込めるようにした（RPC内部でowner/adminロールを検査）。
+- アーカイブ済みタスクは既存4ビュー（カンバン・表・カレンダー・ガント）からデフォルトで除外される。「表示」フィルタから過去のアーカイブラベルごとに参照専用で閲覧できる（ドラッグでの移動・新規タスク追加・編集モーダルでの保存はいずれも無効化される）。
+- **本番適用済みマイグレーション**：`057_tasks_archive.sql`（列追加・UPDATE権限の再設計・RPC）→`058_tasks_archive_grant_reassert.sql`（後述、マイグレーション履歴の整合性回復）→`059_tasks_archive_insert_lockdown.sql`（後述、INSERT経路の権限の穴を修正）。
+
+### レビューで見つかり、このPRで対応した項目
+1. **Task 1自体の本番検証で発見**：計画のマイグレーション原文は`REVOKE UPDATE (archived_at, archive_label) ON public.tasks FROM authenticated, anon;`という列指定REVOKEだったが、`tasks`テーブルには既にテーブルレベルの標準GRANT `UPDATE ON tasks TO authenticated, anon`が存在しており、**列指定REVOKEだけでは何の効果も持たない**（Postgresの列ACLとテーブルACLは独立しており、テーブルレベルの権限がそのまま列にも及ぶ）というPostgres特有の落とし穴だった。実装者がBEGIN…ROLLBACK検証（「RPCを経由しない直接UPDATEは拒否されるはず」というケース）で実際に不備（想定外の成功）を検出し、既存マイグレーション029・030と同じ手法（`REVOKE UPDATE ON TABLE`で一旦全体を剥がしてから、許可する13列だけを`GRANT UPDATE (列挙)`し直す）にその場で修正・再検証した。CLAUDE.mdに落とし穴として追記済み。
+2. **上記の副作用（コントローラー対応）**：本番のマイグレーション履歴（`schema_migrations`）には最初にapply_migrationされた「修正前（バグあり）」の内容が記録されたまま、リポジトリのファイル内容（修正後）と食い違う状態になっていた。`058`として修正後の内容をそのまま冪等に再実行し、履歴側にも正しい最終状態を記録した（本番の実権限状態は既に正しかったため、この適用はno-op）。
+3. **最終レビュー（Important）**：UPDATE経路は1で塞いだが、**INSERT経路が手つかずだった**。団体メンバー（owner/adminでなくても）が直接`tasks.insert({..., archived_at: ..., archive_label: "偽装2020年度"})`を送ることで、最初からアーカイブ済みの偽装タスクを作成でき、その偽ラベルが「表示」フィルタの選択肢に紛れ込むことが実証された。`059`でUPDATEと同じ手法をINSERTにも適用し、あわせて`archive_label`に長さ制約（1〜100文字、`task_comments.body`・055と同じ「訂正手段の無い列には作成時点で制約」という理由）を追加。
+4. **最終レビュー（Important）**：「参照専用」がUI上まったく機能しておらず、アーカイブ履歴閲覧中でも編集モーダルが通常通り開き保存でき、特に`recurrence_rule`付きタスクのステータスを「完了」にして保存すると**アーカイブ履歴から新しい現役タスクが生成されてしまう**実害があった。`isViewingArchiveHistory`のとき`handleSave`を早期return、全フォーム要素を無効化、保存ボタンを非表示化、チェックリスト・添付・コメントの3セクションを読み取り専用の案内文に置き換えて解消。
+5. **最終レビュー（Important）**：`loadTasks`が団体の全タスク（過去のアーカイブ全件含む）を無条件・無制限に読み込んでおり、年度アーカイブを重ねてSupabase/PostgRESTの応答上限（既定1000行）を超えると、**現役タスクが無言で欠落する**リスクがあった。`loadTasks`を`archiveView`state対応にしサーバー側で`archived_at IS NULL`または`archive_label`一致に絞り込むよう変更。「表示」ドロップダウンの選択肢は`tasks`stateとは独立した軽量専用クエリ（`loadArchiveLabels`）に分離した。
+6. **最終レビュー（Minor、まとめて対応）**：`filterTasksByArchiveView`のlabel分岐が`archived_at`を見ていなかった点の防御的ハードニング（クライアント側フィルタはサーバー側絞り込みと併用で多層防御として意図的に残置）、`SwimlaneBoard`のDroppableへのドロップ無効化伝播、アーカイブ履歴閲覧中の「年度アーカイブ」ボタン自体の無効化。
+
+### 🟡 見送り・追跡事項として記録
+- **複数団体所属メンバーがタスク自体を別団体へ移動できる問題（セクションS・T・U・V参照）を、この機会に権限レイヤーで塞ぐ機会があった**：`tasks`のUPDATE許可列リスト（057/058）には`organization_id`が含まれているが、実際のアプリコードはこの列を一切更新していない（`handleSave`のペイロードにも含まれない）。`organization_id`（および`id`・`created_at`・`created_by`）をUPDATE許可列から外せば、セクションSが提案する複合FKマイグレーション無しに、この移動経路自体を権限レイヤーで塞げる可能性がある。最終レビューでの指摘。独立した計画・BEGIN…ROLLBACK検証が必要な変更のため、今回は見送り、次にこのテーマに戻ったときの選択肢として記録する。
+- **同時完了によるアーカイブ実行と、他クライアントの操作が競合する可能性**：`archive_organization_tasks`のUPDATEは単一のアトミックなSQL文なので、団体間移動や他の保存操作との間にレースは生じない（実行前後どちらかに確定する）ことは確認済みだが、団体を跨いで移動されたタスクが元団体の`archive_label`を引き継いだまま新しい団体の「表示」ドロップダウンに紛れ込む、という上記の複数団体所属問題由来の副作用は残る。
+- **`tasks`テーブルは列レベルのUPDATE/INSERT権限リストを明示的に持つようになった**。今後`tasks`に列を追加する場合、この許可列リストに含めない限り`authenticated`から書き込めなくなる（`profiles`のRLS改修で実際に踏んだ030の事故と同種の罠）。CLAUDE.mdに落とし穴として追記済み。
+- ライブQA（ブラウザでの実機確認）は今回**未実施**（セクションS・T・U・Vと同じ、認証済みセッションに団体データが無く到達不能という制約）。次に`/clubtasks`を触る際、①owner/adminアカウントで「年度アーカイブ」を実行し、対象件数が正しくトーストされる②「表示」フィルタで過去のアーカイブが参照でき、ドラッグ・新規追加・編集保存がいずれもできないことを確認する③一般メンバーアカウントでは「年度アーカイブ」ボタン自体が表示されないことを確認する、の3点を実機で確認すること。
 
 ---
 
