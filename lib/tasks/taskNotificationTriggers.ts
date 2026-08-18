@@ -42,6 +42,27 @@ export function shouldNotifyAssigneeChanged(
   return true;
 }
 
+export interface TaskRecurrenceState {
+  status: string;
+  recurrenceRule: string | null;
+}
+
+/**
+ * タスクが既存ステータスから新しく「完了」へ遷移し、かつrecurrence_ruleが
+ * 設定されている場合にtrueを返す。既に完了のタスクを再度保存・移動しても
+ * 多重生成しないよう、遷移（prev→next）で判定する（他のtrigger関数と
+ * 同じパターン）。
+ */
+export function shouldGenerateRecurringTask(
+  prev: TaskRecurrenceState,
+  next: TaskRecurrenceState
+): boolean {
+  if (next.status !== "done") return false;
+  if (!next.recurrenceRule) return false;
+  if (prev.status === "done") return false;
+  return true;
+}
+
 export interface TaskCommentRoles {
   assigneeId: string | null;
   reviewerId: string | null;

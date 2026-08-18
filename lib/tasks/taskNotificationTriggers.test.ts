@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   commentNotificationRecipients,
+  shouldGenerateRecurringTask,
   shouldNotifyAssigneeChanged,
   shouldNotifyReviewAssigned,
 } from "./taskNotificationTriggers";
@@ -164,5 +165,43 @@ describe("commentNotificationRecipients", () => {
       "user-author"
     );
     expect(result).toEqual([]);
+  });
+});
+
+describe("shouldGenerateRecurringTask", () => {
+  it("returns true when status newly transitions to done with a recurrence rule set", () => {
+    expect(
+      shouldGenerateRecurringTask(
+        { status: "todo", recurrenceRule: "weekly" },
+        { status: "done", recurrenceRule: "weekly" }
+      )
+    ).toBe(true);
+  });
+
+  it("returns false when the task was already done (prevents duplicate generation)", () => {
+    expect(
+      shouldGenerateRecurringTask(
+        { status: "done", recurrenceRule: "weekly" },
+        { status: "done", recurrenceRule: "weekly" }
+      )
+    ).toBe(false);
+  });
+
+  it("returns false when the new status is not done", () => {
+    expect(
+      shouldGenerateRecurringTask(
+        { status: "todo", recurrenceRule: "weekly" },
+        { status: "in_progress", recurrenceRule: "weekly" }
+      )
+    ).toBe(false);
+  });
+
+  it("returns false when no recurrence rule is set", () => {
+    expect(
+      shouldGenerateRecurringTask(
+        { status: "todo", recurrenceRule: null },
+        { status: "done", recurrenceRule: null }
+      )
+    ).toBe(false);
   });
 });

@@ -50,18 +50,33 @@ function addInterval(base: Date, rule: RecurrenceRule): Date {
   return next;
 }
 
+function isBefore(a: Date, b: Date): boolean {
+  if (a.getFullYear() !== b.getFullYear()) return a.getFullYear() < b.getFullYear();
+  if (a.getMonth() !== b.getMonth()) return a.getMonth() < b.getMonth();
+  return a.getDate() < b.getDate();
+}
+
 export function nextDueDate(
   dueDate: string | null,
   rule: RecurrenceRule,
   today: Date = new Date()
 ): string {
-  const base = dueDate ? parseDateOnly(dueDate) : today;
-  return formatDateOnly(addInterval(base, rule));
+  const parsed = dueDate ? parseDateOnly(dueDate) : null;
+  const base = parsed && !Number.isNaN(parsed.getTime()) ? parsed : today;
+  let next = addInterval(base, rule);
+  // 元期限が過ぎている場合、今日以降になるまで間隔を繰り返し足す（Todoistの
+  // 実際の挙動）。単純に「元期限＋1間隔」だけだと、消化が遅れるほど生成
+  // 直後から期限切れのタスクが積み重なってしまうため。
+  while (isBefore(next, today)) {
+    next = addInterval(next, rule);
+  }
+  return formatDateOnly(next);
 }
 
 export interface RecurringTaskSource {
   organization_id: string;
   title: string;
+  description: string | null;
   category: string | null;
   priority: string | null;
   assignee_id: string | null;
@@ -73,6 +88,7 @@ export interface RecurringTaskSource {
 export interface RecurringTaskInsert {
   organization_id: string;
   title: string;
+  description: string | null;
   category: string | null;
   priority: string | null;
   assignee_id: string | null;
@@ -105,6 +121,7 @@ export function buildRecurringTask(
     task: {
       organization_id: source.organization_id,
       title: source.title,
+      description: source.description,
       category: source.category,
       priority: source.priority,
       assignee_id: source.assignee_id,

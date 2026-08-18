@@ -15,6 +15,7 @@ import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 import {
   shouldNotifyReviewAssigned,
   shouldNotifyAssigneeChanged,
+  shouldGenerateRecurringTask,
   commentNotificationRecipients,
 } from "@/lib/tasks/taskNotificationTriggers";
 import {
@@ -367,6 +368,10 @@ export default function ClubTasksPage() {
             "recurring task checklist fetch error:",
             checklistError
           );
+          toast.error(
+            "チェックリストの取得に失敗したため、定期タスクの自動生成を中止しました"
+          );
+          return;
         }
 
         const generation = buildRecurringTask(
@@ -375,9 +380,12 @@ export default function ClubTasksPage() {
         );
         if (!generation) return;
 
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         const { data: newTask, error: insertError } = await supabase
           .from("tasks")
-          .insert({ ...generation.task, created_by: currentUserId })
+          .insert({ ...generation.task, created_by: user?.id ?? null })
           .select("id")
           .single();
         if (insertError || !newTask) {
@@ -418,7 +426,7 @@ export default function ClubTasksPage() {
         toast.error("定期タスクの自動生成に失敗しました");
       }
     },
-    [currentUserId, loadTasks, loadChecklistCounts]
+    [loadTasks, loadChecklistCounts]
   );
 
   const categoryOptions = useMemo(() => {
@@ -542,12 +550,20 @@ export default function ClubTasksPage() {
           });
         }
 
-        const prevStatus = normalizeStatus(editingTask.status);
-        if (prevStatus !== "done" && payload.status === "done") {
+        if (
+          shouldGenerateRecurringTask(
+            {
+              status: normalizeStatus(editingTask.status),
+              recurrenceRule: editingTask.recurrence_rule,
+            },
+            { status: payload.status, recurrenceRule: payload.recurrence_rule }
+          )
+        ) {
           await maybeGenerateRecurringTask(
             {
               organization_id: orgId,
               title: payload.title,
+              description: payload.description,
               category: payload.category,
               priority: payload.priority,
               assignee_id: payload.assignee_id,
@@ -696,11 +712,22 @@ export default function ClubTasksPage() {
         });
       }
 
-      if (normalizeStatus(task.status) !== "done" && newStatus === "done") {
+      toast.success("移動しました");
+
+      if (
+        shouldGenerateRecurringTask(
+          {
+            status: normalizeStatus(task.status),
+            recurrenceRule: task.recurrence_rule ?? null,
+          },
+          { status: newStatus, recurrenceRule: task.recurrence_rule ?? null }
+        )
+      ) {
         await maybeGenerateRecurringTask(
           {
             organization_id: task.organization_id,
             title: task.title,
+            description: task.description,
             category:
               "category" in rowChange
                 ? (rowChange.category ?? null)
@@ -714,8 +741,6 @@ export default function ClubTasksPage() {
           task.id
         );
       }
-
-      toast.success("移動しました");
     },
     [tasks, notifyTaskChange, currentUserId, swimlaneAxis, maybeGenerateRecurringTask]
   );
