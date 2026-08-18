@@ -1516,7 +1516,7 @@ export default function ClubTasksPage() {
             <div className="p-5 space-y-4">
               <p className="text-sm text-graphite">
                 「{archiveView.label}」を取り消し、{tasks.length}
-                件のタスクを現在のタスクへ戻します。チェックリスト・添付ファイル・コメントも通常通り編集できる状態に戻ります。
+                件のタスクを現在のタスクへ戻します。チェックリスト・添付ファイル・コメントも通常通り編集できる状態に戻ります。取り消したタスクは現在のタスクと区別が付かなくなり、この取り消し自体を元に戻すことはできません（再度アーカイブすると、そのとき未アーカイブの全タスクが対象になります）。
               </p>
               <div className="flex justify-end gap-2 pt-2">
                 <Button
