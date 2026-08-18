@@ -73,3 +73,18 @@ export function formatDateTime(iso: string | null | undefined): string {
     minute: "2-digit",
   });
 }
+
+const RECURRENCE_LABEL: Record<string, string> = {
+  weekly: "毎週",
+  biweekly: "隔週",
+  monthly: "毎月",
+};
+
+/**
+ * カンバンカードの繰り返しバッジ用ラベル。recurrence_ruleが無い・不明な
+ * タスクにはバッジ自体を出さないため null を返す。
+ */
+export function recurrenceLabel(rule: string | null | undefined): string | null {
+  if (!rule) return null;
+  return RECURRENCE_LABEL[rule] ?? null;
+}

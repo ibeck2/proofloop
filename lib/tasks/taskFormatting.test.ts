@@ -6,6 +6,7 @@ import {
   formatFileSize,
   priorityBadgeClass,
   priorityLabel,
+  recurrenceLabel,
 } from "./taskFormatting";
 
 describe("priorityLabel", () => {
@@ -115,5 +116,23 @@ describe("formatDateTime", () => {
         minute: "2-digit",
       })
     );
+  });
+});
+
+describe("recurrenceLabel", () => {
+  it("returns null when there is no recurrence rule", () => {
+    expect(recurrenceLabel(null)).toBeNull();
+    expect(recurrenceLabel(undefined)).toBeNull();
+    expect(recurrenceLabel("")).toBeNull();
+  });
+
+  it("labels known recurrence rules in Japanese", () => {
+    expect(recurrenceLabel("weekly")).toBe("毎週");
+    expect(recurrenceLabel("biweekly")).toBe("隔週");
+    expect(recurrenceLabel("monthly")).toBe("毎月");
+  });
+
+  it("returns null for an unknown recurrence rule", () => {
+    expect(recurrenceLabel("daily")).toBeNull();
   });
 });

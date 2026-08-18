@@ -13,6 +13,8 @@ export interface TaskRow {
   created_by: string | null;
   category: string | null;
   due_date: string | null;
+  /** 'weekly' | 'biweekly' | 'monthly' | null。tasks_recurrence_rule_check制約で3値+NULLのみ許可 */
+  recurrence_rule: string | null;
   /** DB に列がある場合のみ */
   created_at?: string;
   updated_at?: string;
