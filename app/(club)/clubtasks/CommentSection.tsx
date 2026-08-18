@@ -11,12 +11,14 @@ type Props = {
   taskId: string;
   memberNameById: Record<string, string>;
   onCommentAdded: () => void;
+  readOnly?: boolean;
 };
 
 export default function CommentSection({
   taskId,
   memberNameById,
   onCommentAdded,
+  readOnly = false,
 }: Props) {
   const [items, setItems] = useState<CommentRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -93,22 +95,26 @@ export default function CommentSection({
           ))}
         </ul>
       )}
-      <Textarea
-        value={newBody}
-        onChange={(e) => setNewBody(e.target.value)}
-        placeholder="コメントを追加"
-        rows={2}
-        disabled={posting}
-        className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink mb-2"
-      />
-      <Button
-        type="button"
-        variant="outlineMuted"
-        onClick={handlePost}
-        disabled={posting || !newBody.trim()}
-      >
-        {posting ? "投稿中..." : "コメントを投稿"}
-      </Button>
+      {!readOnly && (
+        <>
+          <Textarea
+            value={newBody}
+            onChange={(e) => setNewBody(e.target.value)}
+            placeholder="コメントを追加"
+            rows={2}
+            disabled={posting}
+            className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink mb-2"
+          />
+          <Button
+            type="button"
+            variant="outlineMuted"
+            onClick={handlePost}
+            disabled={posting || !newBody.trim()}
+          >
+            {posting ? "投稿中..." : "コメントを投稿"}
+          </Button>
+        </>
+      )}
     </div>
   );
 }

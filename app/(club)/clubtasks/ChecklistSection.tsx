@@ -10,6 +10,7 @@ import type { ChecklistItemRow } from "@/lib/types/task";
 type Props = {
   taskId: string;
   onCountChange: (taskId: string, done: number, total: number) => void;
+  readOnly?: boolean;
 };
 
 function reportCounts(
@@ -24,7 +25,11 @@ function reportCounts(
   );
 }
 
-export default function ChecklistSection({ taskId, onCountChange }: Props) {
+export default function ChecklistSection({
+  taskId,
+  onCountChange,
+  readOnly = false,
+}: Props) {
   const [items, setItems] = useState<ChecklistItemRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [newText, setNewText] = useState("");
@@ -127,6 +132,7 @@ export default function ChecklistSection({ taskId, onCountChange }: Props) {
                   type="checkbox"
                   checked={item.is_done}
                   onChange={() => handleToggle(item)}
+                  disabled={readOnly}
                   className="w-4 h-4 accent-ink shrink-0"
                 />
                 <span
@@ -137,42 +143,46 @@ export default function ChecklistSection({ taskId, onCountChange }: Props) {
                   {item.text}
                 </span>
               </label>
-              <button
-                type="button"
-                onClick={() => handleDelete(item)}
-                className="p-1 text-graphite/50 hover:text-seal shrink-0"
-                aria-label="削除"
-              >
-                <Trash2 className="w-4 h-4" aria-hidden="true" />
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(item)}
+                  className="p-1 text-graphite/50 hover:text-seal shrink-0"
+                  aria-label="削除"
+                >
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
+                </button>
+              )}
             </li>
           ))}
         </ul>
       )}
-      <div className="flex gap-2">
-        <Input
-          value={newText}
-          onChange={(e) => setNewText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleAdd();
-            }
-          }}
-          placeholder="項目を追加"
-          disabled={adding}
-          className="flex-1"
-        />
-        <Button
-          type="button"
-          variant="outlineMuted"
-          onClick={handleAdd}
-          disabled={adding || !newText.trim()}
-          aria-label="項目を追加"
-        >
-          <Plus className="w-4 h-4" aria-hidden="true" />
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-2">
+          <Input
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAdd();
+              }
+            }}
+            placeholder="項目を追加"
+            disabled={adding}
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            variant="outlineMuted"
+            onClick={handleAdd}
+            disabled={adding || !newText.trim()}
+            aria-label="項目を追加"
+          >
+            <Plus className="w-4 h-4" aria-hidden="true" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

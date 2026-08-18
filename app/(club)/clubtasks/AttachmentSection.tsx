@@ -10,9 +10,14 @@ import { formatFileSize } from "@/lib/tasks/taskFormatting";
 type Props = {
   taskId: string;
   organizationId: string;
+  readOnly?: boolean;
 };
 
-export default function AttachmentSection({ taskId, organizationId }: Props) {
+export default function AttachmentSection({
+  taskId,
+  organizationId,
+  readOnly = false,
+}: Props) {
   const [items, setItems] = useState<AttachmentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -131,28 +136,32 @@ export default function AttachmentSection({ taskId, organizationId }: Props) {
                   ({formatFileSize(item.file_size)})
                 </span>
               </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(item)}
-                className="p-1 text-graphite/50 hover:text-seal shrink-0"
-                aria-label="削除"
-              >
-                <Trash2 className="w-4 h-4" aria-hidden="true" />
-              </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(item)}
+                  className="p-1 text-graphite/50 hover:text-seal shrink-0"
+                  aria-label="削除"
+                >
+                  <Trash2 className="w-4 h-4" aria-hidden="true" />
+                </button>
+              )}
             </li>
           ))}
         </ul>
       )}
-      <label className="inline-flex items-center gap-2 text-sm border border-rule rounded-lg px-3 py-1.5 cursor-pointer hover:bg-mist w-fit">
-        <Upload className="w-4 h-4" aria-hidden="true" />
-        {uploading ? "アップロード中..." : "ファイルを追加"}
-        <input
-          type="file"
-          onChange={handleUpload}
-          disabled={uploading}
-          className="hidden"
-        />
-      </label>
+      {!readOnly && (
+        <label className="inline-flex items-center gap-2 text-sm border border-rule rounded-lg px-3 py-1.5 cursor-pointer hover:bg-mist w-fit">
+          <Upload className="w-4 h-4" aria-hidden="true" />
+          {uploading ? "アップロード中..." : "ファイルを追加"}
+          <input
+            type="file"
+            onChange={handleUpload}
+            disabled={uploading}
+            className="hidden"
+          />
+        </label>
+      )}
     </div>
   );
 }

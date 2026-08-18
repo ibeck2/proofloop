@@ -29,7 +29,6 @@ import {
   type RecurringTaskSource,
 } from "@/lib/tasks/taskRecurrence";
 import {
-  archiveLabelOptions,
   filterTasksByArchiveView,
   type ArchiveView,
 } from "@/lib/tasks/taskArchive";
@@ -193,19 +192,18 @@ export default function ClubTasksPage() {
 
   const loadArchiveLabels = useCallback(async () => {
     if (!orgId) return;
-    const { data, error } = await supabase
-      .from("tasks")
-      .select("archive_label, archived_at")
-      .eq("organization_id", orgId)
-      .not("archive_label", "is", null);
+    const { data, error } = await supabase.rpc(
+      "list_organization_archive_labels",
+      { p_organization_id: orgId }
+    );
     if (error) {
       console.error("archive labels fetch error:", error);
       return;
     }
     setArchiveLabelOpts(
-      archiveLabelOptions(
-        (data as Array<{ archive_label: string | null; archived_at: string | null }>) ?? []
-      )
+      (
+        data as Array<{ archive_label: string; latest_archived_at: string }>
+      ).map((row) => row.archive_label)
     );
   }, [orgId]);
 
@@ -257,10 +255,15 @@ export default function ClubTasksPage() {
 
   const loadChecklistCounts = useCallback(async () => {
     if (!orgId) return;
-    const { data, error } = await supabase
+    let query = supabase
       .from("task_checklist_items")
-      .select("task_id, is_done")
+      .select("task_id, is_done, tasks!inner(archived_at, archive_label)")
       .eq("organization_id", orgId);
+    query =
+      archiveView.type === "current"
+        ? query.is("tasks.archived_at", null)
+        : query.eq("tasks.archive_label", archiveView.label);
+    const { data, error } = await query;
     if (error) {
       console.error("checklist counts fetch error:", error);
       return;
@@ -273,21 +276,30 @@ export default function ClubTasksPage() {
       counts[row.task_id] = c;
     }
     setChecklistCountByTaskId(counts);
-  }, [orgId]);
+  }, [orgId, archiveView]);
+
+  useEffect(() => {
+    if (orgId) {
+      loadMembers();
+    }
+  }, [orgId, loadMembers]);
 
   useEffect(() => {
     if (orgId) {
       loadTasks();
-      loadMembers();
       loadChecklistCounts();
     }
-  }, [orgId, loadTasks, loadMembers, loadChecklistCounts]);
+  }, [orgId, loadTasks, loadChecklistCounts]);
 
   useEffect(() => {
     if (orgId) {
       loadArchiveLabels();
     }
   }, [orgId, loadArchiveLabels]);
+
+  useEffect(() => {
+    setCategoryFilter("");
+  }, [archiveView]);
 
   const memberNameById = useMemo(() => {
     const map: Record<string, string> = {};
@@ -1078,6 +1090,7 @@ export default function ClubTasksPage() {
                               memberNameById={memberNameById}
                               checklistCountByTaskId={checklistCountByTaskId}
                               onOpen={openEditModal}
+                              isDragDisabled={isViewingArchiveHistory}
                             />
                           ))}
                           {provided.placeholder}
@@ -1101,6 +1114,7 @@ export default function ClubTasksPage() {
               checklistCountByTaskId={checklistCountByTaskId}
               onOpen={openEditModal}
               isDropDisabled={isViewingArchiveHistory}
+              isDragDisabled={isViewingArchiveHistory}
             />
           )}
         </DragDropContext>
@@ -1126,7 +1140,11 @@ export default function ClubTasksPage() {
                 id="task-modal-title"
                 className="text-lg font-bold text-ink"
               >
-                {editingTask ? "タスクを編集" : "新規タスク"}
+                {editingTask
+                  ? isViewingArchiveHistory
+                    ? "タスクを閲覧"
+                    : "タスクを編集"
+                  : "新規タスク"}
               </h2>
               <button
                 type="button"
@@ -1318,27 +1336,24 @@ export default function ClubTasksPage() {
                 </p>
               </div>
               {editingTask ? (
-                isViewingArchiveHistory ? (
-                  <p className="text-xs text-graphite/60">
-                    アーカイブ履歴を閲覧中のため、チェックリスト・添付ファイル・コメントの追加や変更はできません。
-                  </p>
-                ) : (
-                  <>
-                    <ChecklistSection
-                      taskId={editingTask.id}
-                      onCountChange={handleChecklistCountChange}
-                    />
-                    <AttachmentSection
-                      taskId={editingTask.id}
-                      organizationId={editingTask.organization_id}
-                    />
-                    <CommentSection
-                      taskId={editingTask.id}
-                      memberNameById={memberNameById}
-                      onCommentAdded={handleCommentAdded}
-                    />
-                  </>
-                )
+                <>
+                  <ChecklistSection
+                    taskId={editingTask.id}
+                    onCountChange={handleChecklistCountChange}
+                    readOnly={isViewingArchiveHistory}
+                  />
+                  <AttachmentSection
+                    taskId={editingTask.id}
+                    organizationId={editingTask.organization_id}
+                    readOnly={isViewingArchiveHistory}
+                  />
+                  <CommentSection
+                    taskId={editingTask.id}
+                    memberNameById={memberNameById}
+                    onCommentAdded={handleCommentAdded}
+                    readOnly={isViewingArchiveHistory}
+                  />
+                </>
               ) : (
                 <p className="text-xs text-graphite/60">
                   チェックリスト・添付ファイル・コメントは保存後に追加できます。
@@ -1398,6 +1413,7 @@ export default function ClubTasksPage() {
                   onChange={(e) => setArchiveLabelInput(e.target.value)}
                   placeholder="例：2026年度"
                   disabled={archiving}
+                  maxLength={100}
                   className="w-full"
                 />
               </div>

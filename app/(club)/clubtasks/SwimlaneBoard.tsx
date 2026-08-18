@@ -26,6 +26,7 @@ type Props = {
   checklistCountByTaskId: Record<string, { done: number; total: number }>;
   onOpen: (task: TaskRow) => void;
   isDropDisabled: boolean;
+  isDragDisabled?: boolean;
 };
 
 function rowLabel(
@@ -51,6 +52,7 @@ export default function SwimlaneBoard({
   checklistCountByTaskId,
   onOpen,
   isDropDisabled,
+  isDragDisabled = false,
 }: Props) {
   const rows = useMemo(() => {
     const statuses = lanes.map((l) => l.id);
@@ -142,6 +144,7 @@ export default function SwimlaneBoard({
                             memberNameById={memberNameById}
                             checklistCountByTaskId={checklistCountByTaskId}
                             onOpen={onOpen}
+                            isDragDisabled={isDragDisabled}
                           />
                         ))}
                         {provided.placeholder}

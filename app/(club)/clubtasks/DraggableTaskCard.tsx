@@ -14,6 +14,7 @@ type Props = {
   memberNameById: Record<string, string>;
   checklistCountByTaskId: Record<string, { done: number; total: number }>;
   onOpen: (task: TaskRow) => void;
+  isDragDisabled?: boolean;
 };
 
 export default function DraggableTaskCard({
@@ -25,9 +26,10 @@ export default function DraggableTaskCard({
   memberNameById,
   checklistCountByTaskId,
   onOpen,
+  isDragDisabled = false,
 }: Props) {
   return (
-    <Draggable draggableId={task.id} index={index}>
+    <Draggable draggableId={task.id} index={index} isDragDisabled={isDragDisabled}>
       {(draggableProvided, snapshot) => (
         <div
           ref={draggableProvided.innerRef}

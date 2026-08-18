@@ -13,6 +13,12 @@ export type ArchiveView =
  * "current"（既定）はarchived_atが無い現役タスクのみを返す。
  * "label"は指定されたarchive_labelに一致するアーカイブ済みタスクのみを
  * 返す（現役タスクは含まない＝アーカイブ履歴閲覧中は参照専用の一覧になる）。
+ *
+ * loadTasksは既にサーバー側（Supabaseクエリ）でarchiveViewに応じた絞り込みを
+ * 行っているが、archiveViewを切り替えた瞬間から再取得が完了するまでの間は
+ * tasks stateが古いビューのデータのままなので、この関数がその一瞬の
+ * フラッシュ・不整合表示（前のビューのタスクが一瞬混ざって見える）を防ぐために
+ * クライアント側でも引き続き使用している。
  */
 export function filterTasksByArchiveView(
   tasks: TaskRow[],
