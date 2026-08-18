@@ -49,6 +49,15 @@ describe("filterTasksByArchiveView", () => {
       filterTasksByArchiveView(tasks, { type: "label", label: "2026年度" })
     ).toEqual([]);
   });
+
+  it("excludes a row with an archive_label but no archived_at from the label view (defensive)", () => {
+    const tasks = [
+      makeTask({ id: "1", archived_at: null, archive_label: "2026年度" }),
+    ];
+    expect(
+      filterTasksByArchiveView(tasks, { type: "label", label: "2026年度" })
+    ).toEqual([]);
+  });
 });
 
 describe("archiveLabelOptions", () => {

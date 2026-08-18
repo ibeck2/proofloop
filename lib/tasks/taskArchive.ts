@@ -21,7 +21,7 @@ export function filterTasksByArchiveView(
   if (view.type === "current") {
     return tasks.filter((t) => !t.archived_at);
   }
-  return tasks.filter((t) => t.archive_label === view.label);
+  return tasks.filter((t) => t.archived_at && t.archive_label === view.label);
 }
 
 /**
@@ -29,7 +29,9 @@ export function filterTasksByArchiveView(
  * 返す。同じラベルで複数回アーカイブされることは想定していないが、念のため
  * 各ラベルの最も新しいarchived_atを代表値として採用する。
  */
-export function archiveLabelOptions(tasks: TaskRow[]): string[] {
+export function archiveLabelOptions(
+  tasks: Pick<TaskRow, "archive_label" | "archived_at">[]
+): string[] {
   const latestByLabel = new Map<string, number>();
   for (const t of tasks) {
     if (!t.archive_label || !t.archived_at) continue;

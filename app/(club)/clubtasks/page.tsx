@@ -159,6 +159,7 @@ export default function ClubTasksPage() {
   const [archiveModalOpen, setArchiveModalOpen] = useState(false);
   const [archiveLabelInput, setArchiveLabelInput] = useState("");
   const [archiving, setArchiving] = useState(false);
+  const [archiveLabelOpts, setArchiveLabelOpts] = useState<string[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -168,12 +169,18 @@ export default function ClubTasksPage() {
 
   const loadTasks = useCallback(async () => {
     if (!orgId) return;
-    const { data, error } = await supabase
+    let query = supabase
       .from("tasks")
       .select(
         "id, organization_id, title, description, status, priority, assignee_id, reviewer_id, created_by, category, due_date, created_at, recurrence_rule, archived_at, archive_label"
       )
       .eq("organization_id", orgId);
+    if (archiveView.type === "current") {
+      query = query.is("archived_at", null);
+    } else {
+      query = query.eq("archive_label", archiveView.label);
+    }
+    const { data, error } = await query;
 
     if (error) {
       console.error("tasks fetch error:", error);
@@ -182,6 +189,24 @@ export default function ClubTasksPage() {
       return;
     }
     setTasks((data as TaskRow[]) ?? []);
+  }, [orgId, archiveView]);
+
+  const loadArchiveLabels = useCallback(async () => {
+    if (!orgId) return;
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("archive_label, archived_at")
+      .eq("organization_id", orgId)
+      .not("archive_label", "is", null);
+    if (error) {
+      console.error("archive labels fetch error:", error);
+      return;
+    }
+    setArchiveLabelOpts(
+      archiveLabelOptions(
+        (data as Array<{ archive_label: string | null; archived_at: string | null }>) ?? []
+      )
+    );
   }, [orgId]);
 
   const loadMembers = useCallback(async () => {
@@ -257,6 +282,12 @@ export default function ClubTasksPage() {
       loadChecklistCounts();
     }
   }, [orgId, loadTasks, loadMembers, loadChecklistCounts]);
+
+  useEffect(() => {
+    if (orgId) {
+      loadArchiveLabels();
+    }
+  }, [orgId, loadArchiveLabels]);
 
   const memberNameById = useMemo(() => {
     const map: Record<string, string> = {};
@@ -451,8 +482,6 @@ export default function ClubTasksPage() {
     );
   }, [tasks]);
 
-  const archiveLabelOpts = useMemo(() => archiveLabelOptions(tasks), [tasks]);
-
   const isViewingArchiveHistory = archiveView.type !== "current";
 
   const visibleTasks = useMemo(() => {
@@ -504,6 +533,7 @@ export default function ClubTasksPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isViewingArchiveHistory) return;
     if (!orgId) return;
     const title = form.title.trim();
     if (!title) {
@@ -794,6 +824,7 @@ export default function ClubTasksPage() {
     setArchiveModalOpen(false);
     setArchiveLabelInput("");
     await loadTasks();
+    await loadArchiveLabels();
   };
 
   if (ctxLoading) {
@@ -840,6 +871,12 @@ export default function ClubTasksPage() {
               type="button"
               variant="outlineMuted"
               onClick={() => setArchiveModalOpen(true)}
+              disabled={isViewingArchiveHistory}
+              title={
+                isViewingArchiveHistory
+                  ? "アーカイブ履歴を閲覧中は年度アーカイブを実行できません"
+                  : undefined
+              }
               className="inline-flex items-center gap-2"
             >
               <Archive className="w-5 h-5" aria-hidden="true" />
@@ -1063,6 +1100,7 @@ export default function ClubTasksPage() {
               memberNameById={memberNameById}
               checklistCountByTaskId={checklistCountByTaskId}
               onOpen={openEditModal}
+              isDropDisabled={isViewingArchiveHistory}
             />
           )}
         </DragDropContext>
@@ -1116,7 +1154,7 @@ export default function ClubTasksPage() {
                   }
                   placeholder="タスクのタイトル"
                   required
-                  disabled={saving}
+                  disabled={saving || isViewingArchiveHistory}
                 />
               </div>
               <div>
@@ -1130,7 +1168,7 @@ export default function ClubTasksPage() {
                   }
                   placeholder="補足・手順など"
                   rows={4}
-                  disabled={saving}
+                  disabled={saving || isViewingArchiveHistory}
                   className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                 />
               </div>
@@ -1147,7 +1185,7 @@ export default function ClubTasksPage() {
                         status: e.target.value as TaskStatus,
                       }))
                     }
-                    disabled={saving}
+                    disabled={saving || isViewingArchiveHistory}
                     className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                   >
                     <option value="todo">未対応</option>
@@ -1166,7 +1204,7 @@ export default function ClubTasksPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, priority: e.target.value }))
                     }
-                    disabled={saving}
+                    disabled={saving || isViewingArchiveHistory}
                     className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                   >
                     {PRIORITY_OPTIONS.map((o) => (
@@ -1188,7 +1226,7 @@ export default function ClubTasksPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, due_date: e.target.value }))
                     }
-                    disabled={saving}
+                    disabled={saving || isViewingArchiveHistory}
                     className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                   />
                 </div>
@@ -1201,7 +1239,7 @@ export default function ClubTasksPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, assignee_id: e.target.value }))
                     }
-                    disabled={saving}
+                    disabled={saving || isViewingArchiveHistory}
                     className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                   >
                     <option value="">未定</option>
@@ -1225,7 +1263,7 @@ export default function ClubTasksPage() {
                       setForm((f) => ({ ...f, category: e.target.value }))
                     }
                     placeholder="例：デザイン、広報、物品準備"
-                    disabled={saving}
+                    disabled={saving || isViewingArchiveHistory}
                     className="w-full"
                   />
                   <datalist id="task-category-suggestions">
@@ -1243,7 +1281,7 @@ export default function ClubTasksPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, reviewer_id: e.target.value }))
                     }
-                    disabled={saving}
+                    disabled={saving || isViewingArchiveHistory}
                     className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                   >
                     <option value="">未定</option>
@@ -1267,7 +1305,7 @@ export default function ClubTasksPage() {
                       recurrence_rule: e.target.value,
                     }))
                   }
-                  disabled={saving}
+                  disabled={saving || isViewingArchiveHistory}
                   className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                 >
                   <option value="">なし</option>
@@ -1280,21 +1318,27 @@ export default function ClubTasksPage() {
                 </p>
               </div>
               {editingTask ? (
-                <>
-                  <ChecklistSection
-                    taskId={editingTask.id}
-                    onCountChange={handleChecklistCountChange}
-                  />
-                  <AttachmentSection
-                    taskId={editingTask.id}
-                    organizationId={editingTask.organization_id}
-                  />
-                  <CommentSection
-                    taskId={editingTask.id}
-                    memberNameById={memberNameById}
-                    onCommentAdded={handleCommentAdded}
-                  />
-                </>
+                isViewingArchiveHistory ? (
+                  <p className="text-xs text-graphite/60">
+                    アーカイブ履歴を閲覧中のため、チェックリスト・添付ファイル・コメントの追加や変更はできません。
+                  </p>
+                ) : (
+                  <>
+                    <ChecklistSection
+                      taskId={editingTask.id}
+                      onCountChange={handleChecklistCountChange}
+                    />
+                    <AttachmentSection
+                      taskId={editingTask.id}
+                      organizationId={editingTask.organization_id}
+                    />
+                    <CommentSection
+                      taskId={editingTask.id}
+                      memberNameById={memberNameById}
+                      onCommentAdded={handleCommentAdded}
+                    />
+                  </>
+                )
               ) : (
                 <p className="text-xs text-graphite/60">
                   チェックリスト・添付ファイル・コメントは保存後に追加できます。
@@ -1307,11 +1351,13 @@ export default function ClubTasksPage() {
                   onClick={closeModal}
                   disabled={saving}
                 >
-                  キャンセル
+                  {isViewingArchiveHistory ? "閉じる" : "キャンセル"}
                 </Button>
-                <Button type="submit" variant="primary" disabled={saving}>
-                  {saving ? "保存中..." : "保存"}
-                </Button>
+                {!isViewingArchiveHistory && (
+                  <Button type="submit" variant="primary" disabled={saving}>
+                    {saving ? "保存中..." : "保存"}
+                  </Button>
+                )}
               </div>
             </form>
           </div>
