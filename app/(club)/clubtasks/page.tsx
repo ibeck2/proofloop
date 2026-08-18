@@ -6,7 +6,7 @@ import {
   Droppable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { Plus, CheckCircle2, X, Archive, Lock } from "lucide-react";
+import { Plus, CheckCircle2, X, Archive, Lock, Undo2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button, Input, Textarea } from "@/components/ui";
@@ -159,6 +159,8 @@ export default function ClubTasksPage() {
   const [archiveLabelInput, setArchiveLabelInput] = useState("");
   const [archiving, setArchiving] = useState(false);
   const [archiveLabelOpts, setArchiveLabelOpts] = useState<string[]>([]);
+  const [unarchiveModalOpen, setUnarchiveModalOpen] = useState(false);
+  const [unarchiving, setUnarchiving] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -845,6 +847,37 @@ export default function ClubTasksPage() {
     await loadChecklistCounts();
   };
 
+  const handleUnarchive = async () => {
+    if (!orgId || archiveView.type !== "label") return;
+    const label = archiveView.label;
+    setUnarchiving(true);
+    const { data, error } = await supabase.rpc(
+      "unarchive_organization_label",
+      { p_organization_id: orgId, p_archive_label: label }
+    );
+    setUnarchiving(false);
+    if (error) {
+      console.error("unarchive_organization_label error:", error);
+      toast.error("アーカイブの取り消しに失敗しました");
+      return;
+    }
+    const restoredCount = data ?? 0;
+    if (restoredCount > 0) {
+      toast.success(`${restoredCount}件のタスクを現在のタスクに戻しました`);
+    } else {
+      toast.error("対象のタスクが見つかりませんでした");
+    }
+    setUnarchiveModalOpen(false);
+    // "current"に戻すことで、loadTasks/loadChecklistCountsがarchiveView
+    // への依存経由で自動的に再取得する（表示ドロップダウンの切替と同じ
+    // 仕組み。ここで明示的にloadTasksを呼ぶと、このクロージャが束縛して
+    // いる「取り消し前のarchiveView」向けのクエリを再実行してしまうため
+    // 呼ばない）。loadArchiveLabelsはarchiveViewに依存しない独立effectの
+    // ため、ここで明示的に呼ぶ必要がある。
+    setArchiveView({ type: "current" });
+    await loadArchiveLabels();
+  };
+
   if (ctxLoading) {
     return (
       <div className="p-6 md:p-10">
@@ -1017,9 +1050,22 @@ export default function ClubTasksPage() {
       </div>
 
       {isViewingArchiveHistory && (
-        <div className="mb-4 flex items-center gap-2 rounded-lg border border-rule bg-mist px-4 py-2 text-sm text-graphite">
-          <Lock className="w-4 h-4 shrink-0" aria-hidden="true" />
-          「{archiveView.type === "label" ? archiveView.label : ""}」のアーカイブ履歴を閲覧中です（参照専用。ドラッグでの移動・新規タスク追加はできません）
+        <div className="mb-4 flex items-center justify-between gap-2 rounded-lg border border-rule bg-mist px-4 py-2 text-sm text-graphite">
+          <span className="flex items-center gap-2">
+            <Lock className="w-4 h-4 shrink-0" aria-hidden="true" />
+            「{archiveView.type === "label" ? archiveView.label : ""}」のアーカイブ履歴を閲覧中です（参照専用。ドラッグでの移動・新規タスク追加はできません）
+          </span>
+          {(activeRole === "owner" || activeRole === "admin") && (
+            <Button
+              type="button"
+              variant="outlineMuted"
+              onClick={() => setUnarchiveModalOpen(true)}
+              className="inline-flex items-center gap-2 shrink-0"
+            >
+              <Undo2 className="w-4 h-4" aria-hidden="true" />
+              このアーカイブを取り消す
+            </Button>
+          )}
         </div>
       )}
 
@@ -1408,7 +1454,7 @@ export default function ClubTasksPage() {
             </div>
             <div className="p-5 space-y-4">
               <p className="text-sm text-graphite">
-                現在アーカイブされていない全てのタスクに、入力したアーカイブ名を付けて一括でアーカイブします。アーカイブ後は既存の表示から除外されますが、コメント・添付ファイル・チェックリストを含め削除はされず、「表示」の絞り込みからいつでも参照できます。この操作は元に戻せません。
+                現在アーカイブされていない全てのタスクに、入力したアーカイブ名を付けて一括でアーカイブします。アーカイブ後は既存の表示から除外されますが、コメント・添付ファイル・チェックリストを含め削除はされず、「表示」の絞り込みからいつでも参照できます。間違えてアーカイブした場合は、「表示」でこのラベルを選び、表示されるバナーの「このアーカイブを取り消す」から一括で元に戻せます。
               </p>
               <div>
                 <label className="block text-sm font-bold text-ink mb-1">
@@ -1439,6 +1485,55 @@ export default function ClubTasksPage() {
                   disabled={archiving || !archiveLabelInput.trim()}
                 >
                   {archiving ? "アーカイブ中..." : "アーカイブする"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {unarchiveModalOpen && archiveView.type === "label" && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="unarchive-modal-title"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !unarchiving) {
+              setUnarchiveModalOpen(false);
+            }
+          }}
+        >
+          <div className="w-full max-w-md rounded-xl bg-paper border border-rule shadow-xl">
+            <div className="p-5 border-b border-rule">
+              <h2
+                id="unarchive-modal-title"
+                className="text-lg font-bold text-ink"
+              >
+                アーカイブの取り消し
+              </h2>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-graphite">
+                「{archiveView.label}」を取り消し、{tasks.length}
+                件のタスクを現在のタスクへ戻します。チェックリスト・添付ファイル・コメントも通常通り編集できる状態に戻ります。
+              </p>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outlineMuted"
+                  onClick={() => setUnarchiveModalOpen(false)}
+                  disabled={unarchiving}
+                >
+                  キャンセル
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={handleUnarchive}
+                  disabled={unarchiving}
+                >
+                  {unarchiving ? "取り消し中..." : "取り消す"}
                 </Button>
               </div>
             </div>
