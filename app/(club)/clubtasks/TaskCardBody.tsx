@@ -1,12 +1,13 @@
 "use client";
 
-import { CalendarDays, Eye, ListChecks, User } from "lucide-react";
+import { CalendarDays, Eye, ListChecks, Repeat, User } from "lucide-react";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
 import {
   checklistProgressLabel,
   formatDue,
   priorityBadgeClass,
   priorityLabel,
+  recurrenceLabel,
 } from "@/lib/tasks/taskFormatting";
 
 type Props = {
@@ -28,6 +29,7 @@ export default function TaskCardBody({
   const checklistLabel = checklistProgress
     ? checklistProgressLabel(checklistProgress.done, checklistProgress.total)
     : null;
+  const recurrence = recurrenceLabel(task.recurrence_rule);
 
   return (
     <button
@@ -72,6 +74,12 @@ export default function TaskCardBody({
         <p className="text-xs text-graphite/70 flex items-center gap-1 mt-0.5">
           <ListChecks className="w-[14px] h-[14px]" aria-hidden="true" />
           {checklistLabel}
+        </p>
+      )}
+      {recurrence && (
+        <p className="text-xs text-graphite/70 flex items-center gap-1 mt-0.5">
+          <Repeat className="w-[14px] h-[14px]" aria-hidden="true" />
+          {recurrence}
         </p>
       )}
     </button>

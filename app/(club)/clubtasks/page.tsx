@@ -23,6 +23,10 @@ import {
   swimlaneRowKeyForTask,
   type SwimlaneAxis,
 } from "@/lib/tasks/taskSwimlanes";
+import {
+  buildRecurringTask,
+  type RecurringTaskSource,
+} from "@/lib/tasks/taskRecurrence";
 import ChecklistSection from "./ChecklistSection";
 import AttachmentSection from "./AttachmentSection";
 import CommentSection from "./CommentSection";
@@ -107,6 +111,7 @@ const emptyForm = {
   assignee_id: "",
   reviewer_id: "",
   category: "",
+  recurrence_rule: "",
 };
 
 type MemberOption = { user_id: string; name: string; title: string | null; email: string | null };
@@ -153,7 +158,7 @@ export default function ClubTasksPage() {
     const { data, error } = await supabase
       .from("tasks")
       .select(
-        "id, organization_id, title, description, status, priority, assignee_id, reviewer_id, created_by, category, due_date, created_at"
+        "id, organization_id, title, description, status, priority, assignee_id, reviewer_id, created_by, category, due_date, created_at, recurrence_rule"
       )
       .eq("organization_id", orgId);
 
@@ -341,6 +346,71 @@ export default function ClubTasksPage() {
     }
   }, [editingTask, currentUserId, notifyTaskChange]);
 
+  /**
+   * タスクが「完了」に新しく遷移した際、recurrence_ruleが設定されていれば
+   * 次回分のタスクを1件自動生成する（Todoist方式）。生成に失敗しても
+   * 呼び出し元の保存・移動操作自体は失敗させない（付随処理として扱う）。
+   */
+  const maybeGenerateRecurringTask = useCallback(
+    async (source: RecurringTaskSource, sourceTaskId: string) => {
+      if (!source.recurrence_rule) return;
+
+      const { data: checklistData, error: checklistError } = await supabase
+        .from("task_checklist_items")
+        .select("text, position")
+        .eq("task_id", sourceTaskId)
+        .order("position", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (checklistError) {
+        console.error(
+          "recurring task checklist fetch error:",
+          checklistError
+        );
+      }
+
+      const generation = buildRecurringTask(
+        source,
+        (checklistData as Array<{ text: string; position: number }>) ?? []
+      );
+      if (!generation) return;
+
+      const { data: newTask, error: insertError } = await supabase
+        .from("tasks")
+        .insert({ ...generation.task, created_by: currentUserId })
+        .select("id")
+        .single();
+      if (insertError || !newTask) {
+        console.error("recurring task insert error:", insertError);
+        toast.error("定期タスクの自動生成に失敗しました");
+        return;
+      }
+
+      if (generation.checklistItems.length > 0) {
+        const { error: checklistInsertError } = await supabase
+          .from("task_checklist_items")
+          .insert(
+            generation.checklistItems.map((item) => ({
+              task_id: newTask.id,
+              text: item.text,
+              position: item.position,
+              is_done: item.is_done,
+            }))
+          );
+        if (checklistInsertError) {
+          console.error(
+            "recurring task checklist insert error:",
+            checklistInsertError
+          );
+        }
+      }
+
+      toast.success("次回分の定期タスクを自動生成しました");
+      await loadTasks();
+      await loadChecklistCounts();
+    },
+    [currentUserId, loadTasks, loadChecklistCounts]
+  );
+
   const categoryOptions = useMemo(() => {
     return Array.from(
       new Set(
@@ -384,6 +454,7 @@ export default function ClubTasksPage() {
       assignee_id: task.assignee_id ?? "",
       reviewer_id: task.reviewer_id ?? "",
       category: task.category ?? "",
+      recurrence_rule: task.recurrence_rule ?? "",
     });
     setModalOpen(true);
   };
@@ -414,6 +485,7 @@ export default function ClubTasksPage() {
         assignee_id: form.assignee_id || null,
         reviewer_id: form.reviewer_id || null,
         category: form.category.trim() || null,
+        recurrence_rule: form.recurrence_rule || null,
       };
 
       if (editingTask) {
@@ -428,6 +500,7 @@ export default function ClubTasksPage() {
             assignee_id: payload.assignee_id,
             reviewer_id: payload.reviewer_id,
             category: payload.category,
+            recurrence_rule: payload.recurrence_rule,
           })
           .eq("id", editingTask.id);
         if (error) throw error;
@@ -457,6 +530,23 @@ export default function ClubTasksPage() {
             recipientId: payload.assignee_id!,
             taskTitle: payload.title,
           });
+        }
+
+        const prevStatus = normalizeStatus(editingTask.status);
+        if (prevStatus !== "done" && payload.status === "done") {
+          await maybeGenerateRecurringTask(
+            {
+              organization_id: orgId,
+              title: payload.title,
+              category: payload.category,
+              priority: payload.priority,
+              assignee_id: payload.assignee_id,
+              reviewer_id: payload.reviewer_id,
+              due_date: payload.due_date,
+              recurrence_rule: payload.recurrence_rule,
+            },
+            editingTask.id
+          );
         }
       } else {
         const {
@@ -596,9 +686,28 @@ export default function ClubTasksPage() {
         });
       }
 
+      if (normalizeStatus(task.status) !== "done" && newStatus === "done") {
+        await maybeGenerateRecurringTask(
+          {
+            organization_id: task.organization_id,
+            title: task.title,
+            category:
+              "category" in rowChange
+                ? (rowChange.category ?? null)
+                : task.category,
+            priority: task.priority,
+            assignee_id: nextAssignee.assigneeId,
+            reviewer_id: task.reviewer_id,
+            due_date: task.due_date,
+            recurrence_rule: task.recurrence_rule ?? null,
+          },
+          task.id
+        );
+      }
+
       toast.success("移動しました");
     },
-    [tasks, notifyTaskChange, currentUserId, swimlaneAxis]
+    [tasks, notifyTaskChange, currentUserId, swimlaneAxis, maybeGenerateRecurringTask]
   );
 
   if (ctxLoading) {
@@ -1001,6 +1110,30 @@ export default function ClubTasksPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-ink mb-1">
+                  繰り返し
+                </label>
+                <select
+                  value={form.recurrence_rule}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      recurrence_rule: e.target.value,
+                    }))
+                  }
+                  disabled={saving}
+                  className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
+                >
+                  <option value="">なし</option>
+                  <option value="weekly">毎週</option>
+                  <option value="biweekly">隔週</option>
+                  <option value="monthly">毎月</option>
+                </select>
+                <p className="text-xs text-graphite/60 mt-1">
+                  設定すると、このタスクが「完了」になった時点で次回分を自動的に作成します。
+                </p>
               </div>
               {editingTask ? (
                 <>
