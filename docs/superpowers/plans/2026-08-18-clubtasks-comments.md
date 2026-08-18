@@ -634,12 +634,8 @@ export default function CommentSection({
     const body = newBody.trim();
     if (!body) return;
     setPosting(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     const { error } = await supabase.from("task_comments").insert({
       task_id: taskId,
-      author_id: user?.id ?? null,
       body,
     });
     setPosting(false);
