@@ -15,6 +15,7 @@ import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 import {
   shouldNotifyReviewAssigned,
   shouldNotifyAssigneeChanged,
+  commentNotificationRecipients,
 } from "@/lib/tasks/taskNotificationTriggers";
 import {
   decodeSwimlaneDroppableId,
@@ -24,6 +25,7 @@ import {
 } from "@/lib/tasks/taskSwimlanes";
 import ChecklistSection from "./ChecklistSection";
 import AttachmentSection from "./AttachmentSection";
+import CommentSection from "./CommentSection";
 import GanttView from "./GanttView";
 import TableView from "./TableView";
 import CalendarView from "./CalendarView";
@@ -264,7 +266,10 @@ export default function ClubTasksPage() {
 
   const notifyTaskChange = useCallback(
     async (params: {
-      type: "task_review_assigned" | "task_assignee_changed";
+      type:
+        | "task_review_assigned"
+        | "task_assignee_changed"
+        | "task_comment_added";
       recipientId: string;
       taskTitle: string;
     }) => {
@@ -314,6 +319,25 @@ export default function ClubTasksPage() {
     },
     [orgId, orgName, memberEmailById, memberNameById, currentUserId]
   );
+
+  const handleCommentAdded = useCallback(() => {
+    if (!editingTask) return;
+    const recipients = commentNotificationRecipients(
+      {
+        assigneeId: editingTask.assignee_id,
+        reviewerId: editingTask.reviewer_id,
+        createdBy: editingTask.created_by,
+      },
+      currentUserId ?? ""
+    );
+    for (const recipientId of recipients) {
+      void notifyTaskChange({
+        type: "task_comment_added",
+        recipientId,
+        taskTitle: editingTask.title,
+      });
+    }
+  }, [editingTask, currentUserId, notifyTaskChange]);
 
   const categoryOptions = useMemo(() => {
     return Array.from(
@@ -986,10 +1010,15 @@ export default function ClubTasksPage() {
                     taskId={editingTask.id}
                     organizationId={editingTask.organization_id}
                   />
+                  <CommentSection
+                    taskId={editingTask.id}
+                    memberNameById={memberNameById}
+                    onCommentAdded={handleCommentAdded}
+                  />
                 </>
               ) : (
                 <p className="text-xs text-graphite/60">
-                  チェックリスト・添付ファイルは保存後に追加できます。
+                  チェックリスト・添付ファイル・コメントは保存後に追加できます。
                 </p>
               )}
               <div className="flex justify-end gap-2 pt-2">
