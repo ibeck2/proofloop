@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -151,6 +151,8 @@ export default function ClubTasksPage() {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [members, setMembers] = useState<MemberOption[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [panelVisible, setPanelVisible] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [editingTask, setEditingTask] = useState<TaskRow | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
@@ -583,10 +585,36 @@ export default function ClubTasksPage() {
   };
 
   const closeModal = () => {
-    setModalOpen(false);
-    setEditingTask(null);
-    setForm(emptyForm);
+    setPanelVisible(false);
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    closeTimeoutRef.current = setTimeout(() => {
+      setModalOpen(false);
+      setEditingTask(null);
+      setForm(emptyForm);
+      closeTimeoutRef.current = null;
+    }, 200);
   };
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const raf = requestAnimationFrame(() => setPanelVisible(true));
+    return () => cancelAnimationFrame(raf);
+  }, [modalOpen]);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeModal();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [modalOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    };
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1236,7 +1264,9 @@ export default function ClubTasksPage() {
 
       {modalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          className={`fixed inset-0 z-50 flex justify-end bg-black/50 transition-opacity duration-200 ${
+            panelVisible ? "opacity-100" : "opacity-0"
+          }`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="task-modal-title"
@@ -1245,7 +1275,9 @@ export default function ClubTasksPage() {
           }}
         >
           <div
-            className="w-full max-w-lg rounded-xl bg-paper border border-rule shadow-xl max-h-[90vh] overflow-y-auto"
+            className={`w-full sm:max-w-xl h-full rounded-l-xl bg-paper border border-rule shadow-xl overflow-y-auto transition-transform duration-200 ease-out ${
+              panelVisible ? "translate-x-0" : "translate-x-full"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5 border-b border-rule flex items-center justify-between gap-4">
