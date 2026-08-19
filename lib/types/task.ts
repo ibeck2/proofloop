@@ -13,6 +13,8 @@ export interface TaskRow {
   created_by: string | null;
   category: string | null;
   due_date: string | null;
+  /** 開始日。未設定（null）のタスクはガント/カレンダーでcreated_atを仮の開始日として表示する（編集不可の代用値） */
+  start_date: string | null;
   /** 'weekly' | 'biweekly' | 'monthly' | null。tasks_recurrence_rule_check制約で3値+NULLのみ許可 */
   recurrence_rule: string | null;
   /** 年度アーカイブでarchive_organization_tasks RPCがセットする。nullなら現役タスク */
