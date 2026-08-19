@@ -43,6 +43,7 @@ import {
   filterTasksByArchiveView,
   type ArchiveView,
 } from "@/lib/tasks/taskArchive";
+import type { DateRange } from "@/lib/tasks/dateRangeDrag";
 import ChecklistSection from "./ChecklistSection";
 import AttachmentSection from "./AttachmentSection";
 import CommentSection from "./CommentSection";
@@ -496,6 +497,33 @@ export default function ClubTasksPage() {
       }
     },
     [loadTasks, loadChecklistCounts]
+  );
+
+  const handleDateRangeChange = useCallback(
+    async (taskId: string, range: DateRange) => {
+      if (archiveView.type !== "current") return;
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) return;
+      const prevTasks = tasks;
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? { ...t, start_date: range.startDate, due_date: range.dueDate }
+            : t
+        )
+      );
+      const { error } = await supabase
+        .from("tasks")
+        .update({ start_date: range.startDate, due_date: range.dueDate })
+        .eq("id", taskId);
+      if (error) {
+        setTasks(prevTasks);
+        toast.error("期間の変更に失敗しました");
+        return;
+      }
+      toast.success("期間を変更しました");
+    },
+    [tasks, archiveView]
   );
 
   const categoryOptions = useMemo(() => {
@@ -1101,6 +1129,8 @@ export default function ClubTasksPage() {
           tasks={visibleTasks}
           laneTitleById={LANE_TITLE_BY_ID}
           normalizeStatus={normalizeStatus}
+          onDateRangeChange={handleDateRangeChange}
+          isDragDisabled={isViewingArchiveHistory}
         />
       ) : view === "calendar" ? (
         <CalendarView tasks={visibleTasks} onOpen={openEditModal} />

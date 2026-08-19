@@ -1,14 +1,23 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
 import { categoryColor } from "@/lib/tasks/taskCategoryColor";
+import {
+  applyDragToRange,
+  formatDateOnly,
+  pixelDeltaToDayDelta,
+  type DateRange,
+  type DragEdge,
+} from "@/lib/tasks/dateRangeDrag";
 
 type Props = {
   tasks: TaskRow[];
   laneTitleById: Record<TaskStatus, string>;
   normalizeStatus: (s: string | null | undefined) => TaskStatus;
+  onDateRangeChange: (taskId: string, range: DateRange) => void;
+  isDragDisabled?: boolean;
 };
 
 const DAY_WIDTH = 28;
@@ -24,11 +33,26 @@ function diffDays(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / 86400000);
 }
 
+type DragState = {
+  taskId: string;
+  edge: DragEdge;
+  pointerId: number;
+  startClientX: number;
+  originalRange: DateRange;
+};
+
 export default function GanttView({
   tasks,
   laneTitleById,
   normalizeStatus,
+  onDateRangeChange,
+  isDragDisabled = false,
 }: Props) {
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const [previewRanges, setPreviewRanges] = useState<
+    Record<string, DateRange>
+  >({});
+
   const rows = useMemo(() => {
     return tasks
       .filter((t): t is TaskRow & { due_date: string } => Boolean(t.due_date))
@@ -41,6 +65,59 @@ export default function GanttView({
       })
       .sort((a, b) => a.due.getTime() - b.due.getTime());
   }, [tasks]);
+
+  const handlePointerDown = useCallback(
+    (
+      e: React.PointerEvent<HTMLDivElement>,
+      taskId: string,
+      edge: DragEdge,
+      range: DateRange
+    ) => {
+      if (isDragDisabled) return;
+      e.stopPropagation();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setDrag({
+        taskId,
+        edge,
+        pointerId: e.pointerId,
+        startClientX: e.clientX,
+        originalRange: range,
+      });
+    },
+    [isDragDisabled]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      const deltaPx = e.clientX - drag.startClientX;
+      const dayDelta = pixelDeltaToDayDelta(deltaPx, DAY_WIDTH);
+      const nextRange = applyDragToRange(
+        drag.originalRange,
+        drag.edge,
+        dayDelta
+      );
+      setPreviewRanges((prev) => ({ ...prev, [drag.taskId]: nextRange }));
+    },
+    [drag]
+  );
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      e.currentTarget.releasePointerCapture(e.pointerId);
+      const finalRange = previewRanges[drag.taskId] ?? drag.originalRange;
+      onDateRangeChange(drag.taskId, finalRange);
+      const taskId = drag.taskId;
+      setDrag(null);
+      setPreviewRanges((prev) => {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      });
+    },
+    [drag, previewRanges, onDateRangeChange]
+  );
 
   const hiddenCount = tasks.length - rows.length;
 
@@ -107,8 +184,16 @@ export default function GanttView({
             const status = normalizeStatus(task.status);
             const catColor = categoryColor(task.category);
             const barColor = catColor?.hex ?? FALLBACK_BAR_COLOR;
-            const offset = diffDays(rangeStart, start);
-            const span = Math.max(diffDays(start, due) + 1, 1);
+            const baseRange: DateRange = {
+              startDate: formatDateOnly(start),
+              dueDate: formatDateOnly(due),
+            };
+            const effectiveRange = previewRanges[task.id] ?? baseRange;
+            const effectiveStart = toDateOnly(effectiveRange.startDate);
+            const effectiveDue = toDateOnly(effectiveRange.dueDate);
+            const offset = diffDays(rangeStart, effectiveStart);
+            const span = Math.max(diffDays(effectiveStart, effectiveDue) + 1, 1);
+            const isDraggingThisTask = drag?.taskId === task.id;
             return (
               <div key={task.id} className="flex border-b border-rule last:border-b-0">
                 <div
@@ -130,7 +215,9 @@ export default function GanttView({
                 </div>
                 <div className="relative flex-1" style={{ height: 36 }}>
                   <div
-                    className="absolute top-1.5 h-3 rounded-full flex items-center justify-center"
+                    className={`absolute top-1.5 h-3 rounded-full flex items-center justify-center ${
+                      isDraggingThisTask ? "ring-2 ring-ink/40" : ""
+                    }`}
                     style={{
                       left: offset * DAY_WIDTH,
                       width: span * DAY_WIDTH - 4,
@@ -143,6 +230,28 @@ export default function GanttView({
                         className="w-[10px] h-[10px] text-paper"
                         aria-hidden="true"
                       />
+                    )}
+                    {!isDragDisabled && (
+                      <>
+                        <div
+                          className="absolute -left-1 top-0 h-full w-2 cursor-ew-resize touch-none"
+                          onPointerDown={(e) =>
+                            handlePointerDown(e, task.id, "start", baseRange)
+                          }
+                          onPointerMove={handlePointerMove}
+                          onPointerUp={handlePointerUp}
+                          aria-label={`${task.title}の開始日を変更`}
+                        />
+                        <div
+                          className="absolute -right-1 top-0 h-full w-2 cursor-ew-resize touch-none"
+                          onPointerDown={(e) =>
+                            handlePointerDown(e, task.id, "due", baseRange)
+                          }
+                          onPointerMove={handlePointerMove}
+                          onPointerUp={handlePointerUp}
+                          aria-label={`${task.title}の期限を変更`}
+                        />
+                      </>
                     )}
                   </div>
                 </div>
