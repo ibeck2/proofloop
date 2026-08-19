@@ -1264,7 +1264,7 @@ export default function ClubTasksPage() {
 
       {modalOpen && (
         <div
-          className={`fixed inset-0 z-50 flex justify-end bg-black/50 transition-opacity duration-200 ${
+          className={`fixed inset-0 z-[110] flex justify-end bg-black/50 transition-opacity duration-200 ${
             panelVisible ? "opacity-100" : "opacity-0"
           }`}
           role="dialog"
