@@ -1133,7 +1133,12 @@ export default function ClubTasksPage() {
           isDragDisabled={isViewingArchiveHistory}
         />
       ) : view === "calendar" ? (
-        <CalendarView tasks={visibleTasks} onOpen={openEditModal} />
+        <CalendarView
+          tasks={visibleTasks}
+          onOpen={openEditModal}
+          onDateRangeChange={handleDateRangeChange}
+          isDragDisabled={isViewingArchiveHistory}
+        />
       ) : view === "table" ? (
         <TableView
           tasks={visibleTasks}

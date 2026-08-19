@@ -1,13 +1,24 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { TaskRow } from "@/lib/types/task";
-import { priorityBadgeClass } from "@/lib/tasks/taskFormatting";
+import { categoryColor } from "@/lib/tasks/taskCategoryColor";
+import {
+  applyDragToRange,
+  formatDateOnly,
+  parseDateOnly,
+  pixelDeltaToDayDelta,
+  type DateRange,
+  type DragEdge,
+} from "@/lib/tasks/dateRangeDrag";
+import { layoutWeekSegments, type TaskRange } from "@/lib/tasks/calendarWeekLayout";
 
 type Props = {
   tasks: TaskRow[];
   onOpen: (task: TaskRow) => void;
+  onDateRangeChange: (taskId: string, range: DateRange, edge: DragEdge) => void;
+  isDragDisabled?: boolean;
 };
 
 function toDateOnly(iso: string): Date {
@@ -22,24 +33,75 @@ function dateKey(d: Date): string {
 }
 
 const WEEKDAY_LABELS = ["日", "月", "火", "水", "木", "金", "土"];
+const DAY_NUM_HEIGHT = 22;
+const BAR_HEIGHT = 18;
+const BAR_GAP = 3;
+const BOTTOM_PAD = 6;
+const FALLBACK_BAR_COLOR = "#9AA5B1";
 
-export default function CalendarView({ tasks, onOpen }: Props) {
+type DragState = {
+  taskId: string;
+  edge: DragEdge;
+  pointerId: number;
+  startClientX: number;
+  dayWidthPx: number;
+  originalRange: DateRange;
+};
+
+export default function CalendarView({
+  tasks,
+  onOpen,
+  onDateRangeChange,
+  isDragDisabled = false,
+}: Props) {
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
+  const [drag, setDrag] = useState<DragState | null>(null);
+  const [previewRanges, setPreviewRanges] = useState<
+    Record<string, DateRange>
+  >({});
 
-  const tasksByDay = useMemo(() => {
-    const map = new Map<string, TaskRow[]>();
+  const tasksById = useMemo(() => {
+    const map = new Map<string, TaskRow>();
+    for (const t of tasks) map.set(t.id, t);
+    return map;
+  }, [tasks]);
+
+  /**
+   * ドラッグ開始前の「確定済み」の範囲。start_date優先・無ければcreated_at
+   * にフォールバックし、開始日が期限を超えないようクランプ済み（Gantt側と
+   * 同じロジック）。ドラッグの`originalRange`には必ずこちらを使う
+   * （previewの値を渡すと、そのプレビュー自体が既にクランプ後の値なので
+   * 二重クランプにはならないが、pointerdownは新規ドラッグ開始前にしか
+   * 発火しないため、この時点のpreviewは常に空＝base値と一致する）。
+   */
+  const baseRangesById = useMemo(() => {
+    const map = new Map<string, DateRange>();
     for (const t of tasks) {
       if (!t.due_date) continue;
-      const key = dateKey(toDateOnly(t.due_date));
-      const list = map.get(key);
-      if (list) list.push(t);
-      else map.set(key, [t]);
+      const due = toDateOnly(t.due_date);
+      const startRaw = t.start_date
+        ? parseDateOnly(t.start_date)
+        : t.created_at
+          ? toDateOnly(t.created_at)
+          : due;
+      const start = startRaw.getTime() <= due.getTime() ? startRaw : due;
+      map.set(t.id, {
+        startDate: formatDateOnly(start),
+        dueDate: formatDateOnly(due),
+      });
     }
     return map;
   }, [tasks]);
+
+  const taskRanges = useMemo<TaskRange[]>(() => {
+    return Array.from(baseRangesById.entries()).map(([id, base]) => {
+      const effective = previewRanges[id] ?? base;
+      return { id, startDate: effective.startDate, dueDate: effective.dueDate };
+    });
+  }, [baseRangesById, previewRanges]);
 
   const hiddenCount = tasks.filter((t) => !t.due_date).length;
 
@@ -67,6 +129,76 @@ export default function CalendarView({ tasks, onOpen }: Props) {
     month: "long",
   });
   const todayKey = dateKey(toDateOnly(new Date().toISOString()));
+
+  const handlePointerDown = useCallback(
+    (
+      e: React.PointerEvent<HTMLDivElement>,
+      taskId: string,
+      edge: DragEdge,
+      range: DateRange
+    ) => {
+      if (isDragDisabled || drag) return;
+      e.stopPropagation();
+      const weekRow = e.currentTarget.closest(".cal-week") as HTMLElement | null;
+      const dayWidthPx = weekRow ? weekRow.getBoundingClientRect().width / 7 : 0;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setDrag({
+        taskId,
+        edge,
+        pointerId: e.pointerId,
+        startClientX: e.clientX,
+        dayWidthPx,
+        originalRange: range,
+      });
+    },
+    [isDragDisabled, drag]
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      const deltaPx = e.clientX - drag.startClientX;
+      const dayDelta = pixelDeltaToDayDelta(deltaPx, drag.dayWidthPx);
+      const nextRange = applyDragToRange(drag.originalRange, drag.edge, dayDelta);
+      setPreviewRanges((prev) => ({ ...prev, [drag.taskId]: nextRange }));
+    },
+    [drag]
+  );
+
+  const clearDrag = useCallback((taskId: string) => {
+    setDrag(null);
+    setPreviewRanges((prev) => {
+      const next = { ...prev };
+      delete next[taskId];
+      return next;
+    });
+  }, []);
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      e.currentTarget.releasePointerCapture(e.pointerId);
+      const taskId = drag.taskId;
+      const finalRange = previewRanges[taskId];
+      const changed =
+        finalRange &&
+        (finalRange.startDate !== drag.originalRange.startDate ||
+          finalRange.dueDate !== drag.originalRange.dueDate);
+      if (changed) {
+        onDateRangeChange(taskId, finalRange, drag.edge);
+      }
+      clearDrag(taskId);
+    },
+    [drag, previewRanges, onDateRangeChange, clearDrag]
+  );
+
+  const handlePointerCancel = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      clearDrag(drag.taskId);
+    },
+    [drag, clearDrag]
+  );
 
   return (
     <div className="rounded-xl border border-rule bg-paper overflow-hidden">
@@ -108,47 +240,113 @@ export default function CalendarView({ tasks, onOpen }: Props) {
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7">
-        {weeks.flat().map((day) => {
-          const inMonth = day.getMonth() === cursor.getMonth();
-          const key = dateKey(day);
-          const dayTasks = tasksByDay.get(key) ?? [];
-          const isToday = key === todayKey;
-          return (
-            <div
-              key={key}
-              className={`min-h-[92px] border-b border-r border-rule p-1.5 ${
-                inMonth ? "bg-paper" : "bg-mist/50"
-              }`}
-            >
-              <p
-                className={`text-xs font-numeric mb-1 ${
-                  isToday
-                    ? "inline-flex items-center justify-center w-5 h-5 rounded-full bg-ink text-paper"
-                    : inMonth
-                      ? "text-graphite"
-                      : "text-graphite/40"
-                }`}
-              >
-                {day.getDate()}
-              </p>
-              <div className="space-y-1">
-                {dayTasks.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => onOpen(t)}
-                    className={`w-full text-left text-[10px] leading-tight px-1 py-0.5 rounded truncate ${priorityBadgeClass(t.priority)}`}
-                    title={t.title}
+      {weeks.map((week) => {
+        const weekStartIso = dateKey(week[0]);
+        const segments = layoutWeekSegments(taskRanges, weekStartIso);
+        const maxLane = segments.reduce((m, s) => Math.max(m, s.lane), -1);
+        const barsAreaHeight = (maxLane + 1) * (BAR_HEIGHT + BAR_GAP);
+        return (
+          <div
+            key={weekStartIso}
+            className="cal-week relative grid grid-cols-7"
+            style={{ minHeight: DAY_NUM_HEIGHT + barsAreaHeight + BOTTOM_PAD + 4 }}
+          >
+            {week.map((day) => {
+              const inMonth = day.getMonth() === cursor.getMonth();
+              const key = dateKey(day);
+              const isToday = key === todayKey;
+              return (
+                <div
+                  key={key}
+                  className={`border-b border-r border-rule p-1.5 ${
+                    inMonth ? "bg-paper" : "bg-mist/50"
+                  }`}
+                >
+                  <p
+                    className={`text-xs font-numeric ${
+                      isToday
+                        ? "inline-flex items-center justify-center w-5 h-5 rounded-full bg-ink text-paper"
+                        : inMonth
+                          ? "text-graphite"
+                          : "text-graphite/40"
+                    }`}
                   >
-                    {t.title}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                    {day.getDate()}
+                  </p>
+                </div>
+              );
+            })}
+            {segments.map((seg) => {
+              const task = tasksById.get(seg.taskId);
+              if (!task) return null;
+              const catColor = categoryColor(task.category);
+              const isDraggingThisTask = drag?.taskId === seg.taskId;
+              const range = baseRangesById.get(seg.taskId);
+              if (!range) return null;
+              return (
+                <button
+                  key={seg.taskId}
+                  type="button"
+                  onClick={() => onOpen(task)}
+                  className={`absolute text-[10px] leading-tight px-1.5 truncate text-left overflow-hidden ${
+                    isDraggingThisTask ? "ring-2 ring-ink/40" : ""
+                  }`}
+                  style={{
+                    left: `${(seg.startCol / 7) * 100}%`,
+                    width: `${(seg.span / 7) * 100}%`,
+                    top: DAY_NUM_HEIGHT + seg.lane * (BAR_HEIGHT + BAR_GAP),
+                    height: BAR_HEIGHT,
+                    backgroundColor: catColor?.tint ?? "#F2F4F7",
+                    borderTop: `1px solid ${catColor?.border ?? "#C9D2DC"}`,
+                    borderBottom: `1px solid ${catColor?.border ?? "#C9D2DC"}`,
+                    borderLeft: seg.continuesLeft
+                      ? "none"
+                      : `3px solid ${catColor?.hex ?? FALLBACK_BAR_COLOR}`,
+                    borderRight: seg.continuesRight
+                      ? "none"
+                      : `1px solid ${catColor?.border ?? "#C9D2DC"}`,
+                    borderTopLeftRadius: seg.continuesLeft ? 0 : 4,
+                    borderBottomLeftRadius: seg.continuesLeft ? 0 : 4,
+                    borderTopRightRadius: seg.continuesRight ? 0 : 4,
+                    borderBottomRightRadius: seg.continuesRight ? 0 : 4,
+                  }}
+                  title={task.title}
+                >
+                  {task.title}
+                  {!isDragDisabled && !seg.continuesLeft && (
+                    <div
+                      className="absolute -left-1 top-0 h-full w-2 cursor-ew-resize touch-none"
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        handlePointerDown(e, seg.taskId, "start", range);
+                      }}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      onPointerCancel={handlePointerCancel}
+                      onLostPointerCapture={handlePointerCancel}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                  {!isDragDisabled && !seg.continuesRight && (
+                    <div
+                      className="absolute -right-1 top-0 h-full w-2 cursor-ew-resize touch-none"
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        handlePointerDown(e, seg.taskId, "due", range);
+                      }}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      onPointerCancel={handlePointerCancel}
+                      onLostPointerCapture={handlePointerCancel}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 }
