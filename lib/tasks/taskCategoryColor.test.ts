@@ -50,6 +50,8 @@ describe("categoryColor", () => {
       "経理",
     ];
     const colors = new Set(names.map((n) => categoryColor(n)!.hex));
-    expect(colors.size).toBeGreaterThan(1);
+    // ハッシュのビット混合ファイナライザ導入後、この10種別の実測値は8色中6色。
+    // 弱い分布への回帰を検知できるよう、実測値をそのまま下限として固定する。
+    expect(colors.size).toBeGreaterThanOrEqual(6);
   });
 });
