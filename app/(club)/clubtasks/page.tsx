@@ -1049,7 +1049,7 @@ export default function ClubTasksPage() {
                   key={v.id}
                   type="button"
                   onClick={() => setView(v.id)}
-                  className={`flex items-center justify-center gap-1.5 w-[104px] shrink-0 px-2 py-1.5 text-sm font-medium whitespace-nowrap ${
+                  className={`flex items-center justify-center gap-1.5 w-[120px] shrink-0 px-2 py-1.5 text-sm font-medium whitespace-nowrap ${
                     i > 0 ? "border-l border-rule" : ""
                   } ${
                     view === v.id
