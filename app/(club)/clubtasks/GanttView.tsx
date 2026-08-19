@@ -73,7 +73,7 @@ export default function GanttView({
       edge: DragEdge,
       range: DateRange
     ) => {
-      if (isDragDisabled) return;
+      if (isDragDisabled || drag) return;
       e.stopPropagation();
       e.currentTarget.setPointerCapture(e.pointerId);
       setDrag({
@@ -84,7 +84,7 @@ export default function GanttView({
         originalRange: range,
       });
     },
-    [isDragDisabled]
+    [isDragDisabled, drag]
   );
 
   const handlePointerMove = useCallback(
@@ -102,21 +102,39 @@ export default function GanttView({
     [drag]
   );
 
+  const clearDrag = useCallback((taskId: string) => {
+    setDrag(null);
+    setPreviewRanges((prev) => {
+      const next = { ...prev };
+      delete next[taskId];
+      return next;
+    });
+  }, []);
+
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!drag || e.pointerId !== drag.pointerId) return;
       e.currentTarget.releasePointerCapture(e.pointerId);
-      const finalRange = previewRanges[drag.taskId] ?? drag.originalRange;
-      onDateRangeChange(drag.taskId, finalRange);
       const taskId = drag.taskId;
-      setDrag(null);
-      setPreviewRanges((prev) => {
-        const next = { ...prev };
-        delete next[taskId];
-        return next;
-      });
+      const finalRange = previewRanges[taskId];
+      const changed =
+        finalRange &&
+        (finalRange.startDate !== drag.originalRange.startDate ||
+          finalRange.dueDate !== drag.originalRange.dueDate);
+      if (changed) {
+        onDateRangeChange(taskId, finalRange);
+      }
+      clearDrag(taskId);
     },
-    [drag, previewRanges, onDateRangeChange]
+    [drag, previewRanges, onDateRangeChange, clearDrag]
+  );
+
+  const handlePointerCancel = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      clearDrag(drag.taskId);
+    },
+    [drag, clearDrag]
   );
 
   const hiddenCount = tasks.length - rows.length;
@@ -240,6 +258,8 @@ export default function GanttView({
                           }
                           onPointerMove={handlePointerMove}
                           onPointerUp={handlePointerUp}
+                          onPointerCancel={handlePointerCancel}
+                          onLostPointerCapture={handlePointerCancel}
                           aria-label={`${task.title}の開始日を変更`}
                         />
                         <div
@@ -249,6 +269,8 @@ export default function GanttView({
                           }
                           onPointerMove={handlePointerMove}
                           onPointerUp={handlePointerUp}
+                          onPointerCancel={handlePointerCancel}
+                          onLostPointerCapture={handlePointerCancel}
                           aria-label={`${task.title}の期限を変更`}
                         />
                       </>
