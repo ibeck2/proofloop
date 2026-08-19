@@ -124,6 +124,7 @@ const emptyForm = {
   status: "todo" as TaskStatus,
   priority: "medium",
   due_date: "",
+  start_date: "",
   assignee_id: "",
   reviewer_id: "",
   category: "",
@@ -184,7 +185,7 @@ export default function ClubTasksPage() {
     let query = supabase
       .from("tasks")
       .select(
-        "id, organization_id, title, description, status, priority, assignee_id, reviewer_id, created_by, category, due_date, created_at, recurrence_rule, archived_at, archive_label"
+        "id, organization_id, title, description, status, priority, assignee_id, reviewer_id, created_by, category, due_date, start_date, created_at, recurrence_rule, archived_at, archive_label"
       )
       .eq("organization_id", orgId);
     if (archiveView.type === "current") {
@@ -542,6 +543,9 @@ export default function ClubTasksPage() {
       due_date: task.due_date
         ? task.due_date.slice(0, 10)
         : "",
+      start_date: task.start_date
+        ? task.start_date.slice(0, 10)
+        : "",
       assignee_id: task.assignee_id ?? "",
       reviewer_id: task.reviewer_id ?? "",
       category: task.category ?? "",
@@ -565,6 +569,10 @@ export default function ClubTasksPage() {
       toast.error("タイトルは必須です");
       return;
     }
+    if (form.start_date && form.due_date && form.start_date > form.due_date) {
+      toast.error("開始日は期限より後にできません");
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -574,6 +582,7 @@ export default function ClubTasksPage() {
         status: form.status,
         priority: form.priority || null,
         due_date: form.due_date || null,
+        start_date: form.start_date || null,
         assignee_id: form.assignee_id || null,
         reviewer_id: form.reviewer_id || null,
         category: form.category.trim() || null,
@@ -589,6 +598,7 @@ export default function ClubTasksPage() {
             status: payload.status,
             priority: payload.priority,
             due_date: payload.due_date,
+            start_date: payload.start_date,
             assignee_id: payload.assignee_id,
             reviewer_id: payload.reviewer_id,
             category: payload.category,
@@ -1303,7 +1313,21 @@ export default function ClubTasksPage() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-ink mb-1">
+                    開始日
+                  </label>
+                  <input
+                    type="date"
+                    value={form.start_date}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, start_date: e.target.value }))
+                    }
+                    disabled={saving || isViewingArchiveHistory}
+                    className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
+                  />
+                </div>
                 <div>
                   <label className="block text-sm font-bold text-ink mb-1">
                     期限
