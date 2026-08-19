@@ -8,7 +8,7 @@
 export type DateRange = { startDate: string; dueDate: string };
 export type DragEdge = "start" | "due";
 
-function parseDateOnly(iso: string): Date {
+export function parseDateOnly(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d);
 }

@@ -43,7 +43,7 @@ import {
   filterTasksByArchiveView,
   type ArchiveView,
 } from "@/lib/tasks/taskArchive";
-import type { DateRange } from "@/lib/tasks/dateRangeDrag";
+import type { DateRange, DragEdge } from "@/lib/tasks/dateRangeDrag";
 import ChecklistSection from "./ChecklistSection";
 import AttachmentSection from "./AttachmentSection";
 import CommentSection from "./CommentSection";
@@ -500,21 +500,21 @@ export default function ClubTasksPage() {
   );
 
   const handleDateRangeChange = useCallback(
-    async (taskId: string, range: DateRange) => {
+    async (taskId: string, range: DateRange, edge: DragEdge) => {
       if (archiveView.type !== "current") return;
       const task = tasks.find((t) => t.id === taskId);
       if (!task) return;
+      const patch =
+        edge === "start"
+          ? { start_date: range.startDate }
+          : { due_date: range.dueDate };
       const prevTasks = tasks;
       setTasks((prev) =>
-        prev.map((t) =>
-          t.id === taskId
-            ? { ...t, start_date: range.startDate, due_date: range.dueDate }
-            : t
-        )
+        prev.map((t) => (t.id === taskId ? { ...t, ...patch } : t))
       );
       const { error } = await supabase
         .from("tasks")
-        .update({ start_date: range.startDate, due_date: range.dueDate })
+        .update(patch)
         .eq("id", taskId);
       if (error) {
         setTasks(prevTasks);

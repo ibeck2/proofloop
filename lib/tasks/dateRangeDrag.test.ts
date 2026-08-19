@@ -77,6 +77,23 @@ describe("applyDragToRange", () => {
     expect(applyDragToRange(base, "start", 0)).toEqual(base);
     expect(applyDragToRange(base, "due", 0)).toEqual(base);
   });
+
+  it("rolls over month and year boundaries correctly", () => {
+    expect(
+      applyDragToRange(
+        { startDate: "2026-12-28", dueDate: "2026-12-30" },
+        "due",
+        5
+      )
+    ).toEqual({ startDate: "2026-12-28", dueDate: "2027-01-04" });
+    expect(
+      applyDragToRange(
+        { startDate: "2026-03-01", dueDate: "2026-03-10" },
+        "start",
+        -5
+      )
+    ).toEqual({ startDate: "2026-02-24", dueDate: "2026-03-10" });
+  });
 });
 
 describe("formatDateOnly", () => {

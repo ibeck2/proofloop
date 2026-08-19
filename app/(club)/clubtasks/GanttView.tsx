@@ -7,6 +7,7 @@ import { categoryColor } from "@/lib/tasks/taskCategoryColor";
 import {
   applyDragToRange,
   formatDateOnly,
+  parseDateOnly,
   pixelDeltaToDayDelta,
   type DateRange,
   type DragEdge,
@@ -16,7 +17,7 @@ type Props = {
   tasks: TaskRow[];
   laneTitleById: Record<TaskStatus, string>;
   normalizeStatus: (s: string | null | undefined) => TaskStatus;
-  onDateRangeChange: (taskId: string, range: DateRange) => void;
+  onDateRangeChange: (taskId: string, range: DateRange, edge: DragEdge) => void;
   isDragDisabled?: boolean;
 };
 
@@ -57,9 +58,12 @@ export default function GanttView({
     return tasks
       .filter((t): t is TaskRow & { due_date: string } => Boolean(t.due_date))
       .map((t) => {
-        const due = toDateOnly(t.due_date);
-        const startSource = t.start_date ?? t.created_at ?? null;
-        const startRaw = startSource ? toDateOnly(startSource) : due;
+        const due = parseDateOnly(t.due_date);
+        const startRaw = t.start_date
+          ? parseDateOnly(t.start_date)
+          : t.created_at
+            ? toDateOnly(t.created_at)
+            : due;
         const start = startRaw.getTime() <= due.getTime() ? startRaw : due;
         return { task: t, start, due };
       })
@@ -122,7 +126,7 @@ export default function GanttView({
         (finalRange.startDate !== drag.originalRange.startDate ||
           finalRange.dueDate !== drag.originalRange.dueDate);
       if (changed) {
-        onDateRangeChange(taskId, finalRange);
+        onDateRangeChange(taskId, finalRange, drag.edge);
       }
       clearDrag(taskId);
     },
@@ -207,8 +211,8 @@ export default function GanttView({
               dueDate: formatDateOnly(due),
             };
             const effectiveRange = previewRanges[task.id] ?? baseRange;
-            const effectiveStart = toDateOnly(effectiveRange.startDate);
-            const effectiveDue = toDateOnly(effectiveRange.dueDate);
+            const effectiveStart = parseDateOnly(effectiveRange.startDate);
+            const effectiveDue = parseDateOnly(effectiveRange.dueDate);
             const offset = diffDays(rangeStart, effectiveStart);
             const span = Math.max(diffDays(effectiveStart, effectiveDue) + 1, 1);
             const isDraggingThisTask = drag?.taskId === task.id;
@@ -260,7 +264,6 @@ export default function GanttView({
                           onPointerUp={handlePointerUp}
                           onPointerCancel={handlePointerCancel}
                           onLostPointerCapture={handlePointerCancel}
-                          aria-label={`${task.title}の開始日を変更`}
                         />
                         <div
                           className="absolute -right-1 top-0 h-full w-2 cursor-ew-resize touch-none"
@@ -271,7 +274,6 @@ export default function GanttView({
                           onPointerUp={handlePointerUp}
                           onPointerCancel={handlePointerCancel}
                           onLostPointerCapture={handlePointerCancel}
-                          aria-label={`${task.title}の期限を変更`}
                         />
                       </>
                     )}

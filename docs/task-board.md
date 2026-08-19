@@ -919,6 +919,33 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 
 ---
 
+## Z. `/clubtasks` ガント期間ドラッグ編集 Phase1（start_date列・両端ドラッグ・種別色バー） ✅ 完了（2026-08-19）
+
+計画 `docs/superpowers/plans/2026-08-19-clubtasks-gantt-dates-phase1.md`、設計 `docs/superpowers/specs/2026-08-19-clubtasks-gantt-calendar-dates-design.md`（①②④に対応・Phase1のみ）。オーナーからの追加フィードバック（ガントの直感的な期限変更・カレンダーの期間延長・ガントの色を種別色に）を受けて着手。`subagent-driven-development`でworktree実行（Task 1〜6の実装＋タスクごとレビュー、Task 6は本体レビュー→修正→再レビューの2巡、Task 7で実機確認・最終全体レビュー）。
+
+### やったこと
+- `tasks`に`start_date date`列を追加（本番適用済み）。`tasks`はテーブル単位UPDATE/INSERTをREVOKE済みで許可列だけを明示GRANTし直す設計になっているため、`start_date`にもINSERT/UPDATEを明示GRANT。本番でBEGIN…ROLLBACK検証時、単純なロール切替では`auth.uid()`がNULLになりRLSに弾かれて0件になるという別の落とし穴を発見し、実在するorg-ownerのJWTクレームを模した状態で再検証してから適用（詳細はTask2の報告）。
+- 新規`lib/tasks/dateRangeDrag.ts`：ピクセル量→日数変換、ドラッグ後の開始日/期限の計算（交差時のクランプ込み）を純粋関数化。
+- タスク編集モーダルに「開始日」欄を追加（期限/担当者と3列レイアウト）。開始日が期限より後の場合はバリデーションエラー。
+- ガントチャートのバー色をステータス色から種別色（`categoryColor()`）に変更し、完了タスクにはチェックマークを重ねて表示。開始日の算出も`start_date`優先（未設定時は`created_at`にフォールバック、従来通り編集不可の代用値）。
+- ガントのバー両端をPointer Capture APIでドラッグ可能にし、左端で開始日・右端で期限を変更。ドラッグ中はローカルプレビューのみ、離した時に1回だけSupabaseへ書き込む。アーカイブ履歴閲覧中はドラッグ無効。
+
+### Task 6の2巡レビューで見つかり対応した項目
+1回目のレビュー（Opus）でImportant3件を検出：①`pointercancel`/`lostpointercapture`未対応でドラッグ状態が残留し、マウスの`pointerId`が固定値であることを利用してホバーだけで無関係タスクのバーを動かせてしまう②2重pointerdownで最初のドラッグのプレビューが孤児化③クリックのみ（ドラッグ無し）でも書き込みが走り、`start_date`未設定タスクに`created_at`代用値が確定してしまう（設計書§3.3違反）。1コミットで修正し再レビューで承認。
+
+### 最終全体レビューで見つかり、このセッションで対応した項目
+- **Important**：期限側だけをドラッグしても、開始日側の値（`start_date`未設定タスクなら`created_at`代用値）が一緒に書き込まれてしまっていた。ドラッグした側の端だけを送信・書き込むように変更（`onDateRangeChange`に`edge`引数を追加）。
+- **Minor**：`GanttView.tsx`内で日付文字列のパースが2種類混在していた（コンポーネント側`toDateOnly`はUTC解釈、`dateRangeDrag.ts`の`parseDateOnly`はローカル解釈）。`start_date`/`due_date`（ともに`"YYYY-MM-DD"`のDB由来）は`parseDateOnly`に統一し、`created_at`（timestamptz）のみ`toDateOnly`を使うよう整理。
+- **Minor**：ドラッグハンドルの`aria-label`が、role無しの`<div>`に付いていて実質無効だった（支援技術には見えない）。誤った期待を持たせないため削除。
+
+### 🟡 見送り・追跡事項として記録
+- カレンダービュー（Phase2：複数日バー表示＋両端ドラッグ）は未着手。設計書の②に対応する部分。
+- サイドパネル化（③）・カンバンD&Dの重さ改善（⑤）は本計画のスコープ外（それぞれ別の設計・調査が必要）。
+- 種別カラーの衝突（8色パレット）はY章から継続の既知の制約（今回変更なし）。
+- ライブQAはオーナーにログインしていただいたうえで実施済み（バー色・完了マーク・両端ドラッグでの永続化・モーダルの開始日欄・バリデーション・誤クリック防止をデスクトップ幅で確認）。モバイル幅・タッチ操作での確認は次回。
+
+---
+
 ## 参考：スキルの使いどころ早見表
 
 | 場面 | 使うスキル |
