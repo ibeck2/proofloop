@@ -8,6 +8,7 @@ import {
   priorityBadgeClass,
   priorityLabel,
 } from "@/lib/tasks/taskFormatting";
+import { categoryColor } from "@/lib/tasks/taskCategoryColor";
 
 type SortKey =
   | "title"
@@ -128,37 +129,55 @@ export default function TableView({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((task) => (
-            <tr
-              key={task.id}
-              className="border-b border-rule last:border-b-0 hover:bg-mist cursor-pointer"
-              onClick={() => onOpen(task)}
-            >
-              <td className="px-3 py-2 text-ink font-medium">{task.title}</td>
-              <td className="px-3 py-2 text-graphite">
-                {laneTitleById[normalizeStatus(task.status)]}
-              </td>
-              <td className="px-3 py-2">
-                <span
-                  className={`text-xs font-medium px-2 py-0.5 rounded ${priorityBadgeClass(task.priority)}`}
-                >
-                  {priorityLabel(task.priority)}
-                </span>
-              </td>
-              <td className="px-3 py-2 text-graphite">
-                {task.assignee_id
-                  ? memberNameById[task.assignee_id] ?? "（元メンバー）"
-                  : "未定"}
-              </td>
-              <td className="px-3 py-2 text-graphite">{task.category || "—"}</td>
-              <td className="px-3 py-2 text-graphite whitespace-nowrap">
-                <span className="inline-flex items-center gap-1">
-                  <CalendarDays className="w-[14px] h-[14px]" aria-hidden="true" />
-                  {formatDue(task.due_date)}
-                </span>
-              </td>
-            </tr>
-          ))}
+          {sorted.map((task) => {
+            const catColor = categoryColor(task.category);
+            return (
+              <tr
+                key={task.id}
+                className="border-b border-rule last:border-b-0 hover:bg-mist cursor-pointer"
+                onClick={() => onOpen(task)}
+              >
+                <td className="px-3 py-2 text-ink font-medium">{task.title}</td>
+                <td className="px-3 py-2 text-graphite">
+                  {laneTitleById[normalizeStatus(task.status)]}
+                </td>
+                <td className="px-3 py-2">
+                  <span
+                    className={`text-xs font-medium px-2 py-0.5 rounded ${priorityBadgeClass(task.priority)}`}
+                  >
+                    {priorityLabel(task.priority)}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-graphite">
+                  {task.assignee_id
+                    ? memberNameById[task.assignee_id] ?? "（元メンバー）"
+                    : "未定"}
+                </td>
+                <td className="px-3 py-2 text-graphite">
+                  {task.category ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      {catColor && (
+                        <span
+                          className="w-2 h-2 rounded-full shrink-0"
+                          style={{ backgroundColor: catColor.hex }}
+                          aria-hidden="true"
+                        />
+                      )}
+                      {task.category}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="px-3 py-2 text-graphite whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarDays className="w-[14px] h-[14px]" aria-hidden="true" />
+                    {formatDue(task.due_date)}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

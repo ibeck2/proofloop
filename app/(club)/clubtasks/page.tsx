@@ -6,7 +6,18 @@ import {
   Droppable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { Plus, CheckCircle2, X, Archive, Lock, Undo2 } from "lucide-react";
+import {
+  Plus,
+  CheckCircle2,
+  X,
+  Archive,
+  Lock,
+  Undo2,
+  Table,
+  Kanban,
+  Calendar,
+  ChartGantt,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Button, Input, Textarea } from "@/components/ui";
@@ -143,7 +154,7 @@ export default function ClubTasksPage() {
   const [saving, setSaving] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [view, setView] = useState<"kanban" | "gantt" | "table" | "calendar">(
-    "kanban"
+    "table"
   );
   const [swimlaneAxis, setSwimlaneAxis] = useState<SwimlaneAxis | "flat">(
     "flat"
@@ -1022,30 +1033,36 @@ export default function ClubTasksPage() {
             </select>
           </div>
         )}
-        <div className="inline-flex rounded-lg border border-rule overflow-hidden shrink-0 w-fit flex-wrap">
-          {(
-            [
-              { id: "kanban", label: "カンバン" },
-              { id: "table", label: "表" },
-              { id: "calendar", label: "カレンダー" },
-              { id: "gantt", label: "ガントチャート" },
-            ] as const
-          ).map((v, i) => (
-            <button
-              key={v.id}
-              type="button"
-              onClick={() => setView(v.id)}
-              className={`px-3 py-1.5 text-sm font-medium ${
-                i > 0 ? "border-l border-rule" : ""
-              } ${
-                view === v.id
-                  ? "bg-ink text-paper"
-                  : "bg-paper text-graphite hover:bg-mist"
-              }`}
-            >
-              {v.label}
-            </button>
-          ))}
+        <div className="overflow-x-auto min-w-0">
+          <div className="inline-grid grid-flow-col auto-cols-fr min-w-max rounded-lg border border-rule overflow-hidden">
+            {(
+              [
+                { id: "table", label: "表", icon: Table },
+                { id: "kanban", label: "カンバン", icon: Kanban },
+                { id: "calendar", label: "カレンダー", icon: Calendar },
+                { id: "gantt", label: "ガントチャート", icon: ChartGantt },
+              ] as const
+            ).map((v, i) => {
+              const Icon = v.icon;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => setView(v.id)}
+                  className={`flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm font-medium whitespace-nowrap ${
+                    i > 0 ? "border-l border-rule" : ""
+                  } ${
+                    view === v.id
+                      ? "bg-ink text-paper"
+                      : "bg-paper text-graphite hover:bg-mist"
+                  }`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  {v.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -1225,6 +1242,7 @@ export default function ClubTasksPage() {
                   placeholder="タスクのタイトル"
                   required
                   disabled={saving || isViewingArchiveHistory}
+                  className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                 />
               </div>
               <div>
@@ -1334,7 +1352,7 @@ export default function ClubTasksPage() {
                     }
                     placeholder="例：デザイン、広報、物品準備"
                     disabled={saving || isViewingArchiveHistory}
-                    className="w-full"
+                    className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                   />
                   <datalist id="task-category-suggestions">
                     {categoryOptions.map((c) => (
@@ -1466,7 +1484,7 @@ export default function ClubTasksPage() {
                   placeholder="例：2026年度"
                   disabled={archiving}
                   maxLength={100}
-                  className="w-full"
+                  className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">

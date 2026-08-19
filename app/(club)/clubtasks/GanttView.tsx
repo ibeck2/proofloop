@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
+import { categoryColor } from "@/lib/tasks/taskCategoryColor";
 
 type Props = {
   tasks: TaskRow[];
@@ -106,6 +107,7 @@ export default function GanttView({
             const tint = laneTintById[status] ?? "#002B5C";
             const offset = diffDays(rangeStart, start);
             const span = Math.max(diffDays(start, due) + 1, 1);
+            const catColor = categoryColor(task.category);
             return (
               <div key={task.id} className="flex border-b border-rule last:border-b-0">
                 <div
@@ -115,7 +117,14 @@ export default function GanttView({
                 >
                   {task.title}
                   {task.category && (
-                    <span className="ml-1 text-[10px] text-graphite/60">
+                    <span className="ml-1 inline-flex items-center gap-1 text-[10px] text-graphite/60">
+                      {catColor && (
+                        <span
+                          className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
+                          style={{ backgroundColor: catColor.hex }}
+                          aria-hidden="true"
+                        />
+                      )}
                       （{task.category}）
                     </span>
                   )}

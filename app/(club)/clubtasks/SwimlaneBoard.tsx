@@ -10,6 +10,7 @@ import {
   UNASSIGNED_SWIMLANE_KEY,
   type SwimlaneAxis,
 } from "@/lib/tasks/taskSwimlanes";
+import { categoryColor } from "@/lib/tasks/taskCategoryColor";
 import DraggableTaskCard from "./DraggableTaskCard";
 
 type LaneMeta = { id: TaskStatus; title: string };
@@ -75,13 +76,30 @@ export default function SwimlaneBoard({
 
   return (
     <div className="min-w-max px-2 space-y-6">
-      {rows.map((row) => (
+      {rows.map((row) => {
+        const catColor =
+          axis === "category" && row.key !== UNASSIGNED_SWIMLANE_KEY
+            ? categoryColor(row.key)
+            : null;
+        return (
         <div
           key={row.key}
           className="rounded-xl border border-rule overflow-hidden"
         >
-          <div className="px-4 py-2 bg-mist border-b border-rule">
-            <h3 className="text-sm font-bold text-ink">
+          <div
+            className={`px-4 py-2 bg-mist border-b border-rule ${
+              catColor ? "border-l-4" : ""
+            }`}
+            style={catColor ? { borderLeftColor: catColor.hex } : undefined}
+          >
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              {catColor && (
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: catColor.hex }}
+                  aria-hidden="true"
+                />
+              )}
               {rowLabel(row.key, axis, memberNameById)}
             </h3>
           </div>
@@ -156,7 +174,8 @@ export default function SwimlaneBoard({
             })}
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
