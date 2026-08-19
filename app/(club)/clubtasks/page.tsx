@@ -1100,7 +1100,6 @@ export default function ClubTasksPage() {
         <GanttView
           tasks={visibleTasks}
           laneTitleById={LANE_TITLE_BY_ID}
-          laneTintById={STATUS_TINT}
           normalizeStatus={normalizeStatus}
         />
       ) : view === "calendar" ? (

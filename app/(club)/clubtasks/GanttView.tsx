@@ -1,18 +1,19 @@
 "use client";
 
 import { useMemo } from "react";
+import { CheckCircle2 } from "lucide-react";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
 import { categoryColor } from "@/lib/tasks/taskCategoryColor";
 
 type Props = {
   tasks: TaskRow[];
   laneTitleById: Record<TaskStatus, string>;
-  laneTintById: Record<TaskStatus, string | null>;
   normalizeStatus: (s: string | null | undefined) => TaskStatus;
 };
 
 const DAY_WIDTH = 28;
 const LABEL_COL_WIDTH = 200;
+const FALLBACK_BAR_COLOR = "#9AA5B1";
 
 function toDateOnly(iso: string): Date {
   const d = new Date(iso);
@@ -26,7 +27,6 @@ function diffDays(a: Date, b: Date): number {
 export default function GanttView({
   tasks,
   laneTitleById,
-  laneTintById,
   normalizeStatus,
 }: Props) {
   const rows = useMemo(() => {
@@ -34,7 +34,8 @@ export default function GanttView({
       .filter((t): t is TaskRow & { due_date: string } => Boolean(t.due_date))
       .map((t) => {
         const due = toDateOnly(t.due_date);
-        const startRaw = t.created_at ? toDateOnly(t.created_at) : due;
+        const startSource = t.start_date ?? t.created_at ?? null;
+        const startRaw = startSource ? toDateOnly(startSource) : due;
         const start = startRaw.getTime() <= due.getTime() ? startRaw : due;
         return { task: t, start, due };
       })
@@ -104,10 +105,10 @@ export default function GanttView({
 
           {rows.map(({ task, start, due }) => {
             const status = normalizeStatus(task.status);
-            const tint = laneTintById[status] ?? "#002B5C";
+            const catColor = categoryColor(task.category);
+            const barColor = catColor?.hex ?? FALLBACK_BAR_COLOR;
             const offset = diffDays(rangeStart, start);
             const span = Math.max(diffDays(start, due) + 1, 1);
-            const catColor = categoryColor(task.category);
             return (
               <div key={task.id} className="flex border-b border-rule last:border-b-0">
                 <div
@@ -116,29 +117,34 @@ export default function GanttView({
                   title={task.title}
                 >
                   {task.title}
-                  {task.category && (
+                  {task.category && catColor && (
                     <span className="ml-1 inline-flex items-center gap-1 text-[10px] text-graphite/60">
-                      {catColor && (
-                        <span
-                          className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
-                          style={{ backgroundColor: catColor.hex }}
-                          aria-hidden="true"
-                        />
-                      )}
+                      <span
+                        className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ backgroundColor: catColor.hex }}
+                        aria-hidden="true"
+                      />
                       （{task.category}）
                     </span>
                   )}
                 </div>
                 <div className="relative flex-1" style={{ height: 36 }}>
                   <div
-                    className="absolute top-1.5 h-3 rounded-full"
+                    className="absolute top-1.5 h-3 rounded-full flex items-center justify-center"
                     style={{
                       left: offset * DAY_WIDTH,
                       width: span * DAY_WIDTH - 4,
-                      backgroundColor: tint,
+                      backgroundColor: barColor,
                     }}
                     title={`${laneTitleById[status]}・${task.title}`}
-                  />
+                  >
+                    {status === "done" && (
+                      <CheckCircle2
+                        className="w-[10px] h-[10px] text-paper"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
                 </div>
               </div>
             );
