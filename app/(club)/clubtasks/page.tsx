@@ -1034,7 +1034,7 @@ export default function ClubTasksPage() {
           </div>
         )}
         <div className="overflow-x-auto min-w-0">
-          <div className="inline-grid grid-flow-col auto-cols-fr rounded-lg border border-rule overflow-hidden">
+          <div className="inline-grid grid-flow-col auto-cols-fr min-w-max rounded-lg border border-rule overflow-hidden">
             {(
               [
                 { id: "table", label: "表", icon: Table },
