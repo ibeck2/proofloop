@@ -25,6 +25,23 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/migration-edit-guard.mjs",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/env-edit-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
