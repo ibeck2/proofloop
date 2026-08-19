@@ -1242,6 +1242,7 @@ export default function ClubTasksPage() {
                   placeholder="タスクのタイトル"
                   required
                   disabled={saving || isViewingArchiveHistory}
+                  className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                 />
               </div>
               <div>
@@ -1351,7 +1352,7 @@ export default function ClubTasksPage() {
                     }
                     placeholder="例：デザイン、広報、物品準備"
                     disabled={saving || isViewingArchiveHistory}
-                    className="w-full"
+                    className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                   />
                   <datalist id="task-category-suggestions">
                     {categoryOptions.map((c) => (
@@ -1483,7 +1484,7 @@ export default function ClubTasksPage() {
                   placeholder="例：2026年度"
                   disabled={archiving}
                   maxLength={100}
-                  className="w-full"
+                  className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-paper text-ink"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-2">
