@@ -36,6 +36,20 @@ export const NOTIFICATION_REGISTRY: NotificationTypeMeta[] = [
     isOptional: true,
     isOrgScoped: true,
   },
+  {
+    id: "schedule_poll_created",
+    label: "日程調整の新規作成",
+    description: "自分が所属する団体で新しい日程調整が作成されたときにメールで知らせます。",
+    isOptional: true,
+    isOrgScoped: true,
+  },
+  {
+    id: "schedule_poll_reminder",
+    label: "日程調整の未回答リマインド",
+    description: "自分がまだ回答していない日程調整について、幹事からリマインドが送られたときにメールで知らせます。",
+    isOptional: true,
+    isOrgScoped: true,
+  },
 ];
 
 export function getOptionalNotificationTypes(): NotificationTypeMeta[] {
