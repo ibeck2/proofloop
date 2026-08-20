@@ -24,8 +24,8 @@
 新規作成：
 - `supabase/migrations/066_schedule_polls.sql` — `schedule_polls`／`schedule_poll_candidates`テーブル・トリガー・RLS
 - `supabase/migrations/068_schedule_poll_responses.sql` — `schedule_poll_responses`テーブル・RLS・`submit_schedule_poll_response`RPC
-- `supabase/migrations/069_schedule_poll_views.sql` — `schedule_poll_views`テーブル・RLS
-- `supabase/migrations/070_schedule_poll_decide.sql` — `decide_schedule_poll_candidate`RPC
+- `supabase/migrations/070_schedule_poll_views.sql` — `schedule_poll_views`テーブル・RLS
+- `supabase/migrations/071_schedule_poll_decide.sql` — `decide_schedule_poll_candidate`RPC
 - `lib/schedule/scheduleResponse.ts` / `.test.ts` — ○/△/×表示変換
 - `lib/schedule/scheduleReadStatus.ts` / `.test.ts` — 未読／既読・未回答／回答済み判定
 - `lib/schedule/scheduleReminderTargets.ts` / `.test.ts` — リマインド対象抽出
@@ -62,7 +62,7 @@ Expected: 065番台が最新であることを確認する（既に065以降が�
 --
 -- 決定候補は schedule_polls に decided_candidate_id 列を持たせる循環参照を避け、
 -- schedule_poll_candidates.is_decided の部分ユニーク索引で「1 pollにつき決定候補は
--- 最大1件」をDB側から保証する（decide_schedule_poll_candidate RPCは070で追加）。
+-- 最大1件」をDB側から保証する（decide_schedule_poll_candidate RPCは071で追加）。
 
 CREATE TABLE public.schedule_polls (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -130,7 +130,7 @@ CREATE POLICY "schedule_poll_candidates_insert_own_org"
   ON public.schedule_poll_candidates FOR INSERT TO authenticated
   WITH CHECK (organization_id IN (SELECT public.get_user_organization_ids(auth.uid())));
 
--- UPDATE/DELETEポリシーは意図的に作らない。is_decidedの変更は070のRPC（SECURITY DEFINER）
+-- UPDATE/DELETEポリシーは意図的に作らない。is_decidedの変更は071のRPC（SECURITY DEFINER）
 -- 経由に限定し、クライアントからの直接UPDATEは許可しない。
 ```
 
@@ -260,7 +260,7 @@ git commit -m "feat(db): schedule_poll_responsesとsubmit_schedule_poll_response
 ### Task 3: DB migration — `schedule_poll_views`
 
 **Files:**
-- Create: `supabase/migrations/069_schedule_poll_views.sql`
+- Create: `supabase/migrations/070_schedule_poll_views.sql`
 
 **Interfaces:**
 - Consumes: `public.schedule_polls(id, organization_id)`（Task 1）
@@ -270,7 +270,7 @@ git commit -m "feat(db): schedule_poll_responsesとsubmit_schedule_poll_response
 - [ ] **Step 1: マイグレーションファイルを作成**
 
 ```sql
--- 069 schedule_poll_views: 日程調整の既読記録（初回閲覧時刻のみ）
+-- 070 schedule_poll_views: 日程調整の既読記録（初回閲覧時刻のみ）
 --
 -- INSERT ... ON CONFLICT DO NOTHING はSET句が無いためUPDATE権限を必要としない
 -- （068のresponsesと異なり、ここはRPCを使わずテーブル直接INSERTで安全に書ける）。
@@ -328,7 +328,7 @@ CREATE POLICY "schedule_poll_views_insert_own_org"
 - [ ] **Step 3: 本番へ適用し、コミット**
 
 ```bash
-git add supabase/migrations/069_schedule_poll_views.sql
+git add supabase/migrations/070_schedule_poll_views.sql
 git commit -m "feat(db): schedule_poll_viewsテーブルを追加（既読記録）"
 ```
 
@@ -337,7 +337,7 @@ git commit -m "feat(db): schedule_poll_viewsテーブルを追加（既読記録
 ### Task 4: DB migration — `decide_schedule_poll_candidate` RPC
 
 **Files:**
-- Create: `supabase/migrations/070_schedule_poll_decide.sql`
+- Create: `supabase/migrations/071_schedule_poll_decide.sql`
 
 **Interfaces:**
 - Consumes: `public.schedule_poll_candidates`（Task 1）、`public.get_user_admin_organization_ids(uuid)`（既存020）
@@ -347,7 +347,7 @@ git commit -m "feat(db): schedule_poll_viewsテーブルを追加（既読記録
 - [ ] **Step 1: マイグレーションファイルを作成**
 
 ```sql
--- 070 decide_schedule_poll_candidate: 幹事による確定操作
+-- 071 decide_schedule_poll_candidate: 幹事による確定操作
 --
 -- 呼び出し元がpollの作成者本人、またはその団体のowner/adminであることを内部で確認する。
 -- 全メンバーが日程調整を作成できる一方、確定は無関係な人が誤って操作しないよう
@@ -400,7 +400,7 @@ GRANT EXECUTE ON FUNCTION public.decide_schedule_poll_candidate(uuid) TO authent
 - [ ] **Step 3: 本番へ適用し、コミット**
 
 ```bash
-git add supabase/migrations/070_schedule_poll_decide.sql
+git add supabase/migrations/071_schedule_poll_decide.sql
 git commit -m "feat(db): decide_schedule_poll_candidate RPCを追加"
 ```
 
