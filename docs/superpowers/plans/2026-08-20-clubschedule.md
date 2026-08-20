@@ -27,7 +27,8 @@
 - `supabase/migrations/068_schedule_poll_responses.sql` — `schedule_poll_responses`テーブル・RLS・`submit_schedule_poll_response`RPC
 - `supabase/migrations/069_schedule_poll_responses_rpc_only.sql` — Task2レビュー対応：直接INSERTポリシーを削除しRPC限定に統一
 - `supabase/migrations/070_schedule_poll_views.sql` — `schedule_poll_views`テーブル・RLS
-- `supabase/migrations/071_schedule_poll_decide.sql` — `decide_schedule_poll_candidate`RPC
+- `supabase/migrations/071_schedule_poll_decide.sql` — `decide_schedule_poll_candidate`RPC（実装時にanonロックアウトを追加、ブリーフのSQLのままでは`created_by`がNULLのpollに対しanon呼び出しが認可チェックをすり抜ける穴があったため）
+- `supabase/migrations/072_schedule_polls_created_by_lockdown.sql` — Task4レビュー対応：`schedule_polls`のINSERTで`created_by=auth.uid()`を強制
 - `lib/schedule/scheduleResponse.ts` / `.test.ts` — ○/△/×表示変換
 - `lib/schedule/scheduleReadStatus.ts` / `.test.ts` — 未読／既読・未回答／回答済み判定
 - `lib/schedule/scheduleReminderTargets.ts` / `.test.ts` — リマインド対象抽出
