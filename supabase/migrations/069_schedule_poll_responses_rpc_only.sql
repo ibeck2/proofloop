@@ -1,0 +1,16 @@
+-- 069 schedule_poll_responses: 直接INSERTポリシーを削除しRPC限定に統一
+--
+-- 068のセルフレビューで指摘された穴：schedule_poll_responses_insert_own_org は
+-- user_id = auth.uid() と organization_id が自分の所属組織かどうかしか見ておらず、
+-- candidate_id が実際にその organization_id に属するかを検証していなかった。
+-- 複数組織に所属するユーザーが「他組織Aのcandidate_id」と「自分が所属するが
+-- そのcandidateとは無関係な組織Bのorganization_id」を組み合わせてINSERTすると、
+-- ポリシー上は通ってしまい、A団体の候補日程がB団体の回答として見えてしまう
+-- （schedule_poll_candidatesがトリガーでpoll_idからorganization_idを強制導出して
+-- クライアント入力を無視しているのとは非対称）。
+--
+-- submit_schedule_poll_response はSECURITY DEFINERであり、関数内部で
+-- schedule_poll_candidatesから正しいorganization_idを導出してメンバーシップを
+-- 検証してから書き込むため、このテーブルにINSERTポリシーが無くても動作し続ける。
+-- 穴を個別に塞ぐのではなく、直接INSERT経路そのものを閉じる。
+DROP POLICY IF EXISTS "schedule_poll_responses_insert_own_org" ON public.schedule_poll_responses;
