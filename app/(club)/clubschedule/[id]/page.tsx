@@ -140,20 +140,30 @@ export default function ClubSchedulePollDetailPage() {
     }
   }, [pollId]);
 
+  // 詳細ページを開いた時点で既読を記録してからデータを読み込む（初回のみ、SET句が
+  // 無いのでUPDATE権限は不要）。既読upsertとloadAll（既読状態の表示元）が別々の
+  // useEffectで非同期に競走すると、upsertのcommit前にloadAllの読み取りが先に
+  // 終わり自分自身が一瞬「未読」に見えるレースが起きるため、同一effect内で
+  // upsertを待ってからloadAllを呼ぶ順序を保証する。
   useEffect(() => {
-    if (isReady) loadAll();
-  }, [isReady, loadAll]);
-
-  // 詳細ページを開いた時点で既読を記録する（初回のみ、SET句が無いのでUPDATE権限は不要）
-  useEffect(() => {
-    if (!pollId || !userId) return;
-    supabase
-      .from("schedule_poll_views")
-      .upsert({ poll_id: pollId, user_id: userId }, { onConflict: "poll_id,user_id", ignoreDuplicates: true })
-      .then(({ error }) => {
+    if (!isReady || !pollId) return;
+    let cancelled = false;
+    (async () => {
+      if (userId) {
+        const { error } = await supabase
+          .from("schedule_poll_views")
+          .upsert(
+            { poll_id: pollId, user_id: userId },
+            { onConflict: "poll_id,user_id", ignoreDuplicates: true }
+          );
         if (error) console.error("schedule_poll_views upsert error:", error);
-      });
-  }, [pollId, userId]);
+      }
+      if (!cancelled) await loadAll();
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isReady, pollId, userId, loadAll]);
 
   const candidateIds = useMemo(() => candidates.map((c) => c.id), [candidates]);
 
