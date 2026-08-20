@@ -11,6 +11,7 @@ import {
   Kanban,
   Megaphone,
   CalendarDays,
+  CalendarClock,
   Images,
   Star,
   Wallet,
@@ -64,6 +65,10 @@ export default function ClubSidebar() {
             <Link className={linkClass("/clubtasks", true)} href={withOrgQuery("/clubtasks")}>
               <Kanban className="w-6 h-6" aria-hidden="true" />
               <span className="text-sm font-medium">タスク管理</span>
+            </Link>
+            <Link className={linkClass("/clubschedule", false)} href={withOrgQuery("/clubschedule")}>
+              <CalendarClock className="w-6 h-6" aria-hidden="true" />
+              <span className="text-sm font-medium">日程調整</span>
             </Link>
             <Link className={linkClass("/clubfinance", true)} href={withOrgQuery("/clubfinance")}>
               <Wallet className="w-6 h-6" aria-hidden="true" />
