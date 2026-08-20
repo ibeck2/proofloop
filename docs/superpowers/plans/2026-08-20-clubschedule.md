@@ -23,7 +23,9 @@
 
 新規作成：
 - `supabase/migrations/066_schedule_polls.sql` — `schedule_polls`／`schedule_poll_candidates`テーブル・トリガー・RLS
+- `supabase/migrations/067_schedule_poll_candidates_decide_lockdown.sql` — Task1レビュー対応：`schedule_poll_candidates`のINSERTで`is_decided=true`を拒否
 - `supabase/migrations/068_schedule_poll_responses.sql` — `schedule_poll_responses`テーブル・RLS・`submit_schedule_poll_response`RPC
+- `supabase/migrations/069_schedule_poll_responses_rpc_only.sql` — Task2レビュー対応：直接INSERTポリシーを削除しRPC限定に統一
 - `supabase/migrations/070_schedule_poll_views.sql` — `schedule_poll_views`テーブル・RLS
 - `supabase/migrations/071_schedule_poll_decide.sql` — `decide_schedule_poll_candidate`RPC
 - `lib/schedule/scheduleResponse.ts` / `.test.ts` — ○/△/×表示変換
