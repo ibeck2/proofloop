@@ -404,18 +404,55 @@ export default function ClubSchedulePollDetailPage() {
             : `未回答者にリマインドを送る（${reminderTargets.length}人）`}
         </Button>
       </div>
-      <div className="space-y-2">
-        {memberStatuses.map((m) => (
-          <div
-            key={m.user_id}
-            className="flex items-center justify-between p-3 border border-rule rounded"
-          >
-            <span className="text-ink text-sm">{m.name}</span>
-            <span className="text-xs font-bold text-graphite/70">
-              {READ_STATUS_LABEL[m.status]}
-            </span>
-          </div>
-        ))}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr>
+              <th className="text-left p-2 border-b border-rule bg-mist text-graphite/70 font-medium whitespace-nowrap">
+                メンバー
+              </th>
+              {candidates.map((c) => (
+                <th
+                  key={c.id}
+                  className="text-left p-2 border-b border-rule bg-mist text-graphite/70 font-medium whitespace-nowrap"
+                >
+                  {formatCandidateDate(c.starts_at)}
+                </th>
+              ))}
+              <th className="text-left p-2 border-b border-rule bg-mist text-graphite/70 font-medium whitespace-nowrap">
+                既読/回答
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {memberStatuses.map((m) => (
+              <tr key={m.user_id}>
+                <td className="p-2 border-b border-rule text-ink whitespace-nowrap">{m.name}</td>
+                {candidates.map((c) => {
+                  const response = responsesByUser[m.user_id]?.[c.id];
+                  return (
+                    <td key={c.id} className="p-2 border-b border-rule">
+                      {response ? (
+                        <span
+                          className={`inline-block px-2 py-0.5 text-xs font-bold ${responseBadgeClass(
+                            response
+                          )}`}
+                        >
+                          {responseLabel(response)}
+                        </span>
+                      ) : (
+                        <span className="text-graphite/40">—</span>
+                      )}
+                    </td>
+                  );
+                })}
+                <td className="p-2 border-b border-rule text-xs font-bold text-graphite/70 whitespace-nowrap">
+                  {READ_STATUS_LABEL[m.status]}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
