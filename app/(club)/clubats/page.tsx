@@ -18,6 +18,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import type { ApplicationWithProfile } from "@/lib/types/application";
+import { buildDragCardStyle } from "@/lib/tasks/dragCardStyle";
 import ChatRoom from "@/components/ChatRoom";
 import { Input, Button } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
@@ -690,7 +691,11 @@ export default function ClubAtsPage() {
                                       ? "shadow-xl opacity-95 scale-[1.02] ring-2 ring-ink/30 z-50"
                                       : "shadow-sm hover:shadow-md"
                                   }`}
-                                  style={!isAccepted && !isClosed && tint ? { borderLeftColor: tint } : undefined}
+                                  style={buildDragCardStyle(
+                                    draggableProvided.draggableProps.style,
+                                    snapshot,
+                                    !isAccepted && !isClosed && tint ? { borderLeftColor: tint } : undefined
+                                  )}
                                 >
                                   <div
                                     {...draggableProvided.dragHandleProps}
