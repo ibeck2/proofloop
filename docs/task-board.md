@@ -1004,6 +1004,25 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 
 ---
 
+## AC. `/clubtasks` カンバンD&Dが重く感じる問題（⑤）の根本原因を特定・修正 ✅ 完了（2026-08-20）
+
+`superpowers:systematic-debugging`スキルで着手。セクションR・AAで「新機能ではなく性能調査」と保留されていた項目。
+
+### 根本原因
+`DraggableTaskCard.tsx`で`{...draggableProvided.draggableProps}`（`@hello-pangea/dnd`がドラッグ追従・ドロップ確定アニメーションに使う`style`＝`transform`/`transition`を含む）を先にスプレッドした直後に、別途`style={!isDone && tint ? {...} : undefined}`を指定していた。JSXは同一要素に同じ属性が複数あると**後に書いた方で上書き**するため、この`style`が`draggableProps.style`を毎回丸ごと消していた。`STATUS_TINT`は`done`以外の全レーンで値を持つため、**実質すべてのカードで発生**していた（ドラッグ中にカードがマウスに追従しない・ドロップ時に本来の滑らかな遷移が働かないという、まさに「重い」の説明そのもの）。
+
+本番の`tasks`テーブルを実測したところ**全体で4件**しかなく、カード枚数によるレンダリング負荷という説明は最初から成立しなかった。これはセクションRの「flatかんばん（swimlane未使用、useMemo未適用）でも同様に重い」という記録とも整合する——swimlane特有の計算とは無関係な、共通の原因だったということ。
+
+### 対応
+新規`lib/tasks/dragCardStyle.ts`の純粋関数`buildDragCardStyle`（TDD、4テスト）で、`draggableStyle`とカード固有の`extraStyle`（tint）をどちらも失わずマージ。あわせて`@hello-pangea/dnd`の既定ドロップ確定アニメーション（距離に応じて330〜550ms、`node_modules`のソースで確認済み）を、`snapshot.dropAnimation.curve`は維持したまま**120msに短縮**した（オーナー確認済み・「大幅に短縮」を選択）。
+
+### 調査中の副産物（記録のみ）
+- 合成マウスイベント（`dispatchEvent(new MouseEvent(...))`）でのドラッグ再現を試みたが、`@hello-pangea/dnd`の衝突判定がrequestAnimationFrame同期の実タイミングに依存しており、スクリプトでの安定した再現は最後まで得られなかった。ただし個々のイベント処理自体は1ms未満で、アプリ側コードの処理速度そのものに問題は無いことは確認できた。
+- **`app/(club)/clubats/page.tsx`（入会応募者管理のカンバン）にも全く同じstyle上書きパターンを発見した（693行目）。** 今回のセッションでは`/clubtasks`のみを対象としたため未修正。同じ`buildDragCardStyle`を使って直せるはずなので、次に`/clubats`のカンバンに触れる際に対応する。
+- **ライブQAが環境要因で未実施**：`claude-in-chrome`からlocalhost:3000への接続が`ERR_CONNECTION_REFUSED`になり、Chrome再起動でも復旧しなかった（外部サイトへの接続は正常）。原因不明のままオーナー了承のもと、型チェック・vitest535件全PASS・コードレベルの検証（JSX仕様の直接確認）で十分として進めた。次に`/clubtasks`のカンバンに触れる際、実際にドラッグしてカードがマウスに追従することを目視確認すること。
+
+---
+
 ## 参考：スキルの使いどころ早見表
 
 | 場面 | 使うスキル |
