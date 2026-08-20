@@ -31,12 +31,24 @@ describe("responseBadgeClass", () => {
   // 同じ値。両ファイルは共有シンボルで結合されていないため、ここで
   // リテラルとして固定し、responseBadgeClass の結果がこの値と衝突しない
   // ことを回帰テストとして担保する（×選択時に無反応に見えるバグの再発防止）。
+  //
+  // 単純な文字列完全一致（.not.toBe）だと、`hover:` 等のバリアント接頭辞の
+  // 有無だけが違う実質同じ見た目のクラス（例: 修正前の"no"の値）でも
+  // 「異なる文字列」として通ってしまい、再発を検知できない。実際に見た目へ
+  // 効くユーティリティ（bg-/text-/border-の非バリアント値）の集合で比較する。
   const UNSELECTED_BUTTON_CLASS =
     "border border-rule bg-paper text-graphite hover:border-ink";
 
+  function visualUtilities(className: string): Set<string> {
+    return new Set(
+      className.split(/\s+/).filter((token) => !token.includes(":"))
+    );
+  }
+
   it("differs from the page's unselected-button class for yes/maybe/no", () => {
-    expect(responseBadgeClass("yes")).not.toBe(UNSELECTED_BUTTON_CLASS);
-    expect(responseBadgeClass("maybe")).not.toBe(UNSELECTED_BUTTON_CLASS);
-    expect(responseBadgeClass("no")).not.toBe(UNSELECTED_BUTTON_CLASS);
+    const unselected = visualUtilities(UNSELECTED_BUTTON_CLASS);
+    expect(visualUtilities(responseBadgeClass("yes"))).not.toEqual(unselected);
+    expect(visualUtilities(responseBadgeClass("maybe"))).not.toEqual(unselected);
+    expect(visualUtilities(responseBadgeClass("no"))).not.toEqual(unselected);
   });
 });
