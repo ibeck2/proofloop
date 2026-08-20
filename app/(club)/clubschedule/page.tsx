@@ -42,6 +42,7 @@ export default function ClubSchedulePage() {
     activeOrgName: orgName,
     hasNoMemberships,
     isReady,
+    withOrgQuery,
   } = useClubOrganization();
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -365,7 +366,7 @@ export default function ClubSchedulePage() {
             {sortedPolls.map((poll) => (
               <Link
                 key={poll.id}
-                href={`/clubschedule/${poll.id}`}
+                href={withOrgQuery(`/clubschedule/${poll.id}`)}
                 className="flex items-center gap-4 p-5 rounded-lg border border-rule bg-paper hover:border-ink/30 transition-colors"
               >
                 <CalendarClock className="w-5 h-5 text-graphite/70 shrink-0" aria-hidden="true" />

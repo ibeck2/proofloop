@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { asRow, asRows } from "@/lib/supabase-rows";
 import { Button } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
+import { withOrgIdQuery } from "@/lib/organizationMembers";
 import { responseBadgeClass, responseLabel } from "@/lib/schedule/scheduleResponse";
 import { computeReadStatus, type ScheduleReadStatus } from "@/lib/schedule/scheduleReadStatus";
 import { reminderTargetUserIds } from "@/lib/schedule/scheduleReminderTargets";
@@ -290,7 +291,7 @@ export default function ClubSchedulePollDetailPage() {
   return (
     <div className="p-6 lg:p-10 max-w-4xl">
       <Link
-        href="/clubschedule"
+        href={withOrgIdQuery("/clubschedule", poll.organization_id)}
         className="inline-flex items-center gap-1.5 text-sm text-graphite/70 hover:text-ink mb-4"
       >
         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
