@@ -1018,8 +1018,28 @@ CEO MTGで出た話（Excel未記載）。「最初の5分で使い方がわか�
 
 ### 調査中の副産物（記録のみ）
 - 合成マウスイベント（`dispatchEvent(new MouseEvent(...))`）でのドラッグ再現を試みたが、`@hello-pangea/dnd`の衝突判定がrequestAnimationFrame同期の実タイミングに依存しており、スクリプトでの安定した再現は最後まで得られなかった。ただし個々のイベント処理自体は1ms未満で、アプリ側コードの処理速度そのものに問題は無いことは確認できた。
-- **`app/(club)/clubats/page.tsx`（入会応募者管理のカンバン）にも全く同じstyle上書きパターンを発見した（693行目）。** 今回のセッションでは`/clubtasks`のみを対象としたため未修正。同じ`buildDragCardStyle`を使って直せるはずなので、次に`/clubats`のカンバンに触れる際に対応する。
-- **ライブQAが環境要因で未実施**：`claude-in-chrome`からlocalhost:3000への接続が`ERR_CONNECTION_REFUSED`になり、Chrome再起動でも復旧しなかった（外部サイトへの接続は正常）。原因不明のままオーナー了承のもと、型チェック・vitest535件全PASS・コードレベルの検証（JSX仕様の直接確認）で十分として進めた。次に`/clubtasks`のカンバンに触れる際、実際にドラッグしてカードがマウスに追従することを目視確認すること。
+- **`app/(club)/clubats/page.tsx`（入会応募者管理のカンバン）にも全く同じstyle上書きパターンを発見し、同じセッション内で追加修正・コミット済み**（同じ`buildDragCardStyle`を使用）。
+- **ライブQAが一時的に環境要因（`claude-in-chrome`のlocalhost接続エラー）で実施できなかったが、オーナー自身の実機確認で解消を確認済み**：`/clubtasks`のカンバンが「ヌルヌル動くようになった」と報告あり。接続エラー自体は、実はポート3000を古いdev serverプロセスが占有し続けていたことが原因だった（何度も`npm run dev`を起動する過程で停止漏れが蓄積し、ユーザーが見ていたのは崩れた表示を返す古いプロセスだった）。次にdev serverを扱う際は、起動前に`netstat -ano | findstr :3000`で先客プロセスが無いか確認する習慣をつけること。
+
+---
+
+## AD. `/clubats` 候補者手動追加が失敗する不具合の修正 ✅ 完了（2026-08-20）
+
+セクションACのライブQA中にオーナーが発見。「入会応募者管理で候補者を手動追加しようとしても追加自体に失敗する」——ドラッグの修正とは無関係の、独立した既存のRLS不具合。CLAUDE.md §0の方針に従い、`migration-safety`スキル→Plan Mode承認を経て対応。
+
+### 根本原因
+`applications`テーブルのINSERTポリシーが「Students can insert their own applications」（`WITH CHECK (auth.uid() = user_id AND ...)`）の1本のみだった。`handleManualAddSubmit`（`app/(club)/clubats/page.tsx`）は運営側が`user_id: null`でINSERTするため、`auth.uid() = user_id`が常にfalseになり拒否される。この条件はマイグレーション044（2026-08-14、claim前・凍結中の団体への学生応募を防ぐ改修）より**前から**存在しており、**手動追加機能はそもそも一度も成功したことがなかった**と判明（本番`applications`が実測0件だったことと整合）。
+
+### 対応
+マイグレーション**065**で、`applications`のUPDATE/SELECTポリシーが既に使っている既存のSECURITY DEFINER関数`can_view_org_applications(p_org)`（owner/admin、または`can_manage_applications`を持つメンバーを判定）を再利用し、`user_id IS NULL`のケース専用のINSERTポリシーを追加。RLSの複数permissiveポリシーはOR結合されるため、既存の学生向けポリシーには一切触れていない。
+
+**計画時点では`claim_status='claimed'`条件も付ける想定だったが、本番でのBEGIN…ROLLBACK検証の準備中に実測して撤回した**：テストに使っていた「ProofLoop運営事務局」自体が、実在するownerを持ちながら`claim_status='unclaimed'`のままだった（claimシステム導入前から存在する団体のため）。この条件を付けていたら、まさにオーナーが試している団体で直らないままになるところだった。`can_view_org_applications()`が既に「実在するowner/admin/権限メンバー本人の操作」であることを保証しているため、claim_statusの追加条件はそもそも不要と判断し外した。
+
+本番`BEGIN...ROLLBACK`で検証済み（owner本人での挿入成功／非メンバーでの挿入拒否の2パターン、ROLLBACKで副作用なしを確認）。`get_advisors(security)`で新規警告なし（`can_view_org_applications`関連の既存警告のみ、今回の変更前から存在）。`npx tsc --noEmit`・`npm test`（535件）とも問題なし（コード変更なし、DB側のみの変更のため）。
+
+### 🟡 見送り・追跡事項として記録
+- 本番に`claim_status='claimed'`の団体が現時点で0件のため、「claimed団体での学生自身のINSERT」という既存ポリシーの回帰確認は、実データでは検証できなかった。新ポリシーは既存ポリシーを一切変更していないため構造的に無関係のはずだが、claim運用が実際に始まったら一度確認する価値はある。
+- 実機確認はオーナーが`/clubats`で実際に候補者を追加してみる形で行う（本記録時点では未実施）。
 
 ---
 
