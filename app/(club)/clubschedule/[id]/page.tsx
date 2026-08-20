@@ -5,18 +5,25 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CalendarClock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { asRows } from "@/lib/supabase-rows";
+import { asRow, asRows } from "@/lib/supabase-rows";
 import { Button } from "@/components/ui";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 import { responseBadgeClass, responseLabel } from "@/lib/schedule/scheduleResponse";
 import { computeReadStatus, type ScheduleReadStatus } from "@/lib/schedule/scheduleReadStatus";
 import { reminderTargetUserIds } from "@/lib/schedule/scheduleReminderTargets";
 
-type PollRow = { id: string; title: string; description: string | null; created_by: string | null };
+type PollRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  created_by: string | null;
+  organization_id: string;
+  organizations: { name: string | null } | null;
+};
 type CandidateRow = { id: string; starts_at: string; is_decided: boolean };
 type ResponseRow = { candidate_id: string; user_id: string; response: string };
 type ViewRow = { user_id: string };
-type MemberRow = { user_id: string; name: string; email: string | null };
+type MemberRow = { user_id: string; name: string; email: string | null; role: string | null };
 
 function formatCandidateDate(iso: string) {
   const d = new Date(iso);
@@ -38,7 +45,9 @@ const READ_STATUS_LABEL: Record<ScheduleReadStatus, string> = {
 export default function ClubSchedulePollDetailPage() {
   const params = useParams<{ id: string }>();
   const pollId = params.id;
-  const { activeOrgId: orgId, activeOrgName: orgName, activeRole, isReady } = useClubOrganization();
+  // ページ自体はpollの実際のorganization_idでスコープする。isReadyはログイン済み＆
+  // どこかの団体に所属していることの簡易ゲートとしてのみ使う（活動データはpollOrgIdで決める）。
+  const { isReady } = useClubOrganization();
 
   const [userId, setUserId] = useState<string | null>(null);
   const [poll, setPoll] = useState<PollRow | null>(null);
@@ -58,18 +67,29 @@ export default function ClubSchedulePollDetailPage() {
   }, []);
 
   const loadAll = useCallback(async () => {
-    if (!pollId || !orgId) return;
-    const [{ data: pollData }, { data: candData }, { data: memberRows }] = await Promise.all([
-      supabase.from("schedule_polls").select("id, title, description, created_by").eq("id", pollId).single(),
+    if (!pollId) return;
+
+    // pollの実際のorganization_idを先に確定させる（context側のactiveOrgIdは使わない）。
+    const { data: pollData } = await supabase
+      .from("schedule_polls")
+      .select("id, title, description, created_by, organization_id, organizations ( name )")
+      .eq("id", pollId)
+      .single();
+    const pollRow = pollData ? asRow<PollRow>(pollData) : null;
+    setPoll(pollRow);
+    const pollOrgId = pollRow?.organization_id ?? null;
+
+    const [{ data: candData }, { data: memberRows }] = await Promise.all([
       supabase
         .from("schedule_poll_candidates")
         .select("id, starts_at, is_decided")
         .eq("poll_id", pollId)
         .order("starts_at", { ascending: true }),
-      supabase.from("organization_members").select("user_id").eq("organization_id", orgId),
+      pollOrgId
+        ? supabase.from("organization_members").select("user_id, role").eq("organization_id", pollOrgId)
+        : Promise.resolve({ data: null as Array<{ user_id: string; role: string }> | null, error: null }),
     ]);
 
-    setPoll((pollData as PollRow) ?? null);
     const candRows = asRows<CandidateRow>(candData);
     setCandidates(candRows);
 
@@ -90,7 +110,10 @@ export default function ClubSchedulePollDetailPage() {
       .eq("poll_id", pollId);
     setViews(asRows<ViewRow>(viewData));
 
-    const memberIds = (memberRows as Array<{ user_id: string }> | null)?.map((m) => m.user_id) ?? [];
+    const memberRoleById = new Map(
+      (memberRows as Array<{ user_id: string; role: string }> | null)?.map((m) => [m.user_id, m.role]) ?? []
+    );
+    const memberIds = Array.from(memberRoleById.keys());
     if (memberIds.length > 0) {
       const { data: profileRows } = await supabase
         .from("profiles")
@@ -108,12 +131,13 @@ export default function ClubSchedulePollDetailPage() {
           user_id: p.id,
           name: p.full_name?.trim() || p.display_name?.trim() || "（氏名未設定）",
           email: p.email?.trim() || null,
+          role: memberRoleById.get(p.id) ?? null,
         }))
       );
     } else {
       setMembers([]);
     }
-  }, [pollId, orgId]);
+  }, [pollId]);
 
   useEffect(() => {
     if (isReady) loadAll();
@@ -162,7 +186,10 @@ export default function ClubSchedulePollDetailPage() {
     [memberStatuses]
   );
 
-  const canDecide = activeRole === "owner" || activeRole === "admin" || poll?.created_by === userId;
+  // activeRoleはcontext（activeOrgId）に紐づくため、pollの実際の団体での自分の役割を
+  // メンバー一覧（pollOrgIdでフェッチ済み）から直接引く。
+  const ownRole = userId ? members.find((m) => m.user_id === userId)?.role : undefined;
+  const canDecide = ownRole === "owner" || ownRole === "admin" || poll?.created_by === userId;
 
   const handleRespond = async (candidateId: string, response: "yes" | "maybe" | "no") => {
     setSavingCandidateId(candidateId);
@@ -198,7 +225,8 @@ export default function ClubSchedulePollDetailPage() {
   };
 
   const handleRemind = async () => {
-    if (!orgId || !userId || !poll) return;
+    const pollOrgId = poll?.organization_id ?? null;
+    if (!pollOrgId || !userId || !poll) return;
     setRemindSending(true);
     setErrorMessage(null);
     try {
@@ -217,7 +245,7 @@ export default function ClubSchedulePollDetailPage() {
           {
             p_user_id: recipientId,
             p_notification_type: "schedule_poll_reminder",
-            p_organization_id: orgId,
+            p_organization_id: pollOrgId,
           }
         );
         if (prefErr) {
@@ -238,7 +266,7 @@ export default function ClubSchedulePollDetailPage() {
             recipientName: recipient.name,
             actorName,
             pollTitle: poll.title,
-            organizationName: orgName ?? "団体",
+            organizationName: poll.organizations?.name ?? "団体",
             pollId,
           }),
         });
