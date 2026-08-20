@@ -6,6 +6,11 @@ const config: Config = {
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    // lib/ 配下にはTailwindクラス文字列を返す純粋関数（例: lib/schedule/scheduleResponse.ts
+    // のresponseBadgeClass）がある。ここが未スキャンだと、そこでしか使われていない
+    // クラス（例: 初出のbg-graphite裸利用）がビルドされず、クラス名としては正しいのに
+    // 背景色が透明のまま表示される（実機QAで発見・073直前のFix1で実際に踏んだ）。
+    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   darkMode: "class",
   theme: {
