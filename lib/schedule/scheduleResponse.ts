@@ -17,7 +17,7 @@ export function responseLabel(response: string | null | undefined): string {
 const RESPONSE_BADGE_CLASS: Record<string, string> = {
   yes: "border border-ink bg-ink text-paper",
   maybe: "border border-rule bg-mist text-ink",
-  no: "border border-rule bg-paper text-graphite",
+  no: "border border-graphite bg-graphite text-paper",
 };
 const DEFAULT_RESPONSE_BADGE_CLASS = "border border-rule bg-paper text-graphite/50";
 
