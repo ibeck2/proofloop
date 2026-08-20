@@ -3,6 +3,7 @@
 import { Draggable } from "@hello-pangea/dnd";
 import { GripVertical } from "lucide-react";
 import type { TaskRow, TaskStatus } from "@/lib/types/task";
+import { buildDragCardStyle } from "@/lib/tasks/dragCardStyle";
 import TaskCardBody from "./TaskCardBody";
 
 type Props = {
@@ -41,7 +42,11 @@ export default function DraggableTaskCard({
               ? "shadow-xl opacity-95 scale-[1.02] ring-2 ring-ink/30 z-50"
               : "shadow-sm hover:shadow-md"
           }`}
-          style={!isDone && tint ? { borderLeftColor: tint } : undefined}
+          style={buildDragCardStyle(
+            draggableProvided.draggableProps.style,
+            snapshot,
+            !isDone && tint ? { borderLeftColor: tint } : undefined
+          )}
         >
           <div
             {...draggableProvided.dragHandleProps}
