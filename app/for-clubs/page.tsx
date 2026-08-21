@@ -155,7 +155,7 @@ function MockCalendarEvent() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[11px] font-bold text-ink">{e.title}</p>
-              <p className="text-[10px] text-graphite">{e.place}</p>
+              <p className="truncate text-[10px] text-graphite">{e.place}</p>
             </div>
             <span className="shrink-0 text-[10px] text-graphite">
               参加 <span className="font-numeric tabular-nums">{e.participants}</span>人
@@ -239,7 +239,7 @@ function MockFinance() {
 // ─────────────────────────────────────────────
 export default function ForClubsPage() {
   return (
-    <main className="min-h-screen bg-paper text-ink antialiased break-keep font-body">
+    <main className="min-h-screen bg-paper text-ink antialiased break-keep break-words font-body">
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden border-b border-rule">
@@ -333,7 +333,7 @@ export default function ForClubsPage() {
       <div id="features" className="max-w-6xl mx-auto px-6 py-20 md:py-32 space-y-24 md:space-y-36">
 
         {/* ① 会計・財務 */}
-        <section className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
+        <section className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-20">
           <div className="order-2 space-y-6 lg:order-2">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
               <Wallet className="size-3.5 shrink-0" aria-hidden="true" />01 ／ 会計・財務
@@ -363,7 +363,7 @@ export default function ForClubsPage() {
         </section>
 
         {/* ② 応募管理 */}
-        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
               <MessageSquare className="size-3.5 shrink-0" aria-hidden="true" />02 ／ 入会応募者管理
@@ -390,7 +390,7 @@ export default function ForClubsPage() {
         </section>
 
         {/* ③ タイムライン */}
-        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-1">
             <MockTimeline />
             <p className="mt-3 text-center text-xs text-graphite/70">タイムライン（イメージ）</p>
@@ -417,7 +417,7 @@ export default function ForClubsPage() {
         </section>
 
         {/* ④ イベント */}
-        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-2 lg:order-1 space-y-6">
             <div className="inline-flex items-center gap-2 bg-mist px-3 py-1.5 text-xs font-bold text-ink">
               <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />04 ／ イベント告知・集客
@@ -444,7 +444,7 @@ export default function ForClubsPage() {
         </section>
 
         {/* ⑤ タスク・メンバー管理 */}
-        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className="order-1">
             <MockTasksInvite />
             <p className="mt-3 text-center text-xs text-graphite/70">タスク一覧と進捗状況（イメージ）</p>

@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { trackSimulatorComplete, trackSimulatorShare } from "@/lib/analytics/simulatorEvents";
+import { groupWallMarkerLabels } from "@/lib/baito/wallMarkerLabels";
 
 // ─────────────────────────────────────────────
 // 型・定数
@@ -722,13 +723,19 @@ export default function SimulatorPage() {
                   }`}
                   style={{ width: `${Math.min((result.annualIncome / annualMax) * 100, 100)}%` }}
                 />
-                {/* 壁マーカー */}
+                {/* 壁マーカー（縦線） */}
                 {wallMarkers.map((m) => (
                   <div key={m.val}
-                    className="absolute top-0 bottom-0 w-0.5 bg-graphite/40 flex flex-col items-center"
-                    style={{ left: `${(m.val / annualMax) * 100}%` }}>
-                    <span className="absolute -top-5 text-[10px] font-bold text-graphite whitespace-nowrap">{m.label}</span>
-                  </div>
+                    className="absolute top-0 bottom-0 w-0.5 bg-graphite/40"
+                    style={{ left: `${(m.val / annualMax) * 100}%` }} />
+                ))}
+                {/* 壁マーカーのラベル（近接するものはグルーピングして重なりを防ぐ） */}
+                {groupWallMarkerLabels(wallMarkers, annualMax).map((g) => (
+                  <span key={g.text}
+                    className="absolute -top-5 -translate-x-1/2 text-[10px] font-bold text-graphite whitespace-nowrap"
+                    style={{ left: `${g.positionPct}%` }}>
+                    {g.text}
+                  </span>
                 ))}
               </div>
               <p className={`text-sm font-bold ${result.wallStatus === "safe" ? "text-ink" : "text-seal"}`}>

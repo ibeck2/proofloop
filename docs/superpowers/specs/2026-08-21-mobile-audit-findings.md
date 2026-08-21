@@ -278,3 +278,23 @@
 3. `/baito/simulator`の重なりバグの原因説明が不正確：findings docは「マーカー位置を起点に右へ伸びる配置」としているが、実際は`app/baito/simulator/page.tsx:726-731`でラベルはマーカー中心に対して左右均等に配置されている（`flex flex-col items-center`）。重なるという結論自体は変わらないが、次の修正者が誤った方向で対処法を探さないよう、原因記述の訂正が望ましい。
 4. Phase 1で「Mock 5つ全てを個別に375px幅で確認する」としていたが、Phase 2の記録は`MockInboxKanban`のみ。レビューで残り4つ（`MockFinance`・`MockTimeline`・`MockCalendarEvent`・`MockTasksInvite`）を機械的に確認した結果、`%`/固定幅を一切持たず（`size-*`＋`shrink-0`のアイコンのみ）問題なしと判明。実害はないが、次フェーズ着手前にこの一文をPhase 1へ追記し、確認漏れではないことを明示するとよい。
 5. `docs/task-board.md`のAG行に「本ブランチ未マージ」の明記が無く、読み手が「本番で直っている」と誤解しうる → 本レビュー後に追記済み。
+
+## 3件の修正を実施（2026-08-22・`fix/mobile-audit-followups`ブランチ）
+
+上記まとめの「要修正」3件すべてを修正した。修正時の実機再検証で、**`/for-clubs`の原因診断が当初の記述（264行目）と異なることが判明**したため、正しい原因をここに記録する。
+
+### `/for-clubs`：実際の根本原因は`break-keep`ではなく`grid-cols-1`欠如だった
+
+当初のPhase 2診断（264行目）は「`<main>`の`break-keep`＋当該段落のJSX改行パターン」としていたが、この段落だけに`break-words`を追加してもページ全体の`scrollWidth`ははみ出したまま（534px vs 487px）だった。実機で`getBoundingClientRect()`を使って追跡したところ、真因は別にあった：
+
+`#features`配下の5つの機能紹介`<section>`（会計・応募管理・タイムライン・イベント・タスク）が**いずれも`className="grid lg:grid-cols-2 ..."`で、モバイル幅（`lg:`未満）のベースとなる`grid-cols-1`を指定していなかった**。`grid-template-columns`が未指定のグリッドは、暗黙のautoトラックが「コンテンツの必要幅」でサイズ決定される（Flexboxの`min-width:auto`と同種だが、こちらはグリッドの自動最小サイズという別の仕様）。結果、各セクションの2カラム目（Mockコンポーネントを含む列）が、内部の固定幅要素（例：`MockCalendarEvent`の日付バッジ`shrink-0`＋参加人数`shrink-0`）の分だけ、親の`<section>`自体の幅（439px）を無視して510px超まで広がり、それがページ全体の横スクロールとして現れていた。
+
+**実際に修正したのは**：5つの`<section>`すべてに`grid-cols-1`を追加（`grid grid-cols-1 lg:grid-cols-2 ...`）。この1点だけで`scrollWidth`=`clientWidth`（487px、はみ出しゼロ）に完全に解消した。診断の過程で試した「`MockCalendarEvent`の行に`min-w-0`を追加」「5つの`order-*`ラッパーに`min-w-0`/`w-full`を追加」は、検証の結果いずれも効果がなかった（ライブDOM操作で確認済み）ため、最終的な修正には含めていない。
+
+**教訓**：`grid lg:grid-cols-2`のように**レスポンシブprefix付きの`grid-cols-N`だけがあり、ベースの`grid-cols-1`（または相当の指定）が無いパターン**は、Task 3のPhase1グレップ（`grid-cols-[2-9]`をベースなしで検索）の対象外だった（このパターンはベース側に何も無い＝マッチしようがない）。今後同種の監査では、`grid\s+.*lg:grid-cols-\d`のような「`lg:`はあるがベースの`grid-cols-`が無い」パターンも検索対象に加える価値がある。
+
+### `/baito/simulator`：純粋関数を切り出して修正
+`lib/baito/wallMarkerLabels.ts`の`groupWallMarkerLabels`関数で、間隔が閾値未満の隣接マーカーを1つのラベル（例：「123万/130万」）に統合。テスト4件を追加。実機で123万と130万が正しく統合され、150万との間に21pxの間隔ができ重ならないことを確認済み。
+
+### `/clubprofile`：`STUDENT_PATHS`から削除
+`components/AppShell.tsx`の`STUDENT_PATHS`配列から`/clubprofile`を削除。**本番（修正前）で重なりを定量的に再現・確認**：固定ボトムナビと「保存する」ボタンが実際に40px重なっており、タップ不能な状態だった（`getBoundingClientRect()`による実測）。これにより、この不具合は「崩れて見苦しい」ではなく実質的に**機能不可**（保存操作ができない）だったことが確定した。修正後のlocalhostでは`headerCount:1`・`hasBottomNav:false`を確認（club組織コンテキストの解決がlocalhost環境で止まる既知の別問題により、フォーム本体の表示までは確認できなかったが、AppShell側の二重描画が消えていることは構造的に確認済み）。

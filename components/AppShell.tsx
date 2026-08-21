@@ -22,7 +22,6 @@ const STUDENT_PATHS = [
   "/search",
   "/classinfo",
   "/schedule",
-  "/clubprofile",
   "/mypage",
   "/timeline",
   "/baito",
