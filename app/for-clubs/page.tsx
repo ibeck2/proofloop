@@ -66,7 +66,7 @@ function MockInboxKanban() {
     <div className="flex flex-col overflow-hidden border border-rule bg-mist">
       <MockChrome path="/clubats" />
       <div className="flex min-h-0 flex-1 gap-3 p-4">
-        <div className="flex w-[38%] flex-col gap-2 border border-rule bg-paper p-3">
+        <div className="flex w-[38%] min-w-0 flex-col gap-2 border border-rule bg-paper p-3">
           <div className="flex items-center gap-2 text-ink">
             <Inbox className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             <span className="text-[11px] font-bold">
@@ -74,20 +74,20 @@ function MockInboxKanban() {
             </span>
           </div>
           {DEMO_APPLICANTS.map((a) => (
-            <div key={a.name} className="border border-rule bg-mist p-2">
-              <p className="text-[11px] font-bold text-ink">{a.name}</p>
-              <p className="text-[10px] text-graphite">{a.faculty}</p>
+            <div key={a.name} className="min-w-0 border border-rule bg-mist p-2">
+              <p className="truncate text-[11px] font-bold text-ink">{a.name}</p>
+              <p className="truncate text-[10px] text-graphite">{a.faculty}</p>
             </div>
           ))}
         </div>
-        <div className="flex flex-1 flex-col gap-2 border border-rule bg-paper p-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-2 border border-rule bg-paper p-3">
           <div className="flex items-center gap-2 text-ink">
             <Kanban className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             <span className="text-[11px] font-bold">応募ボード</span>
           </div>
           <div className="flex min-h-0 flex-1 gap-2">
             {["新規", "面談中", "内定"].map((stage) => (
-              <div key={stage} className="flex-1 border border-dashed border-rule bg-mist p-2">
+              <div key={stage} className="min-w-0 flex-1 border border-dashed border-rule bg-mist p-2">
                 <span className="text-[9px] font-bold tracking-wider text-graphite/70">
                   {stage}
                 </span>
