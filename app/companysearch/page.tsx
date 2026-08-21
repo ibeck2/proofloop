@@ -62,7 +62,7 @@ export default function CompanySearchPage() {
             <div className="w-full">
               <div className="relative flex items-center w-full">
                 <Input
-                  className="h-12 pl-4 pr-12 text-sm shadow-sm rounded-none"
+                  className="h-12 !pl-4 !pr-12 text-sm shadow-sm rounded-none"
                   placeholder="キーワードで検索"
                   type="text"
                   value={keyword}

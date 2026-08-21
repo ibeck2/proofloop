@@ -189,7 +189,7 @@ export default function CompanymessagePage() {
         <footer className="p-8 border-t border-rule shrink-0">
           <form onSubmit={handleSendMessage} className="flex flex-col border border-rule">
             <Textarea
-              className="border-0 focus:ring-0 p-4 text-sm min-h-[100px] rounded-none"
+              className="!border-0 focus:ring-0 !p-4 text-sm min-h-[100px] rounded-none"
               placeholder="メッセージを入力"
               value={message}
               onChange={(e) => setMessage(e.target.value)}

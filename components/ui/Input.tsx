@@ -1,7 +1,7 @@
 import { type InputHTMLAttributes, forwardRef } from "react";
 
 const baseClass =
-  "w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper placeholder-graphite/50 rounded-none";
+  "w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper placeholder-graphite/50 rounded-none px-3 py-2";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement>;
 

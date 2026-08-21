@@ -1,7 +1,7 @@
 import { type TextareaHTMLAttributes, forwardRef } from "react";
 
 const baseClass =
-  "w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper placeholder-graphite/50 rounded-none resize-none";
+  "w-full border border-rule focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-ink text-graphite bg-paper placeholder-graphite/50 rounded-none resize-none px-3 py-2";
 
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>;
 
