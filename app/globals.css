@@ -3,17 +3,32 @@
 @tailwind utilities;
 
 :root {
-  /* このサイトはライトテーマのみ。ページは常に白い面を描くので、
-     body の背景も白で固定する。OSのダークモード設定に連動したダーク上書きを
-     残すと、フッター上の余白などに黒い帯が出る。 */
   color-scheme: light;
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-ink: #002B5C;
+  --color-seal: #8B0000;
+  --color-paper: #FFFFFF;
+  --color-mist: #F2F4F7;
+  --color-rule: #C9D2DC;
+  --color-graphite: #1F2A36;
+}
+
+/* 手動トグルのみ。OSのprefers-color-schemeには自動追従しない
+   （過去にOS追従で「フッター上に黒い帯が出る」問題があったため）。
+   .darkクラスはThemeProvider（contexts/ThemeContext.tsx）が
+   <html>に付け外しする。 */
+:root.dark {
+  color-scheme: dark;
+  --color-ink: #EDF1F7;
+  --color-seal: #C4362B;
+  --color-paper: #0A1420;
+  --color-mist: #111E2E;
+  --color-rule: #28364A;
+  --color-graphite: #B8C2CE;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--color-graphite);
+  background: var(--color-paper);
 }
 
 .hide-scrollbar::-webkit-scrollbar {
