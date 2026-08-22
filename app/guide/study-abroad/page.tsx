@@ -376,7 +376,7 @@ export default function StudyAbroadPage() {
               </p>
             </div>
             <Link href="/guide/study-abroad/recommend"
-              className="shrink-0 inline-flex items-center gap-2 bg-seal text-paper hover:bg-[#600000] transition-colors px-8 py-4 font-black text-base whitespace-nowrap">
+              className="shrink-0 inline-flex items-center gap-2 bg-seal text-paper hover:opacity-90 transition-colors px-8 py-4 font-black text-base whitespace-nowrap">
               診断してみる
               <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </Link>

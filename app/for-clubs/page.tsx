@@ -263,7 +263,7 @@ export default function ForClubsPage() {
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/signup"
-              className="inline-flex items-center justify-center gap-2 bg-seal px-8 py-4 text-base font-bold text-paper shadow-lg shadow-seal/20 transition hover:bg-[#600000] hover:shadow-xl">
+              className="inline-flex items-center justify-center gap-2 bg-seal px-8 py-4 text-base font-bold text-paper shadow-lg shadow-seal/20 transition hover:opacity-90 hover:shadow-xl">
               無料で団体を登録する
               <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
             </Link>
@@ -526,7 +526,7 @@ export default function ForClubsPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/signup"
-              className="inline-flex items-center justify-center gap-2 bg-seal px-10 py-4 text-base font-black text-paper shadow-lg shadow-seal/20 transition hover:bg-[#600000] hover:shadow-xl">
+              className="inline-flex items-center justify-center gap-2 bg-seal px-10 py-4 text-base font-black text-paper shadow-lg shadow-seal/20 transition hover:opacity-90 hover:shadow-xl">
               無料で団体を登録する
               <ArrowRight className="size-5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
             </Link>

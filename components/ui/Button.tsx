@@ -8,8 +8,8 @@ const variantClasses: Record<ButtonVariant, string> = {
   // primary は元から紺、secondary/outline は元から深紅で、primary は21箇所で使われている。
   // ここで色を入れ替えると、まだ移行していないページの見た目が一斉に変わってしまう。
   // 深紅を減らすかどうかは、各ページを移行するときにそのページの文脈で判断する。
-  primary: "bg-ink text-paper hover:bg-[#001f45] border-0",
-  secondary: "bg-seal text-paper hover:bg-[#600000] border-0",
+  primary: "bg-ink text-paper hover:opacity-90 border-0",
+  secondary: "bg-seal text-paper hover:opacity-90 border-0",
   outline: "bg-paper border border-seal text-seal hover:bg-seal hover:text-paper",
   outlineMuted: "bg-paper border border-rule text-ink hover:border-seal hover:text-seal",
   ghost: "bg-transparent text-graphite hover:text-ink hover:bg-mist",
