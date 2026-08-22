@@ -595,7 +595,7 @@ export default function LivingAloneGuidePage() {
           </div>
           <Link
             href="/baito/simulator"
-            className="shrink-0 inline-flex items-center gap-2 bg-seal text-paper hover:opacity-90 transition-colors px-8 py-4 font-black text-base whitespace-nowrap"
+            className="shrink-0 inline-flex items-center gap-2 bg-seal text-paper hover:opacity-90 transition px-8 py-4 font-black text-base whitespace-nowrap"
           >
             シミュレートしてみる
             <ArrowRight className="w-4 h-4" aria-hidden="true" />

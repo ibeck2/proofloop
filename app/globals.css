@@ -43,15 +43,6 @@ body {
   min-width: 320px;
   width: 320px;
 }
-.custom-scrollbar::-webkit-scrollbar {
-  height: 8px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #002b5c;
-}
 
 /* ヒーローの「顕在化」演出。
    仕様: docs/superpowers/specs/2026-07-23-ui-identity-design.md §6.2

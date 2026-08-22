@@ -203,7 +203,7 @@ export default function ClaimPage() {
               </p>
               <Link
                 href="/clubdashboard"
-                className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-ink text-paper hover:opacity-90 border-0 px-6 py-2.5 text-sm w-full text-center"
+                className="font-bold transition rounded-none inline-flex items-center justify-center gap-2 bg-ink text-paper hover:opacity-90 border-0 px-6 py-2.5 text-sm w-full text-center"
               >
                 団体ダッシュボードへ
               </Link>
@@ -239,7 +239,7 @@ export default function ClaimPage() {
                 <Link
                   href="/signup"
                   onClick={rememberReturn}
-                  className="font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2 bg-ink text-paper hover:opacity-90 border-0 px-6 py-2.5 text-sm w-full text-center"
+                  className="font-bold transition rounded-none inline-flex items-center justify-center gap-2 bg-ink text-paper hover:opacity-90 border-0 px-6 py-2.5 text-sm w-full text-center"
                 >
                   新規登録
                 </Link>

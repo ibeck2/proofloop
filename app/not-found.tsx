@@ -6,7 +6,7 @@ export default function NotFound() {
       <p className="text-ink text-2xl md:text-3xl font-bold mb-8">ページが見つかりません</p>
       <Link
         href="/"
-        className="bg-ink text-paper px-8 py-3 font-bold text-sm hover:opacity-90 transition-colors"
+        className="bg-ink text-paper px-8 py-3 font-bold text-sm hover:opacity-90 transition"
       >
         ホームに戻る
       </Link>

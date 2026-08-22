@@ -1110,7 +1110,7 @@ DBマイグレーション4タスク（Task1〜4）のレビューで、当初�
 
 ## AH. ダークモード導入（全ページ手動トグル） ✅ 実装完了・9タスク全完了（2026-08-22、`feature/dark-mode`ブランチ・main未マージ）
 
-設計 `docs/superpowers/specs/2026-08-22-dark-mode-design.md`、実装計画 `docs/superpowers/plans/2026-08-22-dark-mode.md`（8タスク、`superpowers:subagent-driven-development`で1タスクずつレビュー付きで実行）。
+設計 `docs/superpowers/specs/2026-08-22-dark-mode-design.md`、実装計画 `docs/superpowers/plans/2026-08-22-dark-mode.md`（9タスク、`superpowers:subagent-driven-development`で1タスクずつレビュー付きで実行）。
 
 ### やったこと
 `app/globals.css`の`:root`/`:root.dark`にCSS変数（`--color-ink`等6色）を定義し、`tailwind.config.ts`をそのCSS変数参照に切替。既存の`bg-ink`等のクラスを使っているコードは無変更でダーク対応になった。`contexts/ThemeContext.tsx`（`localStorage`永続化・`beforeInteractive`インラインスクリプトでFOUC防止）を新規実装し、`AppShell.tsx`のヘッダー（デスクトップ）とモバイルドロワーにトグルボタンを設置。ハードコード色・固定ホバー色（`hover:bg-[#001f45]`等）を全ファイル洗い出して6色トークン／`hover:opacity-90`に置換。`/clubdashboard`のrecharts（CSSクラスを解決しないJSコンシューマ）は`DARK_COLORS`定数を追加しテーマ追従させた。`npm test`（552件）・`npx tsc --noEmit`・`npm run build`はすべて成功。
@@ -1118,7 +1118,7 @@ DBマイグレーション4タスク（Task1〜4）のレビューで、当初�
 ### ライブ確認したこと・しなかったこと（Task 8 全体検証より）
 `localhost:3000`で以下を確認：
 - **確認済み（ライト・ダーク両方、トグル動作・`localStorage`永続化・FOUCなし全て含む）**：`/`・`/gpa`・`/guide/money`・`/for-clubs`・`/login`・`/signup`・`/search`・`/admin`（Basic認証は本番のみでlocalhostには無く通過）。body背景・見出し色がデザイントークン通りであることを`getComputedStyle`で実測。
-- **確認できなかったもの**：`/clubdashboard`（Task 7のrechartsテーマ対応）は未検証のまま。本番はまだこのブランチ未デプロイのためトグル自体が存在せず、localhostは`docs/CLAUDE.md`記載の既知の穴（クラブの組織コンテキスト解決がlocalhostでは無限ローディングになる）で認証済み状態に到達できない。**dark-mode計画7タスク中、この1点だけがコードレビューのみでの承認**。
+- **確認できなかったもの**：`/clubdashboard`（Task 7のrechartsテーマ対応）は未検証のまま。本番はまだこのブランチ未デプロイのためトグル自体が存在せず、localhostは`docs/CLAUDE.md`記載の既知の穴（クラブの組織コンテキスト解決がlocalhostでは無限ローディングになる）で認証済み状態に到達できない。**dark-mode計画9タスク中、この1点だけがコードレビューのみでの承認**。
 
 ### ✅ 検証中に発見した重大な既存不具合 → Task 9で対応済み
 Task 2（`tailwind.config.ts`をCSS変数参照へ切替）の副作用で、**6色トークンの不透明度修飾子構文（`text-paper/70`・`bg-ink/5`・`border-ink/20`等）がサイト全体で無効化されている**ことが判明した。
@@ -1126,6 +1126,10 @@ Task 2（`tailwind.config.ts`をCSS変数参照へ切替）の副作用で、**6
 - **実害を実機で確認**：`/guide/money`末尾の「バイトで収入を補うなら」CTA（`bg-ink`セクション内の`<p className="text-paper/70">`）と`/for-clubs`ヒーローの「近日公開予定」バッジ（`text-paper/80`）で、テキスト色が背景色と完全一致し**文字が実際に見えない**状態（コントラスト比1:1）をライト・ダーク両テーマで実測確認した。
 - **範囲**：`grep`実測で`(bg|text|border|ring|divide|from|to|via|outline|decoration|placeholder)-(ink|seal|paper|mist|rule|graphite)/[数字]`パターンが`app`/`components`/`lib`配下に**559件**。このダークモード導入以前（`COLORS`を直接hexで`...COLORS`spreadしていた頃）は正常に機能していたはずの回帰。
 - **対応（Task 9・2026-08-22）**：`app/globals.css`のCSS変数をスペース区切りのRGBチャンネル値（例：`--color-ink: 0 43 92;`）に変更し、`tailwind.config.ts`をTailwind標準の`ink: "rgb(var(--color-ink) / <alpha-value>)"`パターンに変更。呼び出し側559箇所は無変更。`npx tsc --noEmit`エラーなし、`npm test` 552/552 pass、`npm run build`成功。ビルド後CSS（`.next/static/css/*.css`）で`.text-paper\/70{color:rgb(var(--color-paper)/.7)}`のようなルールが実際に出力されていることを実測（従来は該当セレクタが丸ごと欠落していた）。実機（`getComputedStyle`）で`/guide/money`のCTA段落と`/for-clubs`の「近日公開予定」バッジを、ライト・ダーク両テーマで確認：文字色と背景色が明確に異なる値になり読める状態になったことを確認済み（例：ダーク時バッジは`color: rgba(10,20,32,0.8)` / 背景`rgb(237,241,247)`、ライト時は`color: rgba(255,255,255,0.8)` / 背景`rgb(0,43,92)`）。非修飾クラス（ヘッダーの`bg-paper`）も両テーマで正しい単色（`rgb(255,255,255)`／`rgb(10,20,32)`）のまま変化していないことも確認した。
+
+### 最終レビュー対応（2026-08-22・全体レビューの指摘を反映）
+- **FOUC防止スクリプトの実装を修正**：`app/layout.tsx`で`next/script`の`strategy="beforeInteractive"`を使っていたが、App Routerではインラインスクリプトが`self.__next_s`キューに積まれてハイドレーション時（＝1回ペイント後）にしか実行されず、ダークモード利用者に毎回ライトテーマのフラッシュが出ていた（Task 3が防ごうとした問題が実際には防げていなかった）。`<Script>`をやめ、素の`<script suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />`に置き換え、ビルド後HTMLの`<head>`にスクリプトが生テキストとしてインラインされ、パース時に実行されることを確認した。`THEME_INIT_SCRIPT`の中身（localStorage参照・`classList.add("dark")`）自体は無変更。
+- **モバイルでもトグルを全ページ表示（ユーザーの明示判断）**：導入時点では`AppShell.tsx`のヘッダートグルが`hidden md:inline-flex`でモバイル非表示、かつモバイルでの唯一の到達経路だったハンバーガードロワーは学生・団体パスにしか出ないため、`/gpa`・`/guide/money`・`/for-clubs`・`/login`等の検索流入の主戦場（＝モバイル比率が高いB2Cページ）でモバイル利用者がトグルに一切到達できなかった。ユーザー判断で「全ページのモバイルでもトグルを出す」方針に変更し、ヘッダートグルの`hidden md:`を外して常時表示にし、重複を避けるためドロワー footer内の別トグルボタン（Task 4で追加した方）は削除した（＝どの幅・どのページでもトグルは常に1つ）。
 
 ### 見送り・スコープ外
 - `/gpa`の生`<input type="text/number">`（`GpaCalculatorClient.tsx`・`GradeTotalsInput.tsx`）に`bg-paper`が付いておらず、ダークモードでブラウザのネイティブ既定色（濃いグレー、design tokenと不一致）で描画される軽微な見た目の不一致。コントラストは問題ないため実害は小さい。

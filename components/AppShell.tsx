@@ -152,7 +152,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               type="button"
               aria-label={theme === "dark" ? "ライトモードに切り替え" : "ダークモードに切り替え"}
               onClick={toggleTheme}
-              className="hidden md:inline-flex p-2 text-graphite hover:text-ink transition-colors"
+              className="inline-flex p-2 text-graphite hover:text-ink transition-colors"
             >
               {theme === "dark" ? (
                 <Sun className="w-5 h-5" aria-hidden="true" />
@@ -221,7 +221,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                         </Link>
                         <Link
                           href="/signup"
-                          className="inline-flex items-center justify-center bg-seal text-paper hover:opacity-90 transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                          className="inline-flex items-center justify-center bg-seal text-paper hover:opacity-90 transition px-6 h-10 font-bold text-sm rounded-none"
                         >
                           新規登録
                         </Link>
@@ -377,29 +377,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/signup"
                       onClick={closeMenu}
-                      className="w-full inline-flex items-center justify-center bg-seal text-paper hover:opacity-90 transition-colors py-3 font-bold text-sm rounded-none"
+                      className="w-full inline-flex items-center justify-center bg-seal text-paper hover:opacity-90 transition py-3 font-bold text-sm rounded-none"
                     >
                       新規登録
                     </Link>
                   </>
                 )}
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="w-full inline-flex items-center justify-center gap-2 border border-rule text-graphite hover:text-ink transition-colors py-3 font-bold text-sm"
-                >
-                  {theme === "dark" ? (
-                    <>
-                      <Sun className="w-4 h-4" aria-hidden="true" />
-                      ライトモードに切り替え
-                    </>
-                  ) : (
-                    <>
-                      <Moon className="w-4 h-4" aria-hidden="true" />
-                      ダークモードに切り替え
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           </aside>

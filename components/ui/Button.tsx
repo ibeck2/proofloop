@@ -28,7 +28,7 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = "", variant = "primary", size = "md", type = "button", children, ...props }, ref) => {
-    const base = "font-bold transition-colors rounded-none inline-flex items-center justify-center gap-2";
+    const base = "font-bold transition rounded-none inline-flex items-center justify-center gap-2";
     const combined = `${base} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`.trim();
     return (
       <button ref={ref} type={type} className={combined} {...props}>
