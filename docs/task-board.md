@@ -1113,7 +1113,7 @@ DBマイグレーション4タスク（Task1〜4）のレビューで、当初�
 設計 `docs/superpowers/specs/2026-08-22-dark-mode-design.md`、実装計画 `docs/superpowers/plans/2026-08-22-dark-mode.md`（9タスク、`superpowers:subagent-driven-development`で1タスクずつレビュー付きで実行）。
 
 ### やったこと
-`app/globals.css`の`:root`/`:root.dark`にCSS変数（`--color-ink`等6色）を定義し、`tailwind.config.ts`をそのCSS変数参照に切替。既存の`bg-ink`等のクラスを使っているコードは無変更でダーク対応になった。`contexts/ThemeContext.tsx`（`localStorage`永続化・`beforeInteractive`インラインスクリプトでFOUC防止）を新規実装し、`AppShell.tsx`のヘッダー（デスクトップ）とモバイルドロワーにトグルボタンを設置。ハードコード色・固定ホバー色（`hover:bg-[#001f45]`等）を全ファイル洗い出して6色トークン／`hover:opacity-90`に置換。`/clubdashboard`のrecharts（CSSクラスを解決しないJSコンシューマ）は`DARK_COLORS`定数を追加しテーマ追従させた。`npm test`（552件）・`npx tsc --noEmit`・`npm run build`はすべて成功。
+`app/globals.css`の`:root`/`:root.dark`にCSS変数（`--color-ink`等6色）を定義し、`tailwind.config.ts`をそのCSS変数参照に切替。既存の`bg-ink`等のクラスを使っているコードは無変更でダーク対応になった。`contexts/ThemeContext.tsx`（`localStorage`永続化・素のインラインスクリプトでFOUC防止）を新規実装し、`AppShell.tsx`のヘッダーにトグルボタンを設置（デスクトップ・モバイル問わず全ページで表示）。ハードコード色・固定ホバー色（`hover:bg-[#001f45]`等）を全ファイル洗い出して6色トークン／`hover:opacity-90`に置換。`/clubdashboard`のrecharts（CSSクラスを解決しないJSコンシューマ）は`DARK_COLORS`定数を追加しテーマ追従させた。`npm test`（552件）・`npx tsc --noEmit`・`npm run build`はすべて成功。
 
 ### ライブ確認したこと・しなかったこと（Task 8 全体検証より）
 `localhost:3000`で以下を確認：
