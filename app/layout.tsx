@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Toaster } from "sonner";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 import Footer from "@/components/Footer";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { SITE_URL } from "@/lib/site-url";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 export const metadata: Metadata = {
   // サブページで上書きされる際のテンプレート
@@ -38,6 +40,17 @@ export const metadata: Metadata = {
   },
 };
 
+const THEME_INIT_SCRIPT = `
+(function () {
+  try {
+    var stored = localStorage.getItem("proofloop-theme");
+    if (stored === "dark") {
+      document.documentElement.classList.add("dark");
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -46,6 +59,9 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {THEME_INIT_SCRIPT}
+        </Script>
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Lexend:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&family=Shippori+Mincho+B1:wght@600;700&display=swap"
           rel="stylesheet"
@@ -56,21 +72,23 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning>
-        <GoogleAnalytics />
-        <AppShell>
-          {children}
-          <Footer />
-        </AppShell>
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: "#ffffff",
-              color: "#002b5c",
-              border: "1px solid #e5e7eb",
-            },
-          }}
-        />
+        <ThemeProvider>
+          <GoogleAnalytics />
+          <AppShell>
+            {children}
+            <Footer />
+          </AppShell>
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: "var(--color-paper)",
+                color: "var(--color-ink)",
+                border: "1px solid var(--color-rule)",
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );
