@@ -8,8 +8,10 @@ import {
   Home,
   Mail,
   Menu,
+  Moon,
   Newspaper,
   Search,
+  Sun,
   User,
   Briefcase,
   X,
@@ -17,6 +19,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { CLUB_NAV_LINKS } from "@/components/ClubSidebar";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const STUDENT_PATHS = [
   "/",
@@ -50,6 +53,7 @@ const MOBILE_NAV_LINKS: Array<{ href: string; label: string; Icon: LucideIcon; l
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const showStudentNav = isStudentPath(pathname ?? "");
   const showClubNav = isClubPath(pathname ?? "");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -128,7 +132,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       {/* 共通ヘッダー: ロゴ + 学生向けナビ（学生パスのみ） + モバイル用ハンバーガー（学生パス・団体管理パス） */}
-      <header className="sticky top-0 z-[100] w-full bg-white border-b border-slate-200 shrink-0">
+      <header className="sticky top-0 z-[100] w-full bg-paper border-b border-rule shrink-0">
         <div className="px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           <Link
             href="/"
@@ -139,6 +143,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               ProofLoop
             </span>
           </Link>
+          <button
+            type="button"
+            aria-label={theme === "dark" ? "ライトモードに切り替え" : "ダークモードに切り替え"}
+            onClick={toggleTheme}
+            className="hidden md:inline-flex p-2 text-graphite hover:text-ink transition-colors"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-5 h-5" aria-hidden="true" />
+            ) : (
+              <Moon className="w-5 h-5" aria-hidden="true" />
+            )}
+          </button>
           {showStudentNav && (
             <nav className="hidden md:flex items-center gap-6 md:gap-8 text-graphite font-bold text-sm shrink-0">
               <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/">
@@ -200,7 +216,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       </Link>
                       <Link
                         href="/signup"
-                        className="inline-flex items-center justify-center bg-seal text-paper hover:bg-[#600000] transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        className="inline-flex items-center justify-center bg-seal text-paper hover:opacity-90 transition-colors px-6 h-10 font-bold text-sm rounded-none"
                       >
                         新規登録
                       </Link>
@@ -241,12 +257,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <aside
             aria-label="メニュー"
             aria-hidden={!isMenuOpen}
-            className={`md:hidden fixed top-0 right-0 z-[120] h-full w-[min(280px,85vw)] max-w-[280px] bg-white shadow-xl overscroll-contain transition-transform duration-200 ease-out ${
+            className={`md:hidden fixed top-0 right-0 z-[120] h-full w-[min(280px,85vw)] max-w-[280px] bg-paper shadow-xl overscroll-contain transition-transform duration-200 ease-out ${
               isMenuOpen ? "translate-x-0" : "translate-x-full"
             }`}
           >
             <div className="flex flex-col h-full pt-14 pb-6">
-              <div className="px-4 pb-4 border-b border-slate-100">
+              <div className="px-4 pb-4 border-b border-rule">
                 {showClubNav ? (
                   <div className="flex gap-2" role="tablist">
                     <button
@@ -321,7 +337,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   ))}
                 </nav>
               )}
-              <div className="px-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
+              <div className="px-4 pt-4 border-t border-rule flex flex-col gap-2">
                 {session ? (
                   <>
                     <Link
@@ -355,12 +371,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/signup"
                       onClick={closeMenu}
-                      className="w-full inline-flex items-center justify-center bg-seal text-paper hover:bg-[#600000] transition-colors py-3 font-bold text-sm rounded-none"
+                      className="w-full inline-flex items-center justify-center bg-seal text-paper hover:opacity-90 transition-colors py-3 font-bold text-sm rounded-none"
                     >
                       新規登録
                     </Link>
                   </>
                 )}
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="w-full inline-flex items-center justify-center gap-2 border border-rule text-graphite hover:text-ink transition-colors py-3 font-bold text-sm"
+                >
+                  {theme === "dark" ? (
+                    <>
+                      <Sun className="w-4 h-4" aria-hidden="true" />
+                      ライトモードに切り替え
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="w-4 h-4" aria-hidden="true" />
+                      ダークモードに切り替え
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </aside>
@@ -369,7 +402,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {children}
       {/* 学生向けモバイルフッター */}
       {showStudentNav && (
-        <nav className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-rule flex justify-around py-3 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <nav className="md:hidden fixed bottom-0 left-0 w-full bg-paper border-t border-rule flex justify-around py-3 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
           <Link className="flex flex-col items-center gap-1 text-ink" href="/">
             <Home className="w-6 h-6" aria-hidden="true" />
             <span className="text-[10px] font-bold">ホーム</span>
