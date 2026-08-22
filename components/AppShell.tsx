@@ -143,103 +143,109 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               ProofLoop
             </span>
           </Link>
-          <button
-            type="button"
-            aria-label={theme === "dark" ? "ライトモードに切り替え" : "ダークモードに切り替え"}
-            onClick={toggleTheme}
-            className="hidden md:inline-flex p-2 text-graphite hover:text-ink transition-colors"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-5 h-5" aria-hidden="true" />
-            ) : (
-              <Moon className="w-5 h-5" aria-hidden="true" />
-            )}
-          </button>
-          {showStudentNav && (
-            <nav className="hidden md:flex items-center gap-6 md:gap-8 text-graphite font-bold text-sm shrink-0">
-              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/">
-                <Home className="w-5 h-5" aria-hidden="true" />
-                ホーム
-              </Link>
-              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/search">
-                <Search className="w-5 h-5" aria-hidden="true" />
-                検索
-              </Link>
-              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/timeline">
-                <Newspaper className="w-5 h-5" aria-hidden="true" />
-                新着情報
-              </Link>
-              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/schedule">
-                <CalendarDays className="w-5 h-5" aria-hidden="true" />
-                カレンダー
-              </Link>
-              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/baito">
-                <Briefcase className="w-5 h-5" aria-hidden="true" />
-                バイト・インターン
-              </Link>
-              {session && (
-                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage/messages">
-                  <Mail className="w-5 h-5" aria-hidden="true" />
-                  メッセージ
+          {/* ロゴ以外は常時レンダリングされるこの1つのグループにまとめる。
+              justify-betweenの直接の子をLogoとこのグループの2つだけに保つことで、
+              showStudentNav/showMobileMenuButtonの有無でトップレベルの子要素数が
+              変わりレイアウトが崩れるのを防ぐ（ダークモードトグル追加時に実際に発生した）。 */}
+          <div className="flex items-center gap-6 md:gap-8">
+            <button
+              type="button"
+              aria-label={theme === "dark" ? "ライトモードに切り替え" : "ダークモードに切り替え"}
+              onClick={toggleTheme}
+              className="hidden md:inline-flex p-2 text-graphite hover:text-ink transition-colors"
+            >
+              {theme === "dark" ? (
+                <Sun className="w-5 h-5" aria-hidden="true" />
+              ) : (
+                <Moon className="w-5 h-5" aria-hidden="true" />
+              )}
+            </button>
+            {showStudentNav && (
+              <nav className="hidden md:flex items-center gap-6 md:gap-8 text-graphite font-bold text-sm shrink-0">
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/">
+                  <Home className="w-5 h-5" aria-hidden="true" />
+                  ホーム
                 </Link>
-              )}
-              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage">
-                <User className="w-5 h-5" aria-hidden="true" />
-                マイページ
-              </Link>
-            </nav>
-          )}
-          {showMobileMenuButton && (
-            <div className="flex items-center gap-3">
-              {showStudentNav && (
-                <div className="hidden md:flex items-center gap-3">
-                  {session ? (
-                    <>
-                      <span className="text-graphite text-sm font-medium flex items-center gap-2 whitespace-nowrap">
-                        {profileLoaded ? loginLabel : "ログイン中: ゲストさん"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors px-6 h-10 font-bold text-sm rounded-none"
-                      >
-                        ログアウト
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href="/login"
-                        className="inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors px-6 h-10 font-bold text-sm rounded-none"
-                      >
-                        ログイン
-                      </Link>
-                      <Link
-                        href="/signup"
-                        className="inline-flex items-center justify-center bg-seal text-paper hover:opacity-90 transition-colors px-6 h-10 font-bold text-sm rounded-none"
-                      >
-                        新規登録
-                      </Link>
-                    </>
-                  )}
-                </div>
-              )}
-              {/* モバイル: ハンバーガーボタン */}
-              <button
-                type="button"
-                aria-label="メニューを開く"
-                aria-expanded={isMenuOpen}
-                className="md:hidden p-2 -mr-2 text-graphite hover:text-ink transition-colors"
-                onClick={() => setIsMenuOpen((prev) => !prev)}
-              >
-                {isMenuOpen ? (
-                  <X className="w-7 h-7" aria-hidden="true" />
-                ) : (
-                  <Menu className="w-7 h-7" aria-hidden="true" />
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/search">
+                  <Search className="w-5 h-5" aria-hidden="true" />
+                  検索
+                </Link>
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/timeline">
+                  <Newspaper className="w-5 h-5" aria-hidden="true" />
+                  新着情報
+                </Link>
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/schedule">
+                  <CalendarDays className="w-5 h-5" aria-hidden="true" />
+                  カレンダー
+                </Link>
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/baito">
+                  <Briefcase className="w-5 h-5" aria-hidden="true" />
+                  バイト・インターン
+                </Link>
+                {session && (
+                  <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage/messages">
+                    <Mail className="w-5 h-5" aria-hidden="true" />
+                    メッセージ
+                  </Link>
                 )}
-              </button>
-            </div>
-          )}
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage">
+                  <User className="w-5 h-5" aria-hidden="true" />
+                  マイページ
+                </Link>
+              </nav>
+            )}
+            {showMobileMenuButton && (
+              <div className="flex items-center gap-3">
+                {showStudentNav && (
+                  <div className="hidden md:flex items-center gap-3">
+                    {session ? (
+                      <>
+                        <span className="text-graphite text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+                          {profileLoaded ? loginLabel : "ログイン中: ゲストさん"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleLogout}
+                          className="inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        >
+                          ログアウト
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          href="/login"
+                          className="inline-flex items-center justify-center bg-paper border border-ink text-ink hover:bg-ink hover:text-paper transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        >
+                          ログイン
+                        </Link>
+                        <Link
+                          href="/signup"
+                          className="inline-flex items-center justify-center bg-seal text-paper hover:opacity-90 transition-colors px-6 h-10 font-bold text-sm rounded-none"
+                        >
+                          新規登録
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+                {/* モバイル: ハンバーガーボタン */}
+                <button
+                  type="button"
+                  aria-label="メニューを開く"
+                  aria-expanded={isMenuOpen}
+                  className="md:hidden p-2 -mr-2 text-graphite hover:text-ink transition-colors"
+                  onClick={() => setIsMenuOpen((prev) => !prev)}
+                >
+                  {isMenuOpen ? (
+                    <X className="w-7 h-7" aria-hidden="true" />
+                  ) : (
+                    <Menu className="w-7 h-7" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
