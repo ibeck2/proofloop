@@ -19,6 +19,21 @@ export const COLORS = {
   graphite: "#1F2A36",
 } as const;
 
+/**
+ * ダークモード時の6色。値は docs/superpowers/specs/2026-08-22-dark-mode-design.md §2.3
+ * （ブラウザモックアップで承認済み）。CSSクラス経由の場合は app/globals.css の
+ * CSS変数が自動的にこちらへ切り替わるため、このオブジェクトは
+ * recharts等「実際の色値（hex）を要求するJSコンシューマ」専用。
+ */
+export const DARK_COLORS = {
+  ink: "#EDF1F7",
+  seal: "#C4362B",
+  paper: "#0A1420",
+  mist: "#111E2E",
+  rule: "#28364A",
+  graphite: "#B8C2CE",
+} as const;
+
 export const FONT_FAMILIES = {
   /** 見出し（h1・主要セクション見出しのみ） */
   mincho: ["Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", "serif"],

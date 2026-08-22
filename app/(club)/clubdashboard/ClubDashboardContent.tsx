@@ -14,12 +14,8 @@ import {
 } from "recharts";
 import { supabase } from "@/lib/supabase";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
-import { COLORS } from "@/lib/design/tokens";
-
-// recharts は className ではなく実際の色値を要求するため、トークンの値をそのまま使う。
-const BRAND_STROKE = COLORS.ink;
-const GRID_STROKE = COLORS.rule;
-const TICK_FILL = COLORS.graphite;
+import { COLORS, DARK_COLORS } from "@/lib/design/tokens";
+import { useTheme } from "@/contexts/ThemeContext";
 
 function startOfMonthISO(): string {
   const d = new Date();
@@ -84,6 +80,12 @@ export default function ClubDashboardContent() {
     isReady,
     withOrgQuery,
   } = useClubOrganization();
+
+  const { theme } = useTheme();
+  const chartColors = theme === "dark" ? DARK_COLORS : COLORS;
+  const BRAND_STROKE = chartColors.ink;
+  const GRID_STROKE = chartColors.rule;
+  const TICK_FILL = chartColors.graphite;
 
   const [statsLoading, setStatsLoading] = useState(true);
   const [monthlyViews, setMonthlyViews] = useState<number | null>(null);
