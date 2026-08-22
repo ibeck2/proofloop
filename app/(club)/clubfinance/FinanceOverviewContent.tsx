@@ -257,12 +257,12 @@ export default function FinanceOverviewContent() {
           <h1 className="text-2xl font-bold text-ink font-mincho">会計・財務</h1>
           <p className="text-graphite text-sm mt-1">{orgName}・{period.name}</p>
         </div>
-        <div className="flex gap-2">
-          <Link href={`/clubfinance/report?orgId=${orgId}`}><Button variant="outlineMuted">集計・Excel出力</Button></Link>
-          <Link href={`/clubfinance/budget?orgId=${orgId}`}><Button variant="outlineMuted">予算</Button></Link>
-          <Link href={`/clubfinance/settings?orgId=${orgId}`}><Button variant="outlineMuted">設定</Button></Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/clubfinance/report?orgId=${orgId}`}><Button variant="outlineMuted" className="whitespace-nowrap">集計・Excel出力</Button></Link>
+          <Link href={`/clubfinance/budget?orgId=${orgId}`}><Button variant="outlineMuted" className="whitespace-nowrap">予算</Button></Link>
+          <Link href={`/clubfinance/settings?orgId=${orgId}`}><Button variant="outlineMuted" className="whitespace-nowrap">設定</Button></Link>
           {canManage && (
-            <Button variant="primary" onClick={openNew} className="inline-flex items-center gap-2">
+            <Button variant="primary" onClick={openNew} className="inline-flex items-center gap-2 whitespace-nowrap">
               <Plus className="w-5 h-5" aria-hidden="true" />取引を追加
             </Button>
           )}

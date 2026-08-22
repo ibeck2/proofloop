@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useClubOrganization } from "@/contexts/ClubOrganizationContext";
 
-const NAV_LINKS: Array<{ href: string; label: string; Icon: LucideIcon; exact?: boolean }> = [
+export const CLUB_NAV_LINKS: Array<{ href: string; label: string; Icon: LucideIcon; exact?: boolean }> = [
   { href: "/clubdashboard", label: "ダッシュボードホーム", Icon: LayoutDashboard, exact: true },
   { href: "/clubprofile", label: "プロフィール編集", Icon: Pencil, exact: true },
   { href: "/clubsettings/members", label: "メンバー管理", Icon: Users, exact: true },
@@ -50,7 +50,7 @@ function ClubNavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const { withOrgQuery } = useClubOrganization();
   return (
     <nav className="flex flex-col gap-2">
-      {NAV_LINKS.map(({ href, label, Icon, exact }) => (
+      {CLUB_NAV_LINKS.map(({ href, label, Icon, exact }) => (
         <Link
           key={href}
           className={linkClassFor(pathname, href, exact)}
@@ -84,48 +84,5 @@ export default function ClubSidebar() {
         </div>
       </div>
     </aside>
-  );
-}
-
-export function ClubMobileDrawer({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  return (
-    <>
-      <div
-        role="presentation"
-        aria-hidden={!isOpen}
-        className={`lg:hidden fixed inset-0 z-[110] bg-black/40 transition-opacity duration-200 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={onClose}
-      />
-      <aside
-        aria-label="管理者用メニュー"
-        aria-hidden={!isOpen}
-        className={`lg:hidden fixed top-0 right-0 z-[120] h-full w-[min(280px,85vw)] max-w-[280px] bg-paper shadow-xl transition-transform duration-200 ease-out flex flex-col justify-between p-6 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="flex flex-col gap-8">
-          <p className="text-graphite text-xs">管理者用</p>
-          <ClubNavLinks onNavigate={onClose} />
-        </div>
-        <div className="pt-6 border-t border-rule">
-          <Link
-            className="flex items-center gap-3 px-4 py-2 text-graphite hover:text-ink transition-colors"
-            href="/"
-            onClick={onClose}
-          >
-            <LogOut className="w-5 h-5" aria-hidden="true" />
-            <span className="text-sm font-medium">ログアウト</span>
-          </Link>
-        </div>
-      </aside>
-    </>
   );
 }

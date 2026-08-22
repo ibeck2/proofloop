@@ -16,6 +16,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { CLUB_NAV_LINKS } from "@/components/ClubSidebar";
 
 const STUDENT_PATHS = [
   "/",
@@ -32,6 +33,10 @@ function isStudentPath(pathname: string): boolean {
   return STUDENT_PATHS.some((p) => p !== "/" && pathname.startsWith(p));
 }
 
+function isClubPath(pathname: string): boolean {
+  return pathname.startsWith("/club");
+}
+
 const MOBILE_NAV_LINKS: Array<{ href: string; label: string; Icon: LucideIcon; loginOnly?: boolean }> = [
   { href: "/", label: "ホーム", Icon: Home },
   { href: "/search", label: "検索", Icon: Search },
@@ -46,7 +51,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const showStudentNav = isStudentPath(pathname ?? "");
+  const showClubNav = isClubPath(pathname ?? "");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeMenuTab, setActiveMenuTab] = useState<"general" | "admin">("general");
   const [session, setSession] = useState<{
     user: { id: string; email?: string; user_metadata?: { full_name?: string; name?: string } };
   } | null>(null);
@@ -85,6 +92,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, [session?.user?.id]);
 
+  // 団体管理ページに入ったら管理者用タブをデフォルトにする（一般ページから遷移してきた場合も追従させる）
+  useEffect(() => {
+    if (showClubNav) setActiveMenuTab("admin");
+  }, [showClubNav]);
+
+  // ドロワーが開いている間は背後の本体をスクロールさせない（スワイプが後ろに抜けるのを防ぐ）
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [isMenuOpen]);
+
   const displayName =
     profileDisplayName ??
     session?.user?.user_metadata?.full_name ??
@@ -101,9 +123,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     router.push("/");
   }, [router, closeMenu]);
 
+  const showMobileMenuButton = showStudentNav || showClubNav;
+
   return (
     <>
-      {/* 共通ヘッダー: ロゴ + 学生向けナビ（学生パスのみ） */}
+      {/* 共通ヘッダー: ロゴ + 学生向けナビ（学生パスのみ） + モバイル用ハンバーガー（学生パス・団体管理パス） */}
       <header className="sticky top-0 z-[100] w-full bg-white border-b border-slate-200 shrink-0">
         <div className="px-4 md:px-6 h-14 flex items-center justify-between gap-4">
           <Link
@@ -116,40 +140,42 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
           {showStudentNav && (
-            <>
-              <nav className="hidden md:flex items-center gap-6 md:gap-8 text-graphite font-bold text-sm shrink-0">
-                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/">
-                  <Home className="w-5 h-5" aria-hidden="true" />
-                  ホーム
+            <nav className="hidden md:flex items-center gap-6 md:gap-8 text-graphite font-bold text-sm shrink-0">
+              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/">
+                <Home className="w-5 h-5" aria-hidden="true" />
+                ホーム
+              </Link>
+              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/search">
+                <Search className="w-5 h-5" aria-hidden="true" />
+                検索
+              </Link>
+              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/timeline">
+                <Newspaper className="w-5 h-5" aria-hidden="true" />
+                新着情報
+              </Link>
+              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/schedule">
+                <CalendarDays className="w-5 h-5" aria-hidden="true" />
+                カレンダー
+              </Link>
+              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/baito">
+                <Briefcase className="w-5 h-5" aria-hidden="true" />
+                バイト・インターン
+              </Link>
+              {session && (
+                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage/messages">
+                  <Mail className="w-5 h-5" aria-hidden="true" />
+                  メッセージ
                 </Link>
-                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/search">
-                  <Search className="w-5 h-5" aria-hidden="true" />
-                  検索
-                </Link>
-                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/timeline">
-                  <Newspaper className="w-5 h-5" aria-hidden="true" />
-                  新着情報
-                </Link>
-                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/schedule">
-                  <CalendarDays className="w-5 h-5" aria-hidden="true" />
-                  カレンダー
-                </Link>
-                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/baito">
-                  <Briefcase className="w-5 h-5" aria-hidden="true" />
-                  バイト・インターン
-                </Link>
-                {session && (
-                  <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage/messages">
-                    <Mail className="w-5 h-5" aria-hidden="true" />
-                    メッセージ
-                  </Link>
-                )}
-                <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage">
-                  <User className="w-5 h-5" aria-hidden="true" />
-                  マイページ
-                </Link>
-              </nav>
-              <div className="flex items-center gap-3">
+              )}
+              <Link className="flex items-center gap-2 hover:text-ink transition-colors" href="/mypage">
+                <User className="w-5 h-5" aria-hidden="true" />
+                マイページ
+              </Link>
+            </nav>
+          )}
+          {showMobileMenuButton && (
+            <div className="flex items-center gap-3">
+              {showStudentNav && (
                 <div className="hidden md:flex items-center gap-3">
                   {session ? (
                     <>
@@ -181,33 +207,33 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     </>
                   )}
                 </div>
-                {/* モバイル: ハンバーガーボタン */}
-                <button
-                  type="button"
-                  aria-label="メニューを開く"
-                  aria-expanded={isMenuOpen}
-                  className="md:hidden p-2 -mr-2 text-graphite hover:text-ink transition-colors"
-                  onClick={() => setIsMenuOpen((prev) => !prev)}
-                >
-                  {isMenuOpen ? (
-                    <X className="w-7 h-7" aria-hidden="true" />
-                  ) : (
-                    <Menu className="w-7 h-7" aria-hidden="true" />
-                  )}
-                </button>
-              </div>
-            </>
+              )}
+              {/* モバイル: ハンバーガーボタン */}
+              <button
+                type="button"
+                aria-label="メニューを開く"
+                aria-expanded={isMenuOpen}
+                className="md:hidden p-2 -mr-2 text-graphite hover:text-ink transition-colors"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+              >
+                {isMenuOpen ? (
+                  <X className="w-7 h-7" aria-hidden="true" />
+                ) : (
+                  <Menu className="w-7 h-7" aria-hidden="true" />
+                )}
+              </button>
+            </div>
           )}
         </div>
       </header>
 
       {/* モバイル用ドロワー（横からスライド） */}
-      {showStudentNav && (
+      {showMobileMenuButton && (
         <>
           <div
             role="presentation"
             aria-hidden={!isMenuOpen}
-            className={`md:hidden fixed inset-0 z-[110] bg-black/40 transition-opacity duration-200 ${
+            className={`md:hidden fixed inset-0 z-[110] overscroll-contain touch-none bg-black/40 transition-opacity duration-200 ${
               isMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             onClick={closeMenu}
@@ -215,31 +241,86 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <aside
             aria-label="メニュー"
             aria-hidden={!isMenuOpen}
-            className={`md:hidden fixed top-0 right-0 z-[120] h-full w-[min(280px,85vw)] max-w-[280px] bg-white shadow-xl transition-transform duration-200 ease-out ${
+            className={`md:hidden fixed top-0 right-0 z-[120] h-full w-[min(280px,85vw)] max-w-[280px] bg-white shadow-xl overscroll-contain transition-transform duration-200 ease-out ${
               isMenuOpen ? "translate-x-0" : "translate-x-full"
             }`}
           >
             <div className="flex flex-col h-full pt-14 pb-6">
               <div className="px-4 pb-4 border-b border-slate-100">
-                <span className="font-body font-bold text-ink text-lg">メニュー</span>
+                {showClubNav ? (
+                  <div className="flex gap-2" role="tablist">
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeMenuTab === "admin"}
+                      onClick={() => setActiveMenuTab("admin")}
+                      className={`flex-1 py-2 text-sm font-bold transition-colors ${
+                        activeMenuTab === "admin"
+                          ? "bg-ink text-paper"
+                          : "bg-mist text-graphite hover:text-ink"
+                      }`}
+                    >
+                      管理者用
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeMenuTab === "general"}
+                      onClick={() => setActiveMenuTab("general")}
+                      className={`flex-1 py-2 text-sm font-bold transition-colors ${
+                        activeMenuTab === "general"
+                          ? "bg-ink text-paper"
+                          : "bg-mist text-graphite hover:text-ink"
+                      }`}
+                    >
+                      一般
+                    </button>
+                  </div>
+                ) : (
+                  <span className="font-body font-bold text-ink text-lg">メニュー</span>
+                )}
               </div>
-              <nav className="flex-1 px-2 py-4 flex flex-col gap-1">
-                {MOBILE_NAV_LINKS.filter((link) => !link.loginOnly || session).map(({ href, label, Icon }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={closeMenu}
-                    className={`flex items-center gap-3 px-4 py-3 font-bold text-sm transition-colors ${
-                      pathname === href || (href !== "/" && pathname?.startsWith(href))
-                        ? "bg-mist text-ink"
-                        : "text-graphite hover:bg-mist hover:text-ink"
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" aria-hidden="true" />
-                    {label}
-                  </Link>
-                ))}
-              </nav>
+              {showClubNav && activeMenuTab === "admin" ? (
+                <nav className="flex-1 px-2 py-4 flex flex-col gap-1 overflow-y-auto">
+                  {CLUB_NAV_LINKS.map(({ href, label, Icon, exact }) => {
+                    const pathOnly = href.split("?")[0];
+                    const active = exact
+                      ? pathname === pathOnly
+                      : pathname === pathOnly || (pathname?.startsWith(pathOnly + "/") ?? false);
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={closeMenu}
+                        className={`flex items-center gap-3 px-4 py-3 font-bold text-sm transition-colors ${
+                          active ? "bg-mist text-ink" : "text-graphite hover:bg-mist hover:text-ink"
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" aria-hidden="true" />
+                        {label}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              ) : (
+                <nav className="flex-1 px-2 py-4 flex flex-col gap-1 overflow-y-auto">
+                  {MOBILE_NAV_LINKS.filter((link) => !link.loginOnly || session).map(({ href, label, Icon }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={closeMenu}
+                      className={`flex items-center gap-3 px-4 py-3 font-bold text-sm transition-colors ${
+                        pathname === href || (href !== "/" && pathname?.startsWith(href))
+                          ? "bg-mist text-ink"
+                          : "text-graphite hover:bg-mist hover:text-ink"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" aria-hidden="true" />
+                      {label}
+                    </Link>
+                  ))}
+                </nav>
+              )}
               <div className="px-4 pt-4 border-t border-slate-100 flex flex-col gap-2">
                 {session ? (
                   <>
