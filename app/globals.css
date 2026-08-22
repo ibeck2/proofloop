@@ -4,12 +4,12 @@
 
 :root {
   color-scheme: light;
-  --color-ink: #002B5C;
-  --color-seal: #8B0000;
-  --color-paper: #FFFFFF;
-  --color-mist: #F2F4F7;
-  --color-rule: #C9D2DC;
-  --color-graphite: #1F2A36;
+  --color-ink: 0 43 92;
+  --color-seal: 139 0 0;
+  --color-paper: 255 255 255;
+  --color-mist: 242 244 247;
+  --color-rule: 201 210 220;
+  --color-graphite: 31 42 54;
 }
 
 /* 手動トグルのみ。OSのprefers-color-schemeには自動追従しない
@@ -18,17 +18,17 @@
    <html>に付け外しする。 */
 :root.dark {
   color-scheme: dark;
-  --color-ink: #EDF1F7;
-  --color-seal: #C4362B;
-  --color-paper: #0A1420;
-  --color-mist: #111E2E;
-  --color-rule: #28364A;
-  --color-graphite: #B8C2CE;
+  --color-ink: 237 241 247;
+  --color-seal: 196 54 43;
+  --color-paper: 10 20 32;
+  --color-mist: 17 30 46;
+  --color-rule: 40 54 74;
+  --color-graphite: 184 194 206;
 }
 
 body {
-  color: var(--color-graphite);
-  background: var(--color-paper);
+  color: rgb(var(--color-graphite));
+  background: rgb(var(--color-paper));
 }
 
 .hide-scrollbar::-webkit-scrollbar {

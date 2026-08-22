@@ -16,14 +16,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // 6色のみ。値はapp/globals.cssのCSS変数（:root / :root.dark）を参照する。
+        // 6色のみ。値はapp/globals.cssのCSS変数（:root / :root.dark、スペース区切りの
+        // RGBチャンネル値）を参照する。rgb(var(...) / <alpha-value>)はTailwind標準の
+        // 不透明度対応パターンで、これによりtext-ink/70のような透明度修飾子が機能する
+        // （CSS変数を素のhex文字列にすると、Tailwindが値をRGBチャンネルへ分解できず
+        // 透明度修飾子のCSSが一切生成されない——実際にこれで559箇所が壊れた）。
         // ここに色を足す前に、既存6色で表現できないか必ず検討すること。
-        ink: "var(--color-ink)",
-        seal: "var(--color-seal)",
-        paper: "var(--color-paper)",
-        mist: "var(--color-mist)",
-        rule: "var(--color-rule)",
-        graphite: "var(--color-graphite)",
+        ink: "rgb(var(--color-ink) / <alpha-value>)",
+        seal: "rgb(var(--color-seal) / <alpha-value>)",
+        paper: "rgb(var(--color-paper) / <alpha-value>)",
+        mist: "rgb(var(--color-mist) / <alpha-value>)",
+        rule: "rgb(var(--color-rule) / <alpha-value>)",
+        graphite: "rgb(var(--color-graphite) / <alpha-value>)",
       },
       fontFamily: {
         // Tailwind の既定 sans を上書きして、サイト全体の基準フォントを固定する。
