@@ -24,11 +24,14 @@ OSの`prefers-color-scheme`には自動追従しない。ユーザーがトグ�
 ### 2.2 適用範囲：全ページ一括
 B2C（ガイド・診断等）・B2B団体管理・運営（`/admin`）・企業側を含む全ページを対象とする。段階導入はしない。
 
-これに伴い、**既存の6色トークン（`lib/design/tokens.ts`）を使っていないハードコード色・旧エイリアス色を、ダークモード導入と合わせて6色トークンに統一する。** 対象は以下の通り（調査済み）：
-- `bg-white` / `bg-black` / `text-slate-*` / `border-slate-*` / `bg-gray-*` / `text-gray-*` / `border-gray-*` を使う10ファイル
-- `tailwind.config.ts`に残る22個の旧エイリアス（`primary` `accent` `text-grey` `navy` 等）を使う32ファイル
+これに伴い、**既存の6色トークン（`lib/design/tokens.ts`）を使っていないハードコード色を、ダークモード導入と合わせて6色トークンに統一する。**
 
-これらを直さない限りダークモードで反転しない要素が残るため、今回のスコープに含めるのは必須（オーナー承認済み）。
+⚠️ **調査を訂正**：初回調査で「旧エイリアス（`primary` `accent` `text-grey`等）を使う32ファイル」としていたのは誤りだった。`variant="primary"`（`Button`コンポーネントの`variant` prop値。実体は既に`bg-ink`で正しい）や、Tailwindのネイティブユーティリティ`accent-ink`（チェックボックスのaccent-color、色エイリアスとは無関係）を、単語一致の粗い検索が拾っていた誤検知。実際に`bg-primary` `text-accent` `border-navy`等の**生のTailwindクラスとして**旧エイリアスを使っている箇所は、`app/`・`components/`配下に**ゼロ件**（`bg-primary\b` 等のプレフィックス付きパターンで再検索し確認済み）。`tailwind.config.ts`の22個の旧エイリアスは実質デッドコードであり、**削除するだけでよい**（移行作業は不要）。
+
+改めて対象範囲を確定：
+- **`components/AppShell.tsx`**：`bg-white`（ヘッダー・ドロワー背景・ボトムナビ、3箇所）／`border-slate-100`（ドロワー内の区切り線、2箇所）
+- **`app/baito/simulator/page.tsx:823`**：`bg-black text-white hover:bg-graphite`（共有機能のボタン。`ink`/`paper`トークンへ）
+- モーダルの背景スクリム（`bg-black/40`・`bg-black/50`）は、他9ファイル・11箇所で使われているが、**半透明の黒スクリムはライト・ダーク両方で意味的に正しく機能するため変更不要**（対象外として明記）。
 
 ### 2.3 ダークパレット（ブラウザモックアップで承認済み）
 
@@ -86,18 +89,11 @@ React hydrationより前に`localStorage`を読んで`<html>`へ`.dark`を付与
 
 デスクトップはログイン/ログアウトボタンの隣、モバイルはドロワー内（ハンバーガーメニューを開いた中）に配置する。`AppShell`は全ページ共通ヘッダーなので、ここに1箇所実装すれば全ページに反映される。
 
-### 2.7 旧エイリアス色の対応表（判断が必要なもの）
+### 2.7 旧エイリアス色・固定ホバー色の対応（訂正済み・確定）
 
-`tailwind.config.ts`に残る22個の旧エイリアスのほとんどは6色のいずれかに1:1で対応するが、以下は**新しい判断が必要**：
-
-- `text-grey` / `grey-custom` / `secondary-grey` / `neutral-grey` / `neutral-gray` / `text-sub`（いずれも`#707070`）：6色のどれにも一致しない中間グレー。**`graphite`を70%不透明度で使う（`text-graphite/70`）**に統一する。プロジェクト内で既に「本文より薄い注記」に`text-graphite/70`が使われている慣習（例：モバイル監査ドキュメントの解説文）と揃える。
-- `border-grey`（`#e5e7eb`）→`rule`に統一
-- `neutral-light`（`#f0f0f5`）・`filter-bg`（`#F5F5F5`）→`mist`に統一
-- `background-light`（`#ffffff`）→`paper`に統一
-- `background-message`（`#f8f5f5`）→`mist`に統一
-- `primary-hover`（`#001f42`、inkのホバー濃色）：`hover:bg-[#001f45]`のような直書きが7ファイル（`components/AppShell.tsx` `components/ui/Button.tsx` `app/for-clubs/page.tsx` `app/not-found.tsx` `app/invite/[token]/page.tsx` `app/guide/living-alone/page.tsx` `app/guide/study-abroad/page.tsx`）にある。**これは見た目の些末事ではなく実害がある**：`bg-ink`はCSS変数化でダークモード時ほぼ白になるが、ホバー時の`hover:bg-[#001f45]`は固定の濃紺のままなので、`text-paper`（ダークモードでは背景色＝ほぼ黒）と組み合わさり、**ホバー時に文字が読めなくなる**。固定色でのホバー上書きはすべて`hover:opacity-90`（同じ色のまま少し薄くする、テーマに依存しない）に置き換える。これにより新しい色・新しいCSS変数を増やさずに済み、ライト・ダーク両方で自動的に正しく機能する。
-- `background` / `foreground`（Next.jsテンプレート由来の`--background` `--foreground`変数）：`app/globals.css`の`:root`にある古い定義。今回導入するCSS変数体系と役割が重複するため、置き換えて削除する。
-- `background-dark`（`#0f1823`）：使用箇所を確認し、実質未使用なら`tailwind.config.ts`から削除する。
+- **`tailwind.config.ts`の22個の旧エイリアス**（`primary` `accent` `text-grey` `navy`等）：§2.2の再調査の通り生のTailwindクラスとしての使用はゼロ件。**そのまま削除する**（移行不要）。
+- **固定ホバー色**（`hover:bg-[#001f45]`＝ink相当・`hover:bg-[#600000]`＝seal相当）：`components/ui/Button.tsx`（2箇所）・`components/AppShell.tsx`（2箇所）・`app/for-clubs/page.tsx`（2箇所）・`app/invite/[token]/page.tsx`・`app/not-found.tsx`・`app/guide/study-abroad/page.tsx`・`app/guide/living-alone/page.tsx`の計8ファイル11箇所。**これは見た目の些末事ではなく実害がある**：`bg-ink`はCSS変数化でダークモード時ほぼ白になるが、ホバー時の`hover:bg-[#001f45]`は固定の濃紺のままなので、`text-paper`（ダークモードでは背景色＝ほぼ黒）と組み合わさり、**ホバー時に文字が読めなくなる**。固定色でのホバー上書きはすべて`hover:opacity-90`（同じ色のまま少し薄くする、テーマに依存しない）に置き換える。これにより新しい色・新しいCSS変数を増やさずに済み、ライト・ダーク両方で自動的に正しく機能する。
+- **`background` / `foreground`**（Next.jsテンプレート由来の`--background` `--foreground`変数）：`app/globals.css`の`:root`にある古い定義。今回導入するCSS変数体系と役割が重複するため、置き換えて削除する（`tailwind.config.ts`側の`background: "var(--background)"` `foreground: "var(--foreground)"`も削除）。
 
 ---
 
