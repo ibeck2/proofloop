@@ -6,7 +6,7 @@
 >
 > **運用ルール**：着手したら「状態」を更新する。完了したら `✅` に変え、末尾に完了日を書く。
 
-**最終更新：2026-08-19**
+**最終更新：2026-08-22**
 
 > 🧭 **8月〜1月の実行計画の正は `docs/roadmap-2026-08-to-2027-01.md` に移した。**
 > 学生インターン3名の人件費（累計 ¥965,280）を1月末までに回収する、という目標から逆算した月次計画と
@@ -40,6 +40,7 @@
 | AE | **`/clubschedule` 日程調整機能（新規）**（タスクJのヒアリング機能候補） | ✅ **完了**（2026-08-20、main反映2026-08-21） | 詳細は下記セクションAE。タスクレビューで見つかった認可まわりの穴4件＋全体レビューで見つかったImportant6件（回答マトリクス未実装・複数団体切替バグ等）はすべて本番修正済み。編集/削除経路の欠如とメール送信のサーバー側検証は意図的に見送り、オーナーによる複数アカウントでの実機確認が残る |
 | AF | **Input/Textarea共通コンポーネントの左パディング欠如を修正** | ✅ **完了**（2026-08-21） | 詳細は下記セクションAF。全ページ対象・約20ファイル55箇所を2ファイルの修正で解消 |
 | AG | **スマホ対応の網羅監査・不具合修正** | ✅ 既知バグ2件はmain反映済み（2026-08-22）／追加発見3件も`fix/mobile-audit-followups`ブランチで修正済み・**マージ待ち** | クラブ管理サイドバーのハンバーガー未実装・`/for-clubs`のモック要素はみ出しはmain本番反映済み。監査で新たに見つかった3件（`/baito/simulator`ラベル重なり・`/for-clubs`の別箇所はみ出し＝真因は`grid-cols-1`欠如・`/clubprofile`のヘッダー二重表示＋固定ボトムナビ誤表示＝本番実測で保存ボタンと40px重なり**機能不可**と判明）も修正済み。軽微1件（`/clubfinance`のファイル未選択ラベル省略）は対象外のまま。詳細は`docs/superpowers/specs/2026-08-21-mobile-audit-findings.md`「3件の修正を実施」節。実機確認は基準の375pxでなく約487px幅で行われた点に留意 |
+| AH | **ダークモード導入**（全ページ手動トグル） | ✅ **実装完了・8タスク全完了**（2026-08-22、`feature/dark-mode`ブランチ・main未マージ） | 設計 `docs/superpowers/specs/2026-08-22-dark-mode-design.md`、実装計画 `docs/superpowers/plans/2026-08-22-dark-mode.md`。詳細は下記セクションAH |
 
 **次の推奨着手順：H（企業向け提案書）→ claim トークン第1バッチの送付判断**（Jは独立して並行進行。Oの協賛金応募機能はUI配置決定が次のアクション。Pは電気通信事業法の届出提出がオーナー対応として残る）
 
@@ -1104,6 +1105,32 @@ DBマイグレーション4タスク（Task1〜4）のレビューで、当初�
 ### 見送り・スコープ外
 - 生の`<input>`/`<select>`/`<textarea>`（共通コンポーネント未使用、約20箇所）はそもそも`px-3 py-2`が既に付いており対象外。
 - 3箇所ある重複スタイル定数（`admin/jobs`の`inputCls`・`OrganizationProfileForm`の`inputClass`・`FinanceDemo`の`field`）は`Input`/`Textarea`共通コンポーネントの機能を再実装している状態のまま。共通コンポーネントへの統合は別タスク。
+
+---
+
+## AH. ダークモード導入（全ページ手動トグル） ✅ 実装完了（2026-08-22、`feature/dark-mode`ブランチ・main未マージ）
+
+設計 `docs/superpowers/specs/2026-08-22-dark-mode-design.md`、実装計画 `docs/superpowers/plans/2026-08-22-dark-mode.md`（8タスク、`superpowers:subagent-driven-development`で1タスクずつレビュー付きで実行）。
+
+### やったこと
+`app/globals.css`の`:root`/`:root.dark`にCSS変数（`--color-ink`等6色）を定義し、`tailwind.config.ts`をそのCSS変数参照に切替。既存の`bg-ink`等のクラスを使っているコードは無変更でダーク対応になった。`contexts/ThemeContext.tsx`（`localStorage`永続化・`beforeInteractive`インラインスクリプトでFOUC防止）を新規実装し、`AppShell.tsx`のヘッダー（デスクトップ）とモバイルドロワーにトグルボタンを設置。ハードコード色・固定ホバー色（`hover:bg-[#001f45]`等）を全ファイル洗い出して6色トークン／`hover:opacity-90`に置換。`/clubdashboard`のrecharts（CSSクラスを解決しないJSコンシューマ）は`DARK_COLORS`定数を追加しテーマ追従させた。`npm test`（552件）・`npx tsc --noEmit`・`npm run build`はすべて成功。
+
+### ライブ確認したこと・しなかったこと（Task 8 全体検証より）
+`localhost:3000`で以下を確認：
+- **確認済み（ライト・ダーク両方、トグル動作・`localStorage`永続化・FOUCなし全て含む）**：`/`・`/gpa`・`/guide/money`・`/for-clubs`・`/login`・`/signup`・`/search`・`/admin`（Basic認証は本番のみでlocalhostには無く通過）。body背景・見出し色がデザイントークン通りであることを`getComputedStyle`で実測。
+- **確認できなかったもの**：`/clubdashboard`（Task 7のrechartsテーマ対応）は未検証のまま。本番はまだこのブランチ未デプロイのためトグル自体が存在せず、localhostは`docs/CLAUDE.md`記載の既知の穴（クラブの組織コンテキスト解決がlocalhostでは無限ローディングになる）で認証済み状態に到達できない。**dark-mode計画7タスク中、この1点だけがコードレビューのみでの承認**。
+
+### 🔴 検証中に発見した重大な既存不具合（このタスクの範囲外・別対応が必要）
+Task 2（`tailwind.config.ts`をCSS変数参照へ切替）の副作用で、**6色トークンの不透明度修飾子構文（`text-paper/70`・`bg-ink/5`・`border-ink/20`等）がサイト全体で無効化されている**ことが判明した。
+- **原因**：`ink: "var(--color-ink)"`のように色をCSS変数への直接参照として定義すると、TailwindはRGBチャンネルへ分解できず不透明度修飾子のCSSを一切生成しない（該当セレクタが丸ごと欠落する。スタイルシートを直接走査して確認済み）。結果、`/70`等が付いたクラスはノーオペレーションになり、要素は祖先から`color`を継承する。
+- **実害を実機で確認**：`/guide/money`末尾の「バイトで収入を補うなら」CTA（`bg-ink`セクション内の`<p className="text-paper/70">`）と`/for-clubs`ヒーローの「近日公開予定」バッジ（`text-paper/80`）で、テキスト色が背景色と完全一致し**文字が実際に見えない**状態（コントラスト比1:1）をライト・ダーク両テーマで実測確認した。
+- **範囲**：`grep`実測で`(bg|text|border|ring|divide|from|to|via|outline|decoration|placeholder)-(ink|seal|paper|mist|rule|graphite)/[数字]`パターンが`app`/`components`/`lib`配下に**559件**。このダークモード導入以前（`COLORS`を直接hexで`...COLORS`spreadしていた頃）は正常に機能していたはずの回帰。個々の559件を全数確認はしていないが、上記2件で少なくとも「見えなくなる」実害があるパターンが存在することは確認済み。
+- **推奨される対処の方向性**（未実装・要承認）：CSS変数を`--color-ink: 0 43 92;`のようなRGBチャンネル値で定義し直し、`tailwind.config.ts`側で`ink: "rgb(var(--color-ink) / <alpha-value>)"`のようなTailwind標準の不透明度対応パターンに変更する。多数ファイルにまたがる変更のため、着手前に計画提示・承認が必要（`docs/CLAUDE.md`冒頭ルール）。
+
+### 見送り・スコープ外
+- 上記の不透明度修飾子バグの修正そのもの（この検証タスクでは検出・記録のみ）。
+- `/gpa`の生`<input type="text/number">`（`GpaCalculatorClient.tsx`・`GradeTotalsInput.tsx`）に`bg-paper`が付いておらず、ダークモードでブラウザのネイティブ既定色（濃いグレー、design tokenと不一致）で描画される軽微な見た目の不一致。コントラストは問題ないため実害は小さい。
+- `/`（トップページ）に本タスクと無関係の既存ハイドレーション不整合（`OrganizationField.tsx`/`Hero.tsx`のSVG `<title>`、Task 3で既発見・記録済み）が引き続き存在する。
 
 ---
 
